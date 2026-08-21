@@ -1,0 +1,544 @@
+<meta charset="UTF-8">
+<title>査定書・提案書 作成ツール | TAKAHARA不動産</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;600;700;800&family=Zen+Kaku+Gothic+New:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg:#ece7de;
+    --bg-elevated:#f7f4ee;
+    --bg-sunk:#e2ddd2;
+    --ink:#1b2023;
+    --ink-soft:#4b5459;
+    --ink-faint:#7c8388;
+    --accent:#1f6f6b;
+    --accent-ink:#f7f4ee;
+    --accent-soft:#e3ede9;
+    --accent-2:#b5573c;
+    --line:rgba(27,32,35,0.14);
+    --line-strong:rgba(27,32,35,0.28);
+    --shadow:0 20px 50px -25px rgba(20,25,28,0.35);
+    --font-display:"Shippori Mincho","Hiragino Mincho ProN","Yu Mincho",serif;
+    --font-body:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#12171a; --bg-elevated:#1a2124; --bg-sunk:#0d1113;
+      --ink:#ece7de; --ink-soft:#a9b2b4; --ink-faint:#727c7e;
+      --accent:#4fbdb6; --accent-ink:#0e1516; --accent-soft:#1c2d2c; --accent-2:#d97c5d;
+      --line:rgba(236,231,222,0.14); --line-strong:rgba(236,231,222,0.28);
+      --shadow:0 20px 50px -25px rgba(0,0,0,0.6);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#12171a; --bg-elevated:#1a2124; --bg-sunk:#0d1113;
+    --ink:#ece7de; --ink-soft:#a9b2b4; --ink-faint:#727c7e;
+    --accent:#4fbdb6; --accent-ink:#0e1516; --accent-soft:#1c2d2c; --accent-2:#d97c5d;
+    --line:rgba(236,231,222,0.14); --line-strong:rgba(236,231,222,0.28);
+    --shadow:0 20px 50px -25px rgba(0,0,0,0.6);
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:var(--font-body); font-size:15px; line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,h4{ font-family:var(--font-display); font-weight:700; margin:0; letter-spacing:0.02em; }
+  a{ color:inherit; }
+  input,select,textarea,button{ font-family:var(--font-body); font-size:0.92rem; color:var(--ink); }
+  input,select,textarea{
+    width:100%; padding:8px 10px; background:var(--bg-elevated);
+    border:1px solid var(--line-strong); border-radius:2px; color:var(--ink);
+  }
+  input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible{
+    outline:2px solid var(--accent); outline-offset:2px;
+  }
+  button{
+    cursor:pointer; border:1px solid var(--line-strong); background:var(--bg-elevated);
+    padding:8px 14px; border-radius:2px; font-weight:500;
+  }
+  button:hover{ border-color:var(--accent); color:var(--accent); }
+  .btn-primary{
+    background:var(--accent); color:var(--accent-ink); border-color:var(--accent); font-weight:700;
+  }
+  .btn-primary:hover{ opacity:0.9; color:var(--accent-ink); }
+  .btn-danger:hover{ border-color:var(--accent-2); color:var(--accent-2); }
+
+  /* ---------- toolbar ---------- */
+  .toolbar{
+    position:sticky; top:0; z-index:20;
+    display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;
+    padding:14px clamp(16px,3vw,32px);
+    background:color-mix(in srgb, var(--bg) 92%, transparent);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  .toolbar-brand{ font-family:var(--font-display); font-weight:700; font-size:1.05rem; }
+  .toolbar-brand small{
+    display:block; font-family:var(--font-body); font-weight:500; font-size:0.68rem;
+    letter-spacing:0.1em; color:var(--ink-faint); margin-top:2px;
+  }
+  .toolbar-actions{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .toolbar-actions select{ width:auto; min-width:180px; }
+
+  /* ---------- layout ---------- */
+  .layout{
+    display:grid; grid-template-columns:minmax(320px,420px) 1fr; gap:0;
+    align-items:start;
+  }
+  @media (max-width:960px){ .layout{ grid-template-columns:1fr; } }
+
+  .editor{
+    padding:24px clamp(16px,3vw,32px) 80px;
+    border-right:1px solid var(--line);
+    display:flex; flex-direction:column; gap:28px;
+  }
+  fieldset{ border:none; margin:0; padding:0; display:flex; flex-direction:column; gap:12px; }
+  legend{
+    font-family:var(--font-display); font-weight:700; font-size:0.98rem;
+    padding:0 0 8px; border-bottom:1px solid var(--line); width:100%; margin-bottom:4px;
+  }
+  .field{ display:flex; flex-direction:column; gap:4px; }
+  .field label{ font-size:0.76rem; color:var(--ink-faint); letter-spacing:0.04em; }
+  .field-row{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .field-row3{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
+
+  .comps-table{ width:100%; border-collapse:collapse; font-size:0.82rem; }
+  .comps-table th{ text-align:left; font-weight:500; color:var(--ink-faint); font-size:0.72rem; padding:4px 4px; }
+  .comps-table td{ padding:3px 3px; vertical-align:top; }
+  .comps-table input{ padding:6px 7px; font-size:0.82rem; }
+  .comps-table .unitprice{ font-variant-numeric:tabular-nums; white-space:nowrap; padding:8px 4px; color:var(--ink-soft); }
+  .comps-table .rm{ padding:4px 6px; font-size:0.78rem; }
+
+  .slider-field{ display:flex; flex-direction:column; gap:4px; }
+  .slider-field .row{ display:flex; justify-content:space-between; font-size:0.8rem; color:var(--ink-soft); }
+  .slider-field output{ font-variant-numeric:tabular-nums; font-weight:700; color:var(--accent); }
+  input[type="range"]{ padding:0; accent-color:var(--accent); background:none; border:none; }
+
+  .hint{ font-size:0.76rem; color:var(--ink-faint); line-height:1.6; margin:0; }
+
+  /* ---------- preview / report ---------- */
+  .preview{ background:var(--bg-sunk); padding:clamp(20px,3vw,48px); display:flex; justify-content:center; }
+  .report{
+    width:100%; max-width:760px; background:var(--bg-elevated);
+    box-shadow:var(--shadow); padding:clamp(28px,5vw,56px); color:var(--ink);
+  }
+  .report-head{ display:flex; justify-content:space-between; align-items:flex-start; gap:20px; border-bottom:2px solid var(--ink); padding-bottom:16px; margin-bottom:24px; }
+  .report-head .brand{ font-family:var(--font-display); font-weight:700; font-size:1.3rem; }
+  .report-head .brand small{ display:block; font-weight:500; font-size:0.7rem; color:var(--ink-faint); margin-top:4px; font-family:var(--font-body); }
+  .report-head .meta{ text-align:right; font-size:0.78rem; color:var(--ink-soft); }
+  .report h2.title{ text-align:center; font-size:1.5rem; letter-spacing:0.3em; margin-bottom:28px; }
+  .report .addressee{ font-size:0.98rem; margin-bottom:20px; }
+  .report .addressee .sama{ margin-left:0.3em; }
+  .report section.block{ margin-bottom:26px; }
+  .report h3.block-title{
+    font-size:0.86rem; letter-spacing:0.1em; color:var(--accent); border-left:4px solid var(--accent);
+    padding-left:10px; margin-bottom:12px;
+  }
+  table.spec{ width:100%; border-collapse:collapse; font-size:0.86rem; }
+  table.spec th{ width:9em; text-align:left; color:var(--ink-faint); font-weight:500; padding:6px 8px; border-bottom:1px solid var(--line); white-space:nowrap; }
+  table.spec td{ padding:6px 8px; border-bottom:1px solid var(--line); }
+  table.comp-report{ width:100%; border-collapse:collapse; font-size:0.78rem; }
+  table.comp-report th{ text-align:left; font-weight:500; color:var(--ink-faint); border-bottom:1px solid var(--line-strong); padding:6px 6px; }
+  table.comp-report td{ padding:6px 6px; border-bottom:1px solid var(--line); }
+  table.comp-report td.num, table.comp-report th.num{ text-align:right; font-variant-numeric:tabular-nums; }
+
+  .estimate-box{
+    background:var(--accent-soft); border:1px solid var(--accent); padding:22px 24px; text-align:center; margin-bottom:8px;
+  }
+  .estimate-box .label{ font-size:0.78rem; letter-spacing:0.14em; color:var(--accent); font-weight:700; }
+  .estimate-box .value{ font-family:var(--font-display); font-weight:700; font-size:clamp(1.8rem,3vw,2.6rem); color:var(--ink); margin-top:6px; }
+  .estimate-box .range{ font-size:0.84rem; color:var(--ink-soft); margin-top:6px; }
+
+  .comment-box{ white-space:pre-wrap; font-size:0.9rem; color:var(--ink-soft); background:var(--bg-sunk); padding:16px 18px; border-left:3px solid var(--line-strong); }
+  .disclaimer{ font-size:0.7rem; color:var(--ink-faint); border-top:1px solid var(--line); padding-top:12px; margin-top:30px; line-height:1.7; }
+  .report-foot{ display:flex; justify-content:space-between; font-size:0.8rem; color:var(--ink-soft); margin-top:20px; }
+
+  @media print{
+    .toolbar, .editor{ display:none !important; }
+    body{ background:#fff; }
+    .preview{ background:#fff; padding:0; }
+    .report{ box-shadow:none; max-width:none; padding:0; }
+    @page{ margin:16mm; }
+  }
+</style>
+
+<div class="toolbar">
+  <div class="toolbar-brand">TAKAHARA不動産<small>査定書・提案書 作成ツール（社内用）</small></div>
+  <div class="toolbar-actions">
+    <select id="caseSelect" title="保存済みの案件"></select>
+    <button id="newCaseBtn" type="button">新規案件</button>
+    <button id="deleteCaseBtn" type="button" class="btn-danger">この案件を削除</button>
+    <button id="printBtn" type="button" class="btn-primary">印刷 / PDF出力</button>
+  </div>
+</div>
+
+<div class="layout">
+  <div class="editor">
+    <fieldset>
+      <legend>提案先</legend>
+      <div class="field-row">
+        <div class="field"><label for="clientName">お客様名</label><input id="clientName" placeholder="山田 太郎"></div>
+        <div class="field"><label for="staffName">担当者名</label><input id="staffName" placeholder="高原 一郎"></div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>対象物件</legend>
+      <div class="field"><label for="address">住所</label><input id="address" placeholder="福岡県福岡市中央区大名2-1-1"></div>
+      <div class="field-row3">
+        <div class="field"><label for="ptype">種別</label>
+          <select id="ptype">
+            <option>土地</option>
+            <option>戸建て</option>
+            <option>マンション</option>
+          </select>
+        </div>
+        <div class="field"><label for="landArea">土地面積(m²)</label><input id="landArea" type="number" min="0" step="0.01"></div>
+        <div class="field" id="bldgAreaField"><label for="bldgArea">建物/専有面積(m²)</label><input id="bldgArea" type="number" min="0" step="0.01"></div>
+      </div>
+      <div class="field-row3">
+        <div class="field"><label for="age">築年数</label><input id="age" type="number" min="0" step="1"></div>
+        <div class="field"><label for="structure">構造</label>
+          <select id="structure">
+            <option>木造</option><option>鉄骨造</option><option>RC造</option><option>SRC造</option><option>—</option>
+          </select>
+        </div>
+        <div class="field"><label for="walkMin">最寄駅 徒歩(分)</label><input id="walkMin" type="number" min="0" step="1"></div>
+      </div>
+      <div class="field">
+        <label for="station">最寄駅・間取り等（補足）</label>
+        <input id="station" placeholder="西鉄天神大牟田線「西鉄平尾」駅 / 3LDK">
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>類似取引事例</legend>
+      <p class="hint">レインズ・国交省 不動産情報ライブラリ等で確認した近隣の成約事例を入力してください。面積・価格から坪単価を自動計算します。</p>
+      <table class="comps-table">
+        <thead>
+          <tr><th style="width:32%">所在地・エリア</th><th style="width:16%">成約時期</th><th style="width:16%">価格(万円)</th><th style="width:16%">面積(m²)</th><th>坪単価</th><th></th></tr>
+        </thead>
+        <tbody id="compsBody"></tbody>
+      </table>
+      <button id="addCompBtn" type="button">＋ 事例を追加</button>
+    </fieldset>
+
+    <fieldset>
+      <legend>補正（査定額の調整）</legend>
+      <div class="slider-field">
+        <div class="row"><span>立地・接道条件</span><output id="adjLocationOut">0%</output></div>
+        <input id="adjLocation" type="range" min="-20" max="20" step="1" value="0">
+      </div>
+      <div class="slider-field">
+        <div class="row"><span>築年数・傷み具合</span><output id="adjAgeOut">0%</output></div>
+        <input id="adjAge" type="range" min="-20" max="20" step="1" value="0">
+      </div>
+      <div class="slider-field">
+        <div class="row"><span>その他個別要因</span><output id="adjOtherOut">0%</output></div>
+        <input id="adjOther" type="range" min="-20" max="20" step="1" value="0">
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>提案コメント</legend>
+      <textarea id="comment" rows="6" placeholder="売却スケジュールのご提案、販売戦略のポイントなどをご記入ください。"></textarea>
+    </fieldset>
+  </div>
+
+  <div class="preview">
+    <div class="report" id="report"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var STORAGE_KEY = "takahara_satei_cases_v1";
+  var TSUBO = 3.305785;
+
+  function emptyCase(){
+    return {
+      id: String(Date.now()) + Math.random().toString(16).slice(2),
+      clientName: "", staffName: "",
+      address: "", ptype: "土地", landArea: "", bldgArea: "",
+      age: "", structure: "木造", walkMin: "", station: "",
+      comps: [ {address:"", date:"", price:"", area:""} ],
+      adjLocation: 0, adjAge: 0, adjOther: 0,
+      comment: "", updatedAt: Date.now()
+    };
+  }
+
+  function loadCases(){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY);
+      var list = raw ? JSON.parse(raw) : [];
+      return Array.isArray(list) ? list : [];
+    }catch(e){ return []; }
+  }
+  function saveCases(list){
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(list)); }catch(e){}
+  }
+
+  var cases = loadCases();
+  var current;
+  if(cases.length){ current = cases[0]; } else { current = emptyCase(); cases.push(current); saveCases(cases); }
+
+  var el = {};
+  ["clientName","staffName","address","ptype","landArea","bldgArea","age","structure","walkMin","station",
+   "adjLocation","adjAge","adjOther","comment","caseSelect","compsBody","report",
+   "adjLocationOut","adjAgeOut","adjOtherOut","bldgAreaField"].forEach(function(id){
+    el[id] = document.getElementById(id);
+  });
+
+  function fmtMan(n){
+    if(!isFinite(n)) return "—";
+    return Math.round(n).toLocaleString("ja-JP");
+  }
+  function toTsubo(m2){ return (parseFloat(m2)||0) / TSUBO; }
+
+  function refreshCaseSelect(){
+    el.caseSelect.innerHTML = "";
+    cases.slice().sort(function(a,b){return b.updatedAt-a.updatedAt;}).forEach(function(c){
+      var opt = document.createElement("option");
+      opt.value = c.id;
+      var label = (c.address || "住所未入力") + (c.clientName ? "（"+c.clientName+"様）" : "");
+      opt.textContent = label;
+      if(c.id === current.id) opt.selected = true;
+      el.caseSelect.appendChild(opt);
+    });
+  }
+
+  function loadFormFromCurrent(){
+    el.clientName.value = current.clientName || "";
+    el.staffName.value = current.staffName || "";
+    el.address.value = current.address || "";
+    el.ptype.value = current.ptype || "土地";
+    el.landArea.value = current.landArea || "";
+    el.bldgArea.value = current.bldgArea || "";
+    el.age.value = current.age || "";
+    el.structure.value = current.structure || "木造";
+    el.walkMin.value = current.walkMin || "";
+    el.station.value = current.station || "";
+    el.adjLocation.value = current.adjLocation || 0;
+    el.adjAge.value = current.adjAge || 0;
+    el.adjOther.value = current.adjOther || 0;
+    el.comment.value = current.comment || "";
+    renderComps();
+    updateAdjOutputs();
+    toggleBldgField();
+    render();
+  }
+
+  function toggleBldgField(){
+    el.bldgAreaField.style.display = (current.ptype === "土地") ? "none" : "";
+  }
+
+  function renderComps(){
+    el.compsBody.innerHTML = "";
+    current.comps.forEach(function(c, i){
+      var tr = document.createElement("tr");
+      tr.innerHTML =
+        '<td><input data-i="'+i+'" data-k="address" value="'+escapeAttr(c.address)+'" placeholder="中央区大名"></td>'+
+        '<td><input data-i="'+i+'" data-k="date" value="'+escapeAttr(c.date)+'" placeholder="2026-05"></td>'+
+        '<td><input data-i="'+i+'" data-k="price" type="number" min="0" step="1" value="'+escapeAttr(c.price)+'"></td>'+
+        '<td><input data-i="'+i+'" data-k="area" type="number" min="0" step="0.01" value="'+escapeAttr(c.area)+'"></td>'+
+        '<td class="unitprice">'+compUnitPriceLabel(c)+'</td>'+
+        '<td><button type="button" class="rm" data-rm="'+i+'">×</button></td>';
+      el.compsBody.appendChild(tr);
+    });
+  }
+  function escapeAttr(v){ return (v===undefined||v===null) ? "" : String(v).replace(/"/g,"&quot;"); }
+
+  function compUnitPrice(c){
+    var t = toTsubo(c.area);
+    var p = parseFloat(c.price);
+    if(!t || !isFinite(p) || p<=0) return null;
+    return p / t;
+  }
+  function compUnitPriceLabel(c){
+    var u = compUnitPrice(c);
+    return u ? (fmtMan(u) + "万円/坪") : "—";
+  }
+
+  function updateAdjOutputs(){
+    el.adjLocationOut.textContent = el.adjLocation.value + "%";
+    el.adjAgeOut.textContent = el.adjAge.value + "%";
+    el.adjOtherOut.textContent = el.adjOther.value + "%";
+  }
+
+  function computeEstimate(){
+    var prices = current.comps.map(compUnitPrice).filter(function(v){ return v!==null; });
+    if(!prices.length) return null;
+    var avgUnit = prices.reduce(function(a,b){return a+b;},0) / prices.length;
+    var baseArea = (current.ptype === "マンション") ? current.bldgArea : current.landArea;
+    var baseTsubo = toTsubo(baseArea);
+    if(!baseTsubo) return null;
+    var baseValue = avgUnit * baseTsubo;
+    var mult = 1 + ((Number(current.adjLocation)||0) + (Number(current.adjAge)||0) + (Number(current.adjOther)||0)) / 100;
+    var mid = baseValue * mult;
+    return { avgUnit: avgUnit, baseTsubo: baseTsubo, mid: mid, low: mid*0.95, high: mid*1.05 };
+  }
+
+  function render(){
+    var est = computeEstimate();
+    var today = new Date();
+    var dateStr = today.getFullYear()+"年"+(today.getMonth()+1)+"月"+today.getDate()+"日";
+
+    var specRows = "";
+    specRows += "<tr><th>所在地</th><td>"+escapeHtml(current.address || "—")+"</td></tr>";
+    specRows += "<tr><th>種別</th><td>"+escapeHtml(current.ptype)+"</td></tr>";
+    if(current.ptype !== "マンション"){
+      specRows += "<tr><th>土地面積</th><td>"+(current.landArea? current.landArea+" m²（約"+fmtMan(toTsubo(current.landArea))+"坪）" : "—")+"</td></tr>";
+    }
+    if(current.ptype !== "土地"){
+      specRows += "<tr><th>建物/専有面積</th><td>"+(current.bldgArea? current.bldgArea+" m²（約"+fmtMan(toTsubo(current.bldgArea))+"坪）" : "—")+"</td></tr>";
+      specRows += "<tr><th>築年数</th><td>"+(current.age!==""? current.age+"年" : "—")+"</td></tr>";
+      specRows += "<tr><th>構造</th><td>"+escapeHtml(current.structure)+"</td></tr>";
+    }
+    if(current.station){ specRows += "<tr><th>最寄駅・その他</th><td>"+escapeHtml(current.station)+(current.walkMin? "（徒歩"+current.walkMin+"分）":"")+"</td></tr>"; }
+
+    var compRows = current.comps.filter(function(c){return c.address||c.price||c.area;}).map(function(c){
+      return "<tr><td>"+escapeHtml(c.address||"—")+"</td><td>"+escapeHtml(c.date||"—")+"</td>"+
+        "<td class='num'>"+(c.price? fmtMan(c.price)+"万円":"—")+"</td>"+
+        "<td class='num'>"+(c.area? c.area+" m²":"—")+"</td>"+
+        "<td class='num'>"+compUnitPriceLabel(c)+"</td></tr>";
+    }).join("");
+    if(!compRows) compRows = "<tr><td colspan='5' style=\"color:var(--ink-faint)\">事例が入力されていません</td></tr>";
+
+    var estimateHtml;
+    if(est){
+      estimateHtml =
+        '<div class="estimate-box">'+
+          '<div class="label">査定額（概算）</div>'+
+          '<div class="value">'+fmtMan(est.mid)+' 万円</div>'+
+          '<div class="range">査定幅：'+fmtMan(est.low)+' 万円 〜 '+fmtMan(est.high)+' 万円　／　基準坪単価 '+fmtMan(est.avgUnit)+' 万円/坪</div>'+
+        '</div>';
+    } else {
+      estimateHtml =
+        '<div class="estimate-box">'+
+          '<div class="label">査定額（概算）</div>'+
+          '<div class="value">—</div>'+
+          '<div class="range">類似取引事例と対象物件の面積を入力すると自動計算されます</div>'+
+        '</div>';
+    }
+
+    el.report.innerHTML =
+      '<div class="report-head">'+
+        '<div class="brand">TAKAHARA不動産<small>宅地建物取引業</small></div>'+
+        '<div class="meta">作成日：'+dateStr+'<br>担当：'+escapeHtml(current.staffName||"—")+'</div>'+
+      '</div>'+
+      '<h2 class="title">査　定　書　・　ご　提　案</h2>'+
+      '<p class="addressee">'+escapeHtml(current.clientName || "お客様")+'<span class="sama">様</span></p>'+
+      '<section class="block">'+
+        '<h3 class="block-title">物件概要</h3>'+
+        '<table class="spec">'+specRows+'</table>'+
+      '</section>'+
+      '<section class="block">'+
+        estimateHtml+
+      '</section>'+
+      '<section class="block">'+
+        '<h3 class="block-title">査定根拠（近隣類似取引事例）</h3>'+
+        '<table class="comp-report"><thead><tr><th>所在地</th><th>成約時期</th><th class="num">成約価格</th><th class="num">面積</th><th class="num">坪単価</th></tr></thead>'+
+        '<tbody>'+compRows+'</tbody></table>'+
+      '</section>'+
+      (current.comment ? '<section class="block"><h3 class="block-title">ご提案</h3><div class="comment-box">'+escapeHtml(current.comment)+'</div></section>' : '')+
+      '<div class="disclaimer">本書は近隣の取引事例等を基にした弊社独自の査定であり、不動産鑑定士による鑑定評価ではありません。実際の成約価格は市況・現地状況・交渉等により変動します。正式なご売却にあたっては現地調査のうえ改めてご説明いたします。</div>'+
+      '<div class="report-foot"><span>TAKAHARA不動産</span><span>担当：'+escapeHtml(current.staffName||"—")+'</span></div>';
+  }
+
+  function escapeHtml(s){
+    return String(s==null?"":s).replace(/[&<>"]/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c];
+    });
+  }
+
+  function persist(){
+    current.updatedAt = Date.now();
+    var idx = cases.findIndex(function(c){return c.id===current.id;});
+    if(idx>=0) cases[idx] = current; else cases.push(current);
+    saveCases(cases);
+    refreshCaseSelect();
+  }
+
+  // ---- events ----
+  ["clientName","staffName","address","age","walkMin","station","comment"].forEach(function(id){
+    el[id].addEventListener("input", function(){ current[id] = el[id].value; render(); persist(); });
+  });
+  ["landArea","bldgArea"].forEach(function(id){
+    el[id].addEventListener("input", function(){ current[id] = el[id].value; render(); persist(); });
+  });
+  el.ptype.addEventListener("change", function(){ current.ptype = el.ptype.value; toggleBldgField(); render(); persist(); });
+  el.structure.addEventListener("change", function(){ current.structure = el.structure.value; render(); persist(); });
+
+  [["adjLocation","adjLocationOut"],["adjAge","adjAgeOut"],["adjOther","adjOtherOut"]].forEach(function(pair){
+    el[pair[0]].addEventListener("input", function(){
+      current[pair[0]] = Number(el[pair[0]].value);
+      updateAdjOutputs();
+      render(); persist();
+    });
+  });
+
+  el.compsBody.addEventListener("input", function(e){
+    var t = e.target;
+    if(t.dataset && t.dataset.k){
+      current.comps[Number(t.dataset.i)][t.dataset.k] = t.value;
+      renderCompsUnitOnly();
+      render(); persist();
+    }
+  });
+  function renderCompsUnitOnly(){
+    var rows = el.compsBody.querySelectorAll("tr");
+    rows.forEach(function(tr, i){
+      var cell = tr.querySelector(".unitprice");
+      if(cell) cell.textContent = compUnitPriceLabel(current.comps[i]);
+    });
+  }
+  el.compsBody.addEventListener("click", function(e){
+    var i = e.target.getAttribute("data-rm");
+    if(i !== null){
+      current.comps.splice(Number(i),1);
+      if(!current.comps.length) current.comps.push({address:"",date:"",price:"",area:""});
+      renderComps(); render(); persist();
+    }
+  });
+  document.getElementById("addCompBtn").addEventListener("click", function(){
+    current.comps.push({address:"",date:"",price:"",area:""});
+    renderComps(); render(); persist();
+  });
+
+  el.caseSelect.addEventListener("change", function(){
+    var found = cases.find(function(c){return c.id===el.caseSelect.value;});
+    if(found){ current = found; loadFormFromCurrent(); }
+  });
+  document.getElementById("newCaseBtn").addEventListener("click", function(){
+    current = emptyCase();
+    cases.push(current);
+    saveCases(cases);
+    refreshCaseSelect();
+    loadFormFromCurrent();
+  });
+  document.getElementById("deleteCaseBtn").addEventListener("click", function(){
+    if(cases.length<=1){
+      current = emptyCase();
+      cases = [current];
+      saveCases(cases);
+      refreshCaseSelect();
+      loadFormFromCurrent();
+      return;
+    }
+    if(!confirm("この案件を削除しますか？")) return;
+    cases = cases.filter(function(c){return c.id!==current.id;});
+    saveCases(cases);
+    current = cases[0];
+    refreshCaseSelect();
+    loadFormFromCurrent();
+  });
+  document.getElementById("printBtn").addEventListener("click", function(){ window.print(); });
+
+  refreshCaseSelect();
+  loadFormFromCurrent();
+})();
+</script>
