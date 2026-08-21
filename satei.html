@@ -157,21 +157,62 @@
   .report-foot{ display:flex; justify-content:space-between; font-size:0.8rem; color:var(--ink-soft); margin-top:20px; }
 
   @media print{
-    .toolbar, .editor{ display:none !important; }
+    .toolbar, .editor, .modal-backdrop{ display:none !important; }
     body{ background:#fff; }
     .preview{ background:#fff; padding:0; }
     .report{ box-shadow:none; max-width:none; padding:0; }
     @page{ margin:16mm; }
   }
+
+  /* ---------- cloud sync ---------- */
+  .sync-status{ font-size:0.76rem; color:var(--ink-faint); display:flex; align-items:center; gap:6px; white-space:nowrap; }
+  .sync-status .dot{ width:8px; height:8px; border-radius:50%; background:var(--ink-faint); display:inline-block; flex:none; }
+  .sync-status.ok .dot{ background:var(--accent); }
+  .sync-status.error .dot{ background:var(--accent-2); }
+  .sync-status.busy .dot{ background:var(--ink-soft); }
+
+  .modal-backdrop{
+    position:fixed; inset:0; background:rgba(10,12,13,0.5); z-index:100;
+    display:flex; align-items:center; justify-content:center; padding:20px;
+  }
+  .modal-backdrop[hidden]{ display:none !important; }
+  .modal{
+    background:var(--bg-elevated); border:1px solid var(--line-strong);
+    max-width:440px; width:100%; padding:clamp(22px,4vw,32px);
+    display:flex; flex-direction:column; gap:14px; box-shadow:var(--shadow);
+  }
+  .modal h3{ font-size:1.1rem; }
+  .modal .modal-actions{ display:flex; justify-content:space-between; gap:8px; margin-top:8px; flex-wrap:wrap; }
+  .modal .modal-actions .right{ display:flex; gap:8px; margin-left:auto; }
 </style>
 
 <div class="toolbar">
   <div class="toolbar-brand">TAKAHARA不動産<small>査定書・提案書 作成ツール（社内用）</small></div>
   <div class="toolbar-actions">
+    <span class="sync-status" id="syncStatus"><span class="dot"></span><span id="syncStatusText">ローカルのみ</span></span>
     <select id="caseSelect" title="保存済みの案件"></select>
+    <button id="refreshBtn" type="button" title="共有データを最新に更新">更新</button>
     <button id="newCaseBtn" type="button">新規案件</button>
     <button id="deleteCaseBtn" type="button" class="btn-danger">この案件を削除</button>
+    <button id="cloudSettingsBtn" type="button">共有設定</button>
     <button id="printBtn" type="button" class="btn-primary">印刷 / PDF出力</button>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="cloudModal" hidden>
+  <div class="modal">
+    <h3>複数人でのデータ共有設定</h3>
+    <p class="hint">Supabaseのプロジェクト情報と事務所内の合言葉（パスフレーズ）を入力すると、この案件データを他のスタッフのブラウザとリアルタイムに近い形で共有できます。一度設定すればこのブラウザに保存され、次回から自動接続します（設定手順は同梱の supabase/schema.sql を参照）。</p>
+    <div class="field"><label for="cfgUrl">Supabase Project URL</label><input id="cfgUrl" placeholder="https://xxxxx.supabase.co"></div>
+    <div class="field"><label for="cfgKey">Supabase anon public key</label><input id="cfgKey" placeholder="eyJhbGciOi..."></div>
+    <div class="field"><label for="cfgPass">共有パスフレーズ</label><input id="cfgPass" type="password" placeholder="事務所で決めた合言葉"></div>
+    <div class="modal-actions">
+      <button id="cloudDisconnectBtn" type="button" class="btn-danger">共有をやめてローカルのみに戻す</button>
+      <div class="right">
+        <button id="cloudCancelBtn" type="button">キャンセル</button>
+        <button id="cloudSaveBtn" type="button" class="btn-primary">保存して接続</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -253,10 +294,12 @@
   </div>
 </div>
 
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <script>
 (function(){
   "use strict";
   var STORAGE_KEY = "takahara_satei_cases_v1";
+  var CLOUD_KEY = "takahara_satei_cloud_config_v1";
   var TSUBO = 3.305785;
 
   function emptyCase(){
@@ -282,6 +325,117 @@
     try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(list)); }catch(e){}
   }
 
+  // ---- cloud sync (optional, via Supabase) ----
+  function loadCloudConfig(){
+    try{
+      var raw = localStorage.getItem(CLOUD_KEY);
+      return raw ? JSON.parse(raw) : null;
+    }catch(e){ return null; }
+  }
+  function saveCloudConfig(cfg){
+    try{ localStorage.setItem(CLOUD_KEY, JSON.stringify(cfg)); }catch(e){}
+  }
+  function clearCloudConfig(){
+    try{ localStorage.removeItem(CLOUD_KEY); }catch(e){}
+  }
+
+  var cloudConfig = loadCloudConfig();
+  var sbClient = null;
+  var refreshTimer = null;
+  var cloudPushTimer = null;
+
+  function setSyncStatus(state, text){
+    if(!el.syncStatus) return;
+    el.syncStatus.className = "sync-status" + (state ? " " + state : "");
+    el.syncStatusText.textContent = text;
+  }
+
+  function ensureClient(){
+    if(!cloudConfig) return null;
+    if(!sbClient && window.supabase){
+      sbClient = window.supabase.createClient(cloudConfig.url, cloudConfig.anonKey);
+    }
+    return sbClient;
+  }
+
+  function cloudListCases(){
+    var client = ensureClient();
+    if(!client) return Promise.reject(new Error("not connected"));
+    return client.rpc("list_cases", { p_passphrase: cloudConfig.passphrase }).then(function(res){
+      if(res.error) throw res.error;
+      return res.data || [];
+    });
+  }
+  function cloudUpsertCase(caseObj){
+    var client = ensureClient();
+    if(!client) return Promise.resolve();
+    return client.rpc("upsert_case", {
+      p_passphrase: cloudConfig.passphrase, p_id: caseObj.id, p_data: caseObj
+    }).then(function(res){ if(res.error) throw res.error; });
+  }
+  function cloudDeleteCase(id){
+    var client = ensureClient();
+    if(!client) return Promise.resolve();
+    return client.rpc("delete_case", {
+      p_passphrase: cloudConfig.passphrase, p_id: id
+    }).then(function(res){ if(res.error) throw res.error; });
+  }
+
+  function startAutoRefresh(){
+    if(refreshTimer) clearInterval(refreshTimer);
+    refreshTimer = setInterval(refreshFromCloud, 20000);
+  }
+
+  function refreshFromCloud(){
+    if(!cloudConfig) return Promise.resolve();
+    setSyncStatus("busy", "更新中…");
+    return cloudListCases().then(function(rows){
+      var serverCases = rows.map(function(r){ return r.data; });
+      serverCases.forEach(function(sc){
+        if(current && sc.id === current.id) return; // don't clobber an in-progress edit
+        var idx = cases.findIndex(function(c){ return c.id === sc.id; });
+        if(idx >= 0) cases[idx] = sc; else cases.push(sc);
+      });
+      cases = cases.filter(function(c){
+        return (current && c.id === current.id) || serverCases.some(function(sc){ return sc.id === c.id; });
+      });
+      saveCases(cases);
+      refreshCaseSelect();
+      setSyncStatus("ok", "共有中（" + cases.length + "件）");
+    }).catch(function(err){
+      setSyncStatus("error", "同期エラー：" + (err && err.message ? err.message : "接続失敗"));
+    });
+  }
+
+  function initCloud(){
+    if(!cloudConfig){ setSyncStatus("", "ローカルのみ"); return; }
+    if(!window.supabase){ setSyncStatus("error", "読み込み失敗（オフライン？）"); return; }
+    setSyncStatus("busy", "接続中…");
+    cloudListCases().then(function(rows){
+      var serverCases = rows.map(function(r){ return r.data; });
+      if(serverCases.length){
+        cases = serverCases;
+        current = cases[0];
+      } else if(cases.length){
+        return Promise.all(cases.map(cloudUpsertCase)).then(function(){
+          current = cases[0];
+        });
+      } else {
+        current = emptyCase();
+        cases = [current];
+        return cloudUpsertCase(current);
+      }
+    }).then(function(){
+      saveCases(cases);
+      refreshCaseSelect();
+      loadFormFromCurrent();
+      setSyncStatus("ok", "共有中（" + cases.length + "件）");
+      startAutoRefresh();
+    }).catch(function(err){
+      setSyncStatus("error", "接続エラー：" + (err && err.message ? err.message : "確認してください"));
+    });
+  }
+
   var cases = loadCases();
   var current;
   if(cases.length){ current = cases[0]; } else { current = emptyCase(); cases.push(current); saveCases(cases); }
@@ -289,7 +443,8 @@
   var el = {};
   ["clientName","staffName","address","ptype","landArea","bldgArea","age","structure","walkMin","station",
    "adjLocation","adjAge","adjOther","comment","caseSelect","compsBody","report",
-   "adjLocationOut","adjAgeOut","adjOtherOut","bldgAreaField"].forEach(function(id){
+   "adjLocationOut","adjAgeOut","adjOtherOut","bldgAreaField",
+   "syncStatus","syncStatusText"].forEach(function(id){
     el[id] = document.getElementById(id);
   });
 
@@ -461,6 +616,19 @@
     if(idx>=0) cases[idx] = current; else cases.push(current);
     saveCases(cases);
     refreshCaseSelect();
+
+    if(cloudConfig){
+      var snapshot = JSON.parse(JSON.stringify(current));
+      clearTimeout(cloudPushTimer);
+      cloudPushTimer = setTimeout(function(){
+        setSyncStatus("busy", "保存中…");
+        cloudUpsertCase(snapshot).then(function(){
+          setSyncStatus("ok", "共有中（" + cases.length + "件）");
+        }).catch(function(err){
+          setSyncStatus("error", "保存エラー：" + (err && err.message ? err.message : "確認してください"));
+        });
+      }, 600);
+    }
   }
 
   // ---- events ----
@@ -519,26 +687,72 @@
     saveCases(cases);
     refreshCaseSelect();
     loadFormFromCurrent();
+    if(cloudConfig){
+      cloudUpsertCase(current).catch(function(err){
+        setSyncStatus("error", "保存エラー：" + (err && err.message ? err.message : "確認してください"));
+      });
+    }
   });
   document.getElementById("deleteCaseBtn").addEventListener("click", function(){
+    var removedId = current.id;
     if(cases.length<=1){
       current = emptyCase();
       cases = [current];
       saveCases(cases);
       refreshCaseSelect();
       loadFormFromCurrent();
-      return;
+    } else {
+      if(!confirm("この案件を削除しますか？")) return;
+      cases = cases.filter(function(c){return c.id!==removedId;});
+      saveCases(cases);
+      current = cases[0];
+      refreshCaseSelect();
+      loadFormFromCurrent();
     }
-    if(!confirm("この案件を削除しますか？")) return;
-    cases = cases.filter(function(c){return c.id!==current.id;});
-    saveCases(cases);
-    current = cases[0];
-    refreshCaseSelect();
-    loadFormFromCurrent();
+    if(cloudConfig){
+      cloudDeleteCase(removedId).catch(function(err){
+        setSyncStatus("error", "削除エラー：" + (err && err.message ? err.message : "確認してください"));
+      });
+    }
   });
   document.getElementById("printBtn").addEventListener("click", function(){ window.print(); });
 
+  document.getElementById("refreshBtn").addEventListener("click", function(){
+    if(!cloudConfig){ alert("共有設定が未接続です。「共有設定」から接続してください。"); return; }
+    refreshFromCloud();
+  });
+
+  document.getElementById("cloudSettingsBtn").addEventListener("click", function(){
+    document.getElementById("cfgUrl").value = cloudConfig ? cloudConfig.url : "";
+    document.getElementById("cfgKey").value = cloudConfig ? cloudConfig.anonKey : "";
+    document.getElementById("cfgPass").value = cloudConfig ? cloudConfig.passphrase : "";
+    document.getElementById("cloudModal").hidden = false;
+  });
+  document.getElementById("cloudCancelBtn").addEventListener("click", function(){
+    document.getElementById("cloudModal").hidden = true;
+  });
+  document.getElementById("cloudDisconnectBtn").addEventListener("click", function(){
+    clearCloudConfig();
+    cloudConfig = null;
+    sbClient = null;
+    if(refreshTimer) clearInterval(refreshTimer);
+    setSyncStatus("", "ローカルのみ");
+    document.getElementById("cloudModal").hidden = true;
+  });
+  document.getElementById("cloudSaveBtn").addEventListener("click", function(){
+    var url = document.getElementById("cfgUrl").value.trim();
+    var key = document.getElementById("cfgKey").value.trim();
+    var pass = document.getElementById("cfgPass").value;
+    if(!url || !key || !pass){ alert("すべての項目を入力してください。"); return; }
+    cloudConfig = { url: url, anonKey: key, passphrase: pass };
+    saveCloudConfig(cloudConfig);
+    sbClient = null;
+    document.getElementById("cloudModal").hidden = true;
+    initCloud();
+  });
+
   refreshCaseSelect();
   loadFormFromCurrent();
+  if(cloudConfig){ initCloud(); } else { setSyncStatus("", "ローカルのみ"); }
 })();
 </script>
