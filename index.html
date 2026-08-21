@@ -1,0 +1,900 @@
+<title>潮不動産</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;600;700;800&family=Zen+Kaku+Gothic+New:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg:#ece7de;
+    --bg-elevated:#f7f4ee;
+    --bg-sunk:#e2ddd2;
+    --ink:#1b2023;
+    --ink-soft:#4b5459;
+    --ink-faint:#7c8388;
+    --accent:#1f6f6b;
+    --accent-ink:#f7f4ee;
+    --accent-soft:#e3ede9;
+    --accent-2:#b5573c;
+    --line:rgba(27,32,35,0.14);
+    --line-strong:rgba(27,32,35,0.28);
+    --shadow:0 20px 50px -25px rgba(20,25,28,0.35);
+
+    --sky-top:#2c4256;
+    --sky-mid:#c8825c;
+    --sky-bottom:#e9b878;
+    --water:#1a3440;
+    --skyline:#141b1f;
+
+    --font-display:"Shippori Mincho","Hiragino Mincho ProN","Yu Mincho",serif;
+    --font-body:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",sans-serif;
+
+    --container:1180px;
+  }
+
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#12171a;
+      --bg-elevated:#1a2124;
+      --bg-sunk:#0d1113;
+      --ink:#ece7de;
+      --ink-soft:#a9b2b4;
+      --ink-faint:#727c7e;
+      --accent:#4fbdb6;
+      --accent-ink:#0e1516;
+      --accent-soft:#1c2d2c;
+      --accent-2:#d97c5d;
+      --line:rgba(236,231,222,0.14);
+      --line-strong:rgba(236,231,222,0.28);
+      --shadow:0 20px 50px -25px rgba(0,0,0,0.6);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#12171a;
+    --bg-elevated:#1a2124;
+    --bg-sunk:#0d1113;
+    --ink:#ece7de;
+    --ink-soft:#a9b2b4;
+    --ink-faint:#727c7e;
+    --accent:#4fbdb6;
+    --accent-ink:#0e1516;
+    --accent-soft:#1c2d2c;
+    --accent-2:#d97c5d;
+    --line:rgba(236,231,222,0.14);
+    --line-strong:rgba(236,231,222,0.28);
+    --shadow:0 20px 50px -25px rgba(0,0,0,0.6);
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto;}
+    *{animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important;}
+  }
+
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:var(--font-body);
+    font-size:16px;
+    line-height:1.75;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  img,svg{display:block; max-width:100%;}
+
+  .wrap{
+    max-width:var(--container);
+    margin:0 auto;
+    padding-inline:clamp(20px, 4vw, 48px);
+  }
+
+  h1,h2,h3,h4{
+    font-family:var(--font-display);
+    font-weight:700;
+    line-height:1.35;
+    margin:0;
+    text-wrap:balance;
+    letter-spacing:0.02em;
+  }
+
+  a{color:inherit;}
+
+  .eyebrow{
+    display:inline-flex;
+    align-items:center;
+    gap:0.6em;
+    font-size:0.78rem;
+    font-weight:700;
+    letter-spacing:0.22em;
+    color:var(--accent);
+    text-transform:uppercase;
+  }
+  .eyebrow::before{
+    content:"";
+    width:22px; height:1px;
+    background:var(--accent);
+  }
+
+  .tabnum{ font-variant-numeric:tabular-nums; }
+
+  /* ---------- header ---------- */
+  header.site{
+    position:sticky; top:0; z-index:50;
+    background:color-mix(in srgb, var(--bg) 78%, transparent);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid transparent;
+    transition:border-color .3s ease, background .3s ease;
+  }
+  header.site.scrolled{
+    border-bottom-color:var(--line);
+    background:color-mix(in srgb, var(--bg) 94%, transparent);
+  }
+  .nav-row{
+    display:flex; align-items:center; justify-content:space-between;
+    padding-block:16px;
+    gap:24px;
+  }
+  .brand{
+    display:flex; align-items:center; gap:12px;
+    font-family:var(--font-display);
+    font-weight:700; font-size:1.25rem;
+    letter-spacing:0.06em;
+    text-decoration:none;
+  }
+  .brand .mark{ width:34px; height:34px; flex:none; }
+  .brand small{
+    display:block;
+    font-family:var(--font-body);
+    font-weight:500;
+    font-size:0.62rem;
+    letter-spacing:0.24em;
+    color:var(--ink-faint);
+  }
+  nav.primary{
+    display:flex; align-items:center; gap:clamp(16px,2.4vw,34px);
+    font-size:0.92rem; font-weight:500;
+  }
+  nav.primary a{
+    text-decoration:none; position:relative; padding-block:4px;
+    color:var(--ink-soft);
+    transition:color .2s ease;
+  }
+  nav.primary a:hover, nav.primary a:focus-visible{ color:var(--ink); }
+  nav.primary a::after{
+    content:""; position:absolute; left:0; right:100%; bottom:0; height:1px;
+    background:var(--accent); transition:right .25s ease;
+  }
+  nav.primary a:hover::after, nav.primary a:focus-visible::after{ right:0; }
+  .nav-side{ display:flex; align-items:center; gap:18px; }
+  .tel{
+    font-family:var(--font-display); font-weight:700; font-size:1.05rem;
+    text-decoration:none; white-space:nowrap;
+  }
+  .tel span{ display:block; font-family:var(--font-body); font-weight:500; font-size:0.62rem; letter-spacing:0.14em; color:var(--ink-faint);}
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    padding:12px 26px;
+    background:var(--accent); color:var(--accent-ink);
+    font-weight:700; font-size:0.9rem; letter-spacing:0.04em;
+    text-decoration:none; border:1px solid var(--accent);
+    border-radius:2px;
+    cursor:pointer;
+    transition:transform .2s ease, box-shadow .2s ease, opacity .2s ease;
+    font-family:var(--font-body);
+  }
+  .btn:hover{ transform:translateY(-2px); box-shadow:var(--shadow); opacity:0.94; }
+  .btn:focus-visible, a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible{
+    outline:2px solid var(--accent); outline-offset:3px;
+  }
+  .btn.ghost{
+    background:transparent; color:var(--ink); border-color:var(--line-strong);
+  }
+  .btn.small{ padding:9px 18px; font-size:0.82rem; }
+
+  .navtoggle{ display:none; background:none; border:none; color:var(--ink); cursor:pointer; padding:6px; }
+
+  /* ---------- hero ---------- */
+  .hero{
+    position:relative;
+    overflow:hidden;
+    background:linear-gradient(180deg, var(--sky-top) 0%, var(--sky-mid) 62%, var(--sky-bottom) 100%);
+    color:#f4ede1;
+    isolation:isolate;
+  }
+  .hero .skyline-svg{
+    position:absolute; inset:0; width:100%; height:100%;
+    z-index:0;
+  }
+  .hero-inner{
+    position:relative; z-index:2;
+    padding-top:clamp(64px, 12vh, 140px);
+    padding-bottom:clamp(140px, 26vh, 260px);
+    display:grid;
+    gap:28px;
+  }
+  .hero-tagline{
+    writing-mode:vertical-rl;
+    position:absolute;
+    right:clamp(12px, 4vw, 56px);
+    top:clamp(70px, 10vh, 120px);
+    font-family:var(--font-display);
+    font-size:1.05rem;
+    letter-spacing:0.5em;
+    color:rgba(244,237,225,0.62);
+    z-index:2;
+  }
+  .hero h1{
+    font-size:clamp(2.6rem, 3.4vw + 1.4rem, 4.6rem);
+    color:#faf5ea;
+    max-width:14ch;
+  }
+  .hero h1 em{
+    font-style:normal;
+    color:var(--sky-bottom);
+  }
+  .hero p.lead{
+    max-width:46ch;
+    font-size:1.08rem;
+    color:rgba(244,237,225,0.86);
+  }
+  .hero-cta{ display:flex; gap:16px; flex-wrap:wrap; margin-top:8px; }
+  .hero .btn.ghost{ border-color:rgba(244,237,225,0.5); color:#faf5ea; }
+
+  .hero-stats{
+    position:relative; z-index:2;
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    border-top:1px solid rgba(244,237,225,0.24);
+  }
+  .hero-stats .stat{
+    padding:22px clamp(20px,4vw,48px);
+    border-right:1px solid rgba(244,237,225,0.24);
+  }
+  .hero-stats .stat:last-child{ border-right:none; }
+  .hero-stats .num{
+    font-family:var(--font-display); font-weight:700;
+    font-size:clamp(1.6rem, 1.6vw + 1rem, 2.4rem);
+    color:#faf5ea;
+  }
+  .hero-stats .label{
+    font-size:0.78rem; letter-spacing:0.08em; color:rgba(244,237,225,0.72);
+    margin-top:4px;
+  }
+
+  /* ---------- section shell ---------- */
+  section{ padding-block:clamp(64px, 9vw, 120px); }
+  .section-head{
+    display:flex; justify-content:space-between; align-items:flex-end; gap:24px;
+    margin-bottom:clamp(36px,5vw,64px);
+    flex-wrap:wrap;
+  }
+  .section-head h2{ font-size:clamp(1.9rem, 1.6vw + 1.2rem, 2.7rem); margin-top:10px; }
+  .section-head p{ max-width:38ch; color:var(--ink-soft); margin:0; }
+
+  .reveal{
+    opacity:0; transform:translateY(18px);
+    transition:opacity .7s ease, transform .7s ease;
+  }
+  .reveal.in{ opacity:1; transform:none; }
+
+  /* ---------- philosophy ---------- */
+  .philosophy{ background:var(--bg-elevated); border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
+  .philosophy .grid{
+    display:grid; grid-template-columns:auto 1fr; gap:clamp(28px,5vw,72px); align-items:start;
+  }
+  .philosophy .vertical{
+    writing-mode:vertical-rl;
+    font-family:var(--font-display);
+    font-size:clamp(1.1rem,1vw+0.8rem,1.5rem);
+    letter-spacing:0.35em;
+    color:var(--accent);
+    padding-block:4px;
+  }
+  .philosophy blockquote{
+    margin:0; font-family:var(--font-display); font-weight:600;
+    font-size:clamp(1.4rem, 1.4vw + 1rem, 2.05rem);
+    line-height:1.7;
+  }
+  .philosophy p.body-text{ margin-top:22px; color:var(--ink-soft); max-width:56ch; }
+
+  /* ---------- features ---------- */
+  .features{ display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--line); border:1px solid var(--line); }
+  .feature{
+    background:var(--bg); padding:clamp(28px,3vw,42px);
+    display:flex; flex-direction:column; gap:16px;
+  }
+  .feature .idx{ font-family:var(--font-display); color:var(--ink-faint); font-size:0.85rem; letter-spacing:0.1em; }
+  .feature .icon{ width:46px; height:46px; color:var(--accent); }
+  .feature h3{ font-size:1.2rem; }
+  .feature p{ color:var(--ink-soft); margin:0; font-size:0.96rem; }
+
+  /* ---------- properties ---------- */
+  .properties{ background:var(--bg); }
+  .prop-grid{
+    display:grid; grid-template-columns:repeat(3,1fr); gap:clamp(18px,2vw,28px);
+  }
+  .prop-card{
+    background:var(--bg-elevated);
+    border:1px solid var(--line);
+    display:flex; flex-direction:column;
+    text-decoration:none; color:var(--ink);
+    transition:transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+    overflow:hidden;
+  }
+  .prop-card:hover{ transform:translateY(-6px); box-shadow:var(--shadow); border-color:var(--line-strong); }
+  .facade{
+    aspect-ratio:4/3; position:relative;
+    background:
+      repeating-linear-gradient(90deg, rgba(0,0,0,0.14) 0 2px, transparent 2px 26px),
+      repeating-linear-gradient(0deg, rgba(0,0,0,0.14) 0 2px, transparent 2px 20px),
+      linear-gradient(160deg, var(--facade-a), var(--facade-b));
+  }
+  .facade::after{
+    content:""; position:absolute; inset:0;
+    background-image:radial-gradient(circle, rgba(255,222,150,0.9) 0 2.5px, transparent 2.6px);
+    background-size:26px 20px;
+    background-position: 4px 5px;
+    opacity:0.85;
+    mix-blend-mode:screen;
+  }
+  .tag-row{ position:absolute; top:12px; left:12px; display:flex; gap:6px; z-index:2; }
+  .tag{
+    font-size:0.7rem; font-weight:700; letter-spacing:0.08em;
+    padding:4px 10px; background:rgba(20,24,26,0.72); color:#f7f4ee;
+  }
+  .tag.sale{ background:var(--accent); color:var(--accent-ink); }
+  .tag.rent{ background:var(--accent-2); color:#fff7f0; }
+  .prop-body{ padding:20px 22px 24px; display:flex; flex-direction:column; gap:10px; flex:1; }
+  .prop-area{ font-size:0.78rem; letter-spacing:0.08em; color:var(--ink-faint); }
+  .prop-name{ font-family:var(--font-display); font-size:1.18rem; font-weight:700; }
+  .prop-meta{ display:flex; gap:14px; font-size:0.84rem; color:var(--ink-soft); flex-wrap:wrap; }
+  .prop-price{ margin-top:auto; padding-top:10px; border-top:1px solid var(--line); display:flex; align-items:baseline; justify-content:space-between; }
+  .prop-price .amount{ font-family:var(--font-display); font-weight:700; font-size:1.3rem; color:var(--accent); }
+  .prop-price .unit{ font-size:0.78rem; color:var(--ink-faint); }
+
+  .properties-foot{ display:flex; justify-content:center; margin-top:clamp(32px,4vw,48px); }
+
+  /* ---------- areas ---------- */
+  .areas{ background:var(--bg-sunk); border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
+  .area-layout{ display:grid; grid-template-columns:1.1fr 1fr; gap:clamp(24px,4vw,56px); align-items:center; }
+  .area-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:1px; background:var(--line); border:1px solid var(--line); }
+  .area-card{ background:var(--bg-elevated); padding:20px 22px; display:flex; flex-direction:column; gap:6px; }
+  .area-card .name{ font-family:var(--font-display); font-weight:700; font-size:1.05rem; }
+  .area-card .name small{ font-family:var(--font-body); font-weight:500; color:var(--ink-faint); font-size:0.72rem; margin-left:6px; }
+  .area-card p{ margin:0; font-size:0.86rem; color:var(--ink-soft); }
+  .bay-illust{ width:100%; height:auto; }
+
+  /* ---------- flow ---------- */
+  .flow{ background:var(--bg); }
+  .flow-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:0; position:relative; }
+  .flow-step{ padding:0 22px 0 0; position:relative; }
+  .flow-step:not(:last-child)::after{
+    content:""; position:absolute; top:26px; right:-2px; width:24px; height:1px; background:var(--line-strong);
+  }
+  .flow-step .num{ font-family:var(--font-display); font-size:2.1rem; font-weight:700; color:var(--accent); }
+  .flow-step h3{ font-size:1.05rem; margin-top:14px; }
+  .flow-step p{ color:var(--ink-soft); font-size:0.88rem; margin-top:8px; }
+
+  /* ---------- company ---------- */
+  .company{ background:var(--bg-elevated); border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
+  .company-grid{ display:grid; grid-template-columns:1fr 1.3fr; gap:clamp(28px,4vw,64px); }
+  dl.info{ display:grid; grid-template-columns:auto 1fr; row-gap:16px; column-gap:24px; font-size:0.94rem; }
+  dl.info dt{ color:var(--ink-faint); font-weight:500; white-space:nowrap; }
+  dl.info dd{ margin:0; color:var(--ink); }
+
+  /* ---------- contact ---------- */
+  .contact{ background:var(--bg); }
+  .contact-grid{ display:grid; grid-template-columns:0.9fr 1.1fr; gap:clamp(28px,4vw,64px); }
+  .contact-side{ display:flex; flex-direction:column; gap:22px; }
+  .contact-method{ display:flex; gap:14px; align-items:flex-start; padding:18px; border:1px solid var(--line); background:var(--bg-elevated); }
+  .contact-method .icon{ width:26px; height:26px; color:var(--accent); flex:none; margin-top:2px; }
+  .contact-method h4{ font-family:var(--font-body); font-weight:700; font-size:0.95rem; margin:0 0 4px; }
+  .contact-method p{ margin:0; color:var(--ink-soft); font-size:0.88rem; }
+
+  form.inquiry{ display:grid; gap:16px; }
+  .form-row{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .field{ display:flex; flex-direction:column; gap:6px; }
+  .field label{ font-size:0.8rem; color:var(--ink-soft); font-weight:500; }
+  .field input, .field select, .field textarea{
+    font-family:var(--font-body); font-size:0.95rem;
+    padding:12px 14px; background:var(--bg-elevated);
+    border:1px solid var(--line-strong); color:var(--ink);
+    border-radius:2px;
+  }
+  .field textarea{ resize:vertical; min-height:110px; }
+  .form-note{ font-size:0.78rem; color:var(--ink-faint); }
+  .form-status{ font-size:0.88rem; color:var(--accent); min-height:1.2em; }
+
+  /* ---------- footer ---------- */
+  footer.site{ background:var(--skyline); color:#e8e2d4; padding-block:56px 28px; }
+  .footer-grid{ display:grid; grid-template-columns:1.4fr repeat(3,1fr); gap:32px; padding-bottom:36px; border-bottom:1px solid rgba(232,226,212,0.16); }
+  .footer-grid h5{ font-size:0.8rem; letter-spacing:0.12em; color:rgba(232,226,212,0.55); margin:0 0 16px; font-weight:600; }
+  .footer-grid ul{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:10px; font-size:0.9rem; }
+  .footer-grid a{ text-decoration:none; color:rgba(232,226,212,0.85); }
+  .footer-grid a:hover{ color:#fff; }
+  .footer-brand p{ color:rgba(232,226,212,0.6); max-width:32ch; font-size:0.88rem; }
+  .footer-bottom{ display:flex; justify-content:space-between; align-items:center; padding-top:24px; font-size:0.78rem; color:rgba(232,226,212,0.5); flex-wrap:wrap; gap:12px; }
+
+  @media (max-width: 920px){
+    nav.primary, .nav-side .tel{ display:none; }
+    .navtoggle{ display:inline-flex; }
+    .hero-stats{ grid-template-columns:1fr; }
+    .hero-stats .stat{ border-right:none; border-bottom:1px solid rgba(244,237,225,0.24); }
+    .hero-stats .stat:last-child{ border-bottom:none; }
+    .philosophy .grid{ grid-template-columns:1fr; }
+    .philosophy .vertical{ writing-mode:horizontal-tb; letter-spacing:0.12em; }
+    .features{ grid-template-columns:1fr; }
+    .prop-grid{ grid-template-columns:repeat(2,1fr); }
+    .area-layout{ grid-template-columns:1fr; }
+    .flow-grid{ grid-template-columns:repeat(2,1fr); row-gap:36px; }
+    .flow-step:nth-child(2)::after{ display:none; }
+    .company-grid{ grid-template-columns:1fr; }
+    .contact-grid{ grid-template-columns:1fr; }
+    .footer-grid{ grid-template-columns:1fr 1fr; }
+  }
+  @media (max-width: 560px){
+    .prop-grid{ grid-template-columns:1fr; }
+    .flow-grid{ grid-template-columns:1fr; }
+    .form-row{ grid-template-columns:1fr; }
+    .footer-grid{ grid-template-columns:1fr; }
+    .hero-tagline{ display:none; }
+    .area-grid{ grid-template-columns:1fr; }
+  }
+</style>
+
+<header class="site" id="siteHeader">
+  <div class="wrap nav-row">
+    <a class="brand" href="#top">
+      <svg class="mark" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <rect width="40" height="40" fill="var(--accent)"/>
+        <path d="M4 24c4-5 8 5 12 0s8-5 12 0 8 5 8 5" stroke="var(--accent-ink)" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <path d="M4 30c4-5 8 5 12 0s8-5 12 0 8 5 8 5" stroke="var(--accent-ink)" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.55"/>
+      </svg>
+      <span>潮不動産<small>SHIO REAL ESTATE&nbsp;/&nbsp;FUKUOKA</small></span>
+    </a>
+    <nav class="primary" aria-label="主要メニュー">
+      <a href="#properties">物件を探す</a>
+      <a href="#service">サービス</a>
+      <a href="#areas">エリアから探す</a>
+      <a href="#company">会社概要</a>
+      <a href="#contact">お問い合わせ</a>
+    </nav>
+    <div class="nav-side">
+      <a class="tel" href="tel:0927310000"><span>お電話でのご相談</span>092-731-0000</a>
+      <a class="btn small" href="#contact">無料相談を予約</a>
+      <button class="navtoggle" aria-label="メニュー" id="navToggle">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+  <!-- ================= HERO ================= -->
+  <section class="hero">
+    <svg class="skyline-svg" viewBox="0 0 1440 760" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <defs>
+        <linearGradient id="waterGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#3a5b63"/>
+          <stop offset="1" stop-color="#12262c"/>
+        </linearGradient>
+      </defs>
+      <!-- distant buildings -->
+      <g fill="#1c2a30" opacity="0.75">
+        <rect x="40" y="430" width="46" height="180"/>
+        <rect x="100" y="400" width="34" height="210"/>
+        <rect x="150" y="450" width="60" height="160"/>
+        <rect x="1180" y="420" width="40" height="190"/>
+        <rect x="1230" y="460" width="55" height="150"/>
+        <rect x="1300" y="400" width="30" height="210"/>
+        <rect x="1345" y="440" width="60" height="170"/>
+      </g>
+      <!-- PayPay dome-ish structure -->
+      <g fill="#141f24">
+        <path d="M230 610 v-60 a90 60 0 0 1 180 0 v60 z"/>
+        <rect x="222" y="605" width="196" height="10"/>
+      </g>
+      <!-- mid buildings -->
+      <g fill="#141f24">
+        <rect x="470" y="360" width="70" height="250"/>
+        <rect x="560" y="300" width="54" height="310"/>
+        <rect x="630" y="400" width="90" height="210"/>
+        <rect x="900" y="380" width="64" height="230"/>
+        <rect x="980" y="330" width="46" height="280"/>
+        <rect x="1040" y="410" width="80" height="200"/>
+      </g>
+      <!-- Fukuoka Tower stylised -->
+      <g fill="#0f171a">
+        <path d="M760 610 L800 200 L840 610 Z"/>
+        <path d="M772 610 L800 260 L828 610 Z" fill="#1a262b"/>
+        <rect x="792" y="180" width="16" height="26"/>
+      </g>
+      <g stroke="#0f171a" stroke-width="3" opacity="0.9">
+        <line x1="765" y1="560" x2="835" y2="560"/>
+        <line x1="770" y1="500" x2="830" y2="500"/>
+        <line x1="777" y1="430" x2="823" y2="430"/>
+        <line x1="784" y1="350" x2="816" y2="350"/>
+      </g>
+      <!-- windows lit -->
+      <g fill="#f4c88a" opacity="0.55">
+        <rect x="475" y="380" width="6" height="8"/><rect x="490" y="400" width="6" height="8"/><rect x="505" y="420" width="6" height="8"/>
+        <rect x="568" y="320" width="6" height="8"/><rect x="584" y="350" width="6" height="8"/><rect x="596" y="380" width="6" height="8"/>
+        <rect x="908" y="400" width="6" height="8"/><rect x="925" y="430" width="6" height="8"/><rect x="940" y="460" width="6" height="8"/>
+        <rect x="990" y="350" width="6" height="8"/><rect x="1002" y="390" width="6" height="8"/><rect x="1012" y="430" width="6" height="8"/>
+      </g>
+      <!-- water -->
+      <rect x="0" y="610" width="1440" height="150" fill="url(#waterGrad)"/>
+      <g stroke="#5c8189" stroke-width="2" opacity="0.4" fill="none">
+        <path d="M0 645 Q60 635 120 645 T240 645 T360 645 T480 645 T600 645 T720 645 T840 645 T960 645 T1080 645 T1200 645 T1320 645 T1440 645"/>
+        <path d="M0 685 Q60 675 120 685 T240 685 T360 685 T480 685 T600 685 T720 685 T840 685 T960 685 T1080 685 T1200 685 T1320 685 T1440 685"/>
+      </g>
+      <!-- light reflections -->
+      <g fill="#f4c88a" opacity="0.3">
+        <rect x="795" y="620" width="10" height="60"/>
+        <rect x="500" y="630" width="6" height="30"/>
+        <rect x="960" y="628" width="6" height="34"/>
+      </g>
+    </svg>
+
+    <div class="hero-tagline" aria-hidden="true">住まいは、暮らしの物語</div>
+
+    <div class="wrap hero-inner">
+      <span class="eyebrow" style="color:var(--sky-bottom)">FUKUOKA CITY / REAL ESTATE</span>
+      <h1>潮が満ちる街で、<br><em>暮らし</em>を設計する。</h1>
+      <p class="lead">博多・天神を拠点に、福岡市内の住まい探しを地域密着でサポート。売買・賃貸・リノベーションまで、暮らしにまつわるすべてを一社でご提案します。</p>
+      <div class="hero-cta">
+        <a class="btn" href="#properties">物件を見る</a>
+        <a class="btn ghost" href="#contact">無料相談を予約する</a>
+      </div>
+    </div>
+
+    <div class="wrap hero-stats">
+      <div class="stat"><div class="num tabnum">3,200<span style="font-size:0.6em;">件+</span></div><div class="label">取扱実績</div></div>
+      <div class="stat"><div class="num tabnum">15<span style="font-size:0.6em;">年</span></div><div class="label">福岡エリアでの地域密着</div></div>
+      <div class="stat"><div class="num tabnum">98<span style="font-size:0.6em;">%</span></div><div class="label">お客様満足度</div></div>
+    </div>
+  </section>
+
+  <!-- ================= PHILOSOPHY ================= -->
+  <section class="philosophy">
+    <div class="wrap grid reveal">
+      <div class="vertical">SHIO&nbsp;/&nbsp;潮不動産の考え方</div>
+      <div>
+        <blockquote>家は箱ではなく、<br>暮らしが満ちていく器だと思う。</blockquote>
+        <p class="body-text">潮の満ち引きが街の表情を変えるように、暮らしもまた少しずつかたちを変えていきます。私たちは「今」だけでなく、その先の暮らしまで見据えて物件をご提案する不動産会社です。博多・天神エリアを中心に蓄積した地域情報と、建築・インテリアの視点を掛け合わせ、一人ひとりに合う住まいを一緒に探します。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FEATURES / SERVICE ================= -->
+  <section id="service">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <div>
+          <span class="eyebrow">WHY SHIO</span>
+          <h2>選ばれる、3つの理由</h2>
+        </div>
+        <p>地域情報・物件セレクト・アフターサポート。福岡での住まい探しを最後まで伴走します。</p>
+      </div>
+      <div class="features reveal">
+        <div class="feature">
+          <span class="idx tabnum">01</span>
+          <svg class="icon" viewBox="0 0 48 48" fill="none"><path d="M24 4C15 4 8 11 8 20c0 12 16 24 16 24s16-12 16-24c0-9-7-16-16-16z" stroke="currentColor" stroke-width="1.6"/><circle cx="24" cy="20" r="6" stroke="currentColor" stroke-width="1.6"/></svg>
+          <h3>エリア特化の情報力</h3>
+          <p>博多区・中央区・早良区を中心に、福岡市内の街の変化を日々ウォッチ。表に出にくい未公開物件の情報もいち早くご案内します。</p>
+        </div>
+        <div class="feature">
+          <span class="idx tabnum">02</span>
+          <svg class="icon" viewBox="0 0 48 48" fill="none"><path d="M6 40V18l18-12 18 12v22H6z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M18 40V26h12v14" stroke="currentColor" stroke-width="1.6"/></svg>
+          <h3>デザイン視点の物件セレクト</h3>
+          <p>建築・インテリアの観点からも物件を評価。間取りだけでなく、光の入り方や素材感まで踏まえてご紹介します。</p>
+        </div>
+        <div class="feature">
+          <span class="idx tabnum">03</span>
+          <svg class="icon" viewBox="0 0 48 48" fill="none"><path d="M8 24h32M24 8v32" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="24" cy="24" r="18" stroke="currentColor" stroke-width="1.6"/></svg>
+          <h3>契約後も続くワンストップ支援</h3>
+          <p>ご契約はゴールではなくスタート。引っ越し、リノベーション、火災保険まで、暮らしの立ち上げまで伴走します。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= PROPERTIES ================= -->
+  <section class="properties" id="properties">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <div>
+          <span class="eyebrow">FEATURED PROPERTIES</span>
+          <h2>注目の物件</h2>
+        </div>
+        <p>福岡市内の売買・賃貸物件から、いま特におすすめの6件をピックアップ。</p>
+      </div>
+
+      <div class="prop-grid reveal">
+        <a class="prop-card" href="#contact" style="--facade-a:#8a6a52;--facade-b:#4f3a2c;">
+          <div class="facade"><div class="tag-row"><span class="tag sale">売買</span></div></div>
+          <div class="prop-body">
+            <div class="prop-area">福岡市中央区大濠</div>
+            <div class="prop-name">THE TOWER 大濠</div>
+            <div class="prop-meta"><span>3LDK</span><span class="tabnum">82.4㎡</span><span>築8年</span></div>
+            <div class="prop-price"><span class="amount tabnum">4,980<span style="font-size:0.6em;">万円</span></span><span class="unit">大濠公園徒歩6分</span></div>
+          </div>
+        </a>
+        <a class="prop-card" href="#contact" style="--facade-a:#3f6e78;--facade-b:#1f3a42;">
+          <div class="facade"><div class="tag-row"><span class="tag sale">売買</span></div></div>
+          <div class="prop-body">
+            <div class="prop-area">福岡市博多区築港本町</div>
+            <div class="prop-name">HAKATA PORT RESIDENCE</div>
+            <div class="prop-meta"><span>2LDK</span><span class="tabnum">65.1㎡</span><span>築3年</span></div>
+            <div class="prop-price"><span class="amount tabnum">3,280<span style="font-size:0.6em;">万円</span></span><span class="unit">博多ふ頭を望む</span></div>
+          </div>
+        </a>
+        <a class="prop-card" href="#contact" style="--facade-a:#7c5b45;--facade-b:#3a2a20;">
+          <div class="facade"><div class="tag-row"><span class="tag sale">売買</span></div></div>
+          <div class="prop-body">
+            <div class="prop-area">福岡市早良区西新</div>
+            <div class="prop-name">早良の丘 テラスハウス</div>
+            <div class="prop-meta"><span>4LDK</span><span class="tabnum">110.2㎡</span><span>新築</span></div>
+            <div class="prop-price"><span class="amount tabnum">5,600<span style="font-size:0.6em;">万円</span></span><span class="unit">庭付き二世帯対応</span></div>
+          </div>
+        </a>
+        <a class="prop-card" href="#contact" style="--facade-a:#5c6a5e;--facade-b:#2b342d;">
+          <div class="facade"><div class="tag-row"><span class="tag rent">賃貸</span></div></div>
+          <div class="prop-body">
+            <div class="prop-area">福岡市中央区天神</div>
+            <div class="prop-name">天神ANNEX</div>
+            <div class="prop-meta"><span>1LDK</span><span class="tabnum">45.0㎡</span><span>駅徒歩3分</span></div>
+            <div class="prop-price"><span class="amount tabnum">12.8<span style="font-size:0.6em;">万円/月</span></span><span class="unit">天神駅直結</span></div>
+          </div>
+        </a>
+        <a class="prop-card" href="#contact" style="--facade-a:#436b7a;--facade-b:#20353e;">
+          <div class="facade"><div class="tag-row"><span class="tag sale">売買</span></div></div>
+          <div class="prop-body">
+            <div class="prop-area">福岡市早良区百道浜</div>
+            <div class="prop-name">百道浜シーサイド</div>
+            <div class="prop-meta"><span>3LDK</span><span class="tabnum">78.6㎡</span><span>築11年</span></div>
+            <div class="prop-price"><span class="amount tabnum">4,350<span style="font-size:0.6em;">万円</span></span><span class="unit">海浜公園まで徒歩4分</span></div>
+          </div>
+        </a>
+        <a class="prop-card" href="#contact" style="--facade-a:#8a5344;--facade-b:#432723;">
+          <div class="facade"><div class="tag-row"><span class="tag rent">賃貸</span></div></div>
+          <div class="prop-body">
+            <div class="prop-area">福岡市博多区博多駅前</div>
+            <div class="prop-name">博多駅前オフィス棟</div>
+            <div class="prop-meta"><span>事業用</span><span class="tabnum">150.0㎡</span><span>駅徒歩2分</span></div>
+            <div class="prop-price"><span class="amount tabnum">45<span style="font-size:0.6em;">万円/月</span></span><span class="unit">博多駅直結ビル</span></div>
+          </div>
+        </a>
+      </div>
+
+      <div class="properties-foot">
+        <a class="btn ghost" href="#contact">すべての物件を見る</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= AREAS ================= -->
+  <section class="areas" id="areas">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <div>
+          <span class="eyebrow">AREA GUIDE</span>
+          <h2>エリアから探す</h2>
+        </div>
+        <p>福岡市7区それぞれの特徴を踏まえてご案内します。</p>
+      </div>
+      <div class="area-layout reveal">
+        <div class="area-grid">
+          <div class="area-card"><div class="name">中央区<small>CHUO</small></div><p>天神・大濠公園を擁する都心エリア。オフィスと住まいが近接。</p></div>
+          <div class="area-card"><div class="name">博多区<small>HAKATA</small></div><p>博多駅を中心に交通利便性が高く、単身・ファミリー双方に人気。</p></div>
+          <div class="area-card"><div class="name">早良区<small>SAWARA</small></div><p>百道浜のシーサイドと西新の商店街、海と暮らしが近いエリア。</p></div>
+          <div class="area-card"><div class="name">東区<small>HIGASHI</small></div><p>香椎・海の中道方面。ファミリー向けの落ち着いた住環境。</p></div>
+          <div class="area-card"><div class="name">南区<small>MINAMI</small></div><p>大型商業施設と閑静な住宅街が共存するベッドタウン。</p></div>
+          <div class="area-card"><div class="name">城南区<small>JONAN</small></div><p>大学が点在する文教エリア。緑が多く落ち着いた雰囲気。</p></div>
+        </div>
+        <svg class="bay-illust" viewBox="0 0 400 320" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <rect width="400" height="320" fill="var(--bg-elevated)"/>
+          <path d="M0 200 Q80 160 160 200 T320 200 T400 190 V320 H0 Z" fill="var(--accent-soft)"/>
+          <path d="M0 230 Q80 200 160 230 T320 225 T400 220 V320 H0 Z" fill="var(--bg-sunk)"/>
+          <g fill="var(--accent)" opacity="0.85">
+            <circle cx="140" cy="150" r="4"/>
+            <circle cx="210" cy="120" r="4"/>
+            <circle cx="260" cy="170" r="4"/>
+            <circle cx="90" cy="180" r="4"/>
+            <circle cx="310" cy="140" r="4"/>
+            <circle cx="180" cy="90" r="4"/>
+          </g>
+          <text x="150" y="55" fill="var(--ink-faint)" font-size="13" font-family="var(--font-body)" letter-spacing="2">HAKATA BAY</text>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FLOW ================= -->
+  <section class="flow">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <div>
+          <span class="eyebrow">HOW IT WORKS</span>
+          <h2>ご成約までの流れ</h2>
+        </div>
+        <p>初回のご相談からお引き渡しまで、平均でおよそ1〜2ヶ月です。</p>
+      </div>
+      <div class="flow-grid reveal">
+        <div class="flow-step"><span class="num tabnum">01</span><h3>ご相談</h3><p>ご希望のエリアや条件、暮らし方をヒアリングします。オンライン相談も可能です。</p></div>
+        <div class="flow-step"><span class="num tabnum">02</span><h3>ご案内・内見</h3><p>条件に合う物件をセレクトし、実際に街の雰囲気ごとご案内します。</p></div>
+        <div class="flow-step"><span class="num tabnum">03</span><h3>ご契約</h3><p>重要事項からご契約まで、専門スタッフが丁寧にサポートします。</p></div>
+        <div class="flow-step"><span class="num tabnum">04</span><h3>お引き渡し・アフター</h3><p>引っ越し・リノベーションのご相談も引き続き承ります。</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= COMPANY ================= -->
+  <section class="company" id="company">
+    <div class="wrap company-grid reveal">
+      <div>
+        <span class="eyebrow">COMPANY</span>
+        <h2 style="margin-top:10px;">会社概要</h2>
+        <p style="color:var(--ink-soft); margin-top:18px;">福岡の街に根ざし、住まいづくりを通じて暮らしを豊かにすることを目指しています。</p>
+      </div>
+      <dl class="info">
+        <dt>社名</dt><dd>潮不動産株式会社</dd>
+        <dt>設立</dt><dd>2011年4月</dd>
+        <dt>資本金</dt><dd>3,000万円</dd>
+        <dt>事業内容</dt><dd>不動産売買仲介・賃貸仲介・リノベーション企画</dd>
+        <dt>免許番号</dt><dd>福岡県知事(3)第XXXXX号</dd>
+        <dt>所在地</dt><dd>〒810-0001 福岡県福岡市中央区天神二丁目X-X 潮不動産ビル4F</dd>
+        <dt>電話番号</dt><dd>092-731-0000</dd>
+        <dt>営業時間</dt><dd>9:30〜18:30(水曜定休)</dd>
+      </dl>
+    </div>
+  </section>
+
+  <!-- ================= CONTACT ================= -->
+  <section class="contact" id="contact">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <div>
+          <span class="eyebrow">CONTACT</span>
+          <h2>お問い合わせ</h2>
+        </div>
+        <p>物件のご相談、査定のご依頼など、お気軽にご連絡ください。</p>
+      </div>
+      <div class="contact-grid reveal">
+        <div class="contact-side">
+          <div class="contact-method">
+            <svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M4 5c0-.6.4-1 1-1h3l2 5-2 1.5a12 12 0 0 0 5.5 5.5L15 14l5 2v3c0 .6-.4 1-1 1C10.6 20 4 13.4 4 5z" stroke="currentColor" stroke-width="1.5"/></svg>
+            <div><h4>お電話でのご相談</h4><p>092-731-0000<br>9:30〜18:30(水曜定休)</p></div>
+          </div>
+          <div class="contact-method">
+            <svg class="icon" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M4 6.5l8 6 8-6" stroke="currentColor" stroke-width="1.5"/></svg>
+            <div><h4>メールでのお問い合わせ</h4><p>info@shio-realestate.example</p></div>
+          </div>
+          <div class="contact-method">
+            <svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M4 20l1.4-4.2A8 8 0 1 1 9 18.6L4 20z" stroke="currentColor" stroke-width="1.5"/></svg>
+            <div><h4>LINEで相談する</h4><p>お友だち登録から気軽にご相談いただけます</p></div>
+          </div>
+        </div>
+
+        <form class="inquiry" id="inquiryForm">
+          <div class="form-row">
+            <div class="field"><label for="f-name">お名前</label><input id="f-name" name="name" type="text" required autocomplete="name" placeholder="福岡 太郎"></div>
+            <div class="field"><label for="f-tel">電話番号</label><input id="f-tel" name="tel" type="tel" autocomplete="tel" placeholder="090-0000-0000"></div>
+          </div>
+          <div class="field"><label for="f-mail">メールアドレス</label><input id="f-mail" name="email" type="email" required autocomplete="email" placeholder="you@example.com"></div>
+          <div class="field">
+            <label for="f-type">ご相談内容</label>
+            <select id="f-type" name="type">
+              <option>物件購入について</option>
+              <option>賃貸物件について</option>
+              <option>売却・査定について</option>
+              <option>リノベーションについて</option>
+              <option>その他</option>
+            </select>
+          </div>
+          <div class="field"><label for="f-msg">ご相談内容の詳細</label><textarea id="f-msg" name="message" placeholder="ご希望のエリアや条件などをご記入ください"></textarea></div>
+          <p class="form-note">※これはデモページのフォームです。送信は実際には行われません。</p>
+          <div style="display:flex; align-items:center; gap:18px; flex-wrap:wrap;">
+            <button class="btn" type="submit">送信する</button>
+            <span class="form-status" id="formStatus" role="status"></span>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site">
+  <div class="wrap footer-grid">
+    <div class="footer-brand">
+      <a class="brand" href="#top" style="color:#f2ece0;">
+        <svg class="mark" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <rect width="40" height="40" fill="var(--accent)"/>
+          <path d="M4 24c4-5 8 5 12 0s8-5 12 0 8 5 8 5" stroke="var(--accent-ink)" stroke-width="2" fill="none" stroke-linecap="round"/>
+        </svg>
+        潮不動産
+      </a>
+      <p>福岡市内の住まい探しを、地域密着でサポートする不動産会社です。</p>
+    </div>
+    <div>
+      <h5>MENU</h5>
+      <ul>
+        <li><a href="#properties">物件を探す</a></li>
+        <li><a href="#service">サービス</a></li>
+        <li><a href="#areas">エリアから探す</a></li>
+        <li><a href="#company">会社概要</a></li>
+      </ul>
+    </div>
+    <div>
+      <h5>SERVICE</h5>
+      <ul>
+        <li><a href="#contact">売買仲介</a></li>
+        <li><a href="#contact">賃貸仲介</a></li>
+        <li><a href="#contact">リノベーション</a></li>
+        <li><a href="#contact">売却査定</a></li>
+      </ul>
+    </div>
+    <div>
+      <h5>CONTACT</h5>
+      <ul>
+        <li>092-731-0000</li>
+        <li>info@shio-realestate.example</li>
+        <li>福岡市中央区天神二丁目X-X</li>
+      </ul>
+    </div>
+  </div>
+  <div class="wrap footer-bottom">
+    <span>© 2026 SHIO REAL ESTATE Co., Ltd.</span>
+    <span>宅地建物取引業 福岡県知事(3)第XXXXX号</span>
+  </div>
+</footer>
+
+<script>
+  var header = document.getElementById('siteHeader');
+  window.addEventListener('scroll', function(){
+    header.classList.toggle('scrolled', window.scrollY > 8);
+  }, { passive: true });
+
+  var toggle = document.getElementById('navToggle');
+  var nav = document.querySelector('nav.primary');
+  toggle.addEventListener('click', function(){
+    var open = nav.style.display === 'flex';
+    nav.style.display = open ? 'none' : 'flex';
+    nav.style.flexDirection = 'column';
+    nav.style.position = 'absolute';
+    nav.style.top = '64px';
+    nav.style.left = '0';
+    nav.style.right = '0';
+    nav.style.padding = '20px 24px';
+    nav.style.background = 'var(--bg)';
+    nav.style.borderBottom = '1px solid var(--line)';
+  });
+  var mq = window.matchMedia('(min-width: 921px)');
+  mq.addEventListener('change', function(e){
+    if (e.matches) { nav.removeAttribute('style'); }
+  });
+
+  var prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var revealEls = document.querySelectorAll('.reveal');
+  if (prefersReduced || !('IntersectionObserver' in window)) {
+    revealEls.forEach(function(el){ el.classList.add('in'); });
+  } else {
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if (entry.isIntersecting) {
+          entry.target.classList.add('in');
+          io.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.14 });
+    revealEls.forEach(function(el){ io.observe(el); });
+  }
+
+  var form = document.getElementById('inquiryForm');
+  var status = document.getElementById('formStatus');
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    status.textContent = 'ご入力ありがとうございます。デモのため実際の送信は行われません。';
+  });
+</script>
