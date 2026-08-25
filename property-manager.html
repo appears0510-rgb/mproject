@@ -1,0 +1,795 @@
+<title>物件管理 | TAKAHARA不動産</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;600;700;800&family=Zen+Kaku+Gothic+New:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg:#ece7de;
+    --bg-elevated:#f7f4ee;
+    --bg-sunk:#e2ddd2;
+    --ink:#1b2023;
+    --ink-soft:#4b5459;
+    --ink-faint:#7c8388;
+    --accent:#1f6f6b;
+    --accent-ink:#f7f4ee;
+    --accent-soft:#e3ede9;
+    --accent-2:#b5573c;
+    --line:rgba(27,32,35,0.14);
+    --line-strong:rgba(27,32,35,0.28);
+    --shadow:0 20px 50px -25px rgba(20,25,28,0.35);
+    --font-display:"Shippori Mincho","Hiragino Mincho ProN","Yu Mincho",serif;
+    --font-body:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#12171a; --bg-elevated:#1a2124; --bg-sunk:#0d1113;
+      --ink:#ece7de; --ink-soft:#a9b2b4; --ink-faint:#727c7e;
+      --accent:#4fbdb6; --accent-ink:#0e1516; --accent-soft:#1c2d2c; --accent-2:#d97c5d;
+      --line:rgba(236,231,222,0.14); --line-strong:rgba(236,231,222,0.28);
+      --shadow:0 20px 50px -25px rgba(0,0,0,0.6);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#12171a; --bg-elevated:#1a2124; --bg-sunk:#0d1113;
+    --ink:#ece7de; --ink-soft:#a9b2b4; --ink-faint:#727c7e;
+    --accent:#4fbdb6; --accent-ink:#0e1516; --accent-soft:#1c2d2c; --accent-2:#d97c5d;
+    --line:rgba(236,231,222,0.14); --line-strong:rgba(236,231,222,0.28);
+    --shadow:0 20px 50px -25px rgba(0,0,0,0.6);
+  }
+
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:var(--font-body); font-size:15px; line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+    display:flex; flex-direction:column;
+  }
+  h1,h2,h3{ font-family:var(--font-display); font-weight:700; margin:0; }
+  a{ color:inherit; }
+  button, input, select, textarea{ font-family:var(--font-body); }
+  ::selection{ background:var(--accent); color:var(--accent-ink); }
+
+  /* ---------- header ---------- */
+  header.app{
+    display:flex; align-items:center; justify-content:space-between; gap:16px;
+    padding:14px clamp(16px,3vw,32px);
+    border-bottom:1px solid var(--line);
+    background:var(--bg-elevated);
+    flex-wrap:wrap;
+  }
+  .brand{ display:flex; align-items:center; gap:10px; text-decoration:none; }
+  .brand .mark{ width:28px; height:28px; flex:none; }
+  .brand-text{ font-family:var(--font-display); font-weight:700; font-size:1.05rem; }
+  .brand-text small{ display:block; font-family:var(--font-body); font-weight:500; font-size:0.62rem; letter-spacing:0.16em; color:var(--ink-faint); }
+  .header-actions{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    padding:10px 20px; background:var(--accent); color:var(--accent-ink);
+    font-weight:700; font-size:0.86rem; letter-spacing:0.02em;
+    text-decoration:none; border:1px solid var(--accent); border-radius:3px;
+    cursor:pointer; transition:transform .15s ease, box-shadow .15s ease, opacity .15s ease;
+  }
+  .btn:hover{ transform:translateY(-1px); box-shadow:var(--shadow); opacity:0.94; }
+  .btn.ghost{ background:transparent; color:var(--ink); border-color:var(--line-strong); }
+  .btn.danger{ background:transparent; color:var(--accent-2); border-color:var(--accent-2); }
+  .btn.small{ padding:7px 14px; font-size:0.8rem; }
+  .btn:disabled{ opacity:0.45; cursor:not-allowed; transform:none; box-shadow:none; }
+  .btn:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible{
+    outline:2px solid var(--accent); outline-offset:2px;
+  }
+
+  /* ---------- toolbar ---------- */
+  .toolbar{
+    display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+    padding:14px clamp(16px,3vw,32px);
+    border-bottom:1px solid var(--line);
+    background:var(--bg);
+  }
+  .toolbar .search{ position:relative; flex:1 1 240px; min-width:180px; }
+  .toolbar .search input{
+    width:100%; padding:9px 12px 9px 34px; border:1px solid var(--line-strong);
+    background:var(--bg-elevated); color:var(--ink); border-radius:3px; font-size:0.88rem;
+  }
+  .toolbar .search svg{ position:absolute; left:10px; top:50%; transform:translateY(-50%); width:16px; height:16px; color:var(--ink-faint); }
+  .toolbar select{
+    padding:9px 10px; border:1px solid var(--line-strong); background:var(--bg-elevated);
+    color:var(--ink); border-radius:3px; font-size:0.86rem;
+  }
+  .count-pill{ font-size:0.8rem; color:var(--ink-faint); white-space:nowrap; }
+
+  /* ---------- main ---------- */
+  main{ flex:1; padding:20px clamp(16px,3vw,32px) 60px; position:relative; }
+
+  .dropzone{
+    border:1.5px dashed var(--line-strong); border-radius:6px;
+    padding:28px; text-align:center; color:var(--ink-faint);
+    margin-bottom:24px; transition:border-color .2s ease, background .2s ease;
+    font-size:0.88rem;
+  }
+  .dropzone.active{ border-color:var(--accent); background:var(--accent-soft); color:var(--ink); }
+  .dropzone strong{ color:var(--accent); }
+
+  .grid{
+    display:grid; grid-template-columns:repeat(auto-fill, minmax(230px,1fr)); gap:18px;
+  }
+  .card{
+    background:var(--bg-elevated); border:1px solid var(--line); border-radius:6px;
+    overflow:hidden; cursor:pointer; text-align:left;
+    display:flex; flex-direction:column;
+    transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+    padding:0; color:inherit; font:inherit;
+  }
+  .card:hover, .card:focus-visible{ transform:translateY(-4px); box-shadow:var(--shadow); border-color:var(--line-strong); }
+  .card-thumb{
+    aspect-ratio:4/3; background:var(--bg-sunk); position:relative; overflow:hidden;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .card-thumb img{ width:100%; height:100%; object-fit:cover; object-position:top; display:block; }
+  .card-thumb .noimg{ color:var(--ink-faint); font-size:0.78rem; }
+  .card-tag{
+    position:absolute; top:8px; left:8px; font-size:0.68rem; font-weight:700;
+    letter-spacing:0.05em; padding:3px 8px; border-radius:2px;
+    background:rgba(20,24,26,0.72); color:#f7f4ee;
+  }
+  .card-tag.sale{ background:var(--accent); color:var(--accent-ink); }
+  .card-tag.rent{ background:var(--accent-2); color:#fff7f0; }
+  .card-body{ padding:14px 16px 16px; display:flex; flex-direction:column; gap:6px; flex:1; }
+  .card-addr{ font-size:0.72rem; letter-spacing:0.03em; color:var(--ink-faint); }
+  .card-title{ font-family:var(--font-display); font-weight:700; font-size:1.02rem; }
+  .card-meta{ display:flex; gap:10px; flex-wrap:wrap; font-size:0.78rem; color:var(--ink-soft); }
+  .card-foot{ margin-top:auto; padding-top:8px; border-top:1px solid var(--line); display:flex; align-items:baseline; justify-content:space-between; gap:8px; }
+  .card-price{ font-family:var(--font-display); font-weight:700; color:var(--accent); font-size:1.02rem; }
+  .card-source{ font-size:0.7rem; color:var(--ink-faint); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:40%; }
+
+  .empty-state{
+    text-align:center; padding:60px 20px; color:var(--ink-faint);
+  }
+  .empty-state h2{ font-size:1.3rem; color:var(--ink-soft); margin-bottom:10px; }
+
+  /* ---------- toast ---------- */
+  .toast{
+    position:fixed; bottom:20px; left:50%; transform:translateX(-50%) translateY(20px);
+    background:var(--ink); color:var(--bg-elevated); padding:10px 20px; border-radius:4px;
+    font-size:0.85rem; opacity:0; pointer-events:none; transition:opacity .25s ease, transform .25s ease;
+    z-index:200; max-width:90vw; text-align:center;
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+  /* ---------- detail overlay ---------- */
+  .overlay{
+    position:fixed; inset:0; background:rgba(10,12,13,0.55); z-index:100;
+    display:flex; align-items:stretch; justify-content:flex-end;
+    opacity:0; pointer-events:none; transition:opacity .2s ease;
+  }
+  .overlay.show{ opacity:1; pointer-events:auto; }
+  .detail{
+    background:var(--bg); width:min(1100px, 100%); height:100%;
+    display:flex; flex-direction:column;
+    transform:translateX(24px); transition:transform .25s ease;
+    box-shadow:-10px 0 40px rgba(0,0,0,0.25);
+  }
+  .overlay.show .detail{ transform:translateX(0); }
+  .detail-head{
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    padding:14px 20px; border-bottom:1px solid var(--line); background:var(--bg-elevated);
+  }
+  .detail-head h2{ font-size:1.05rem; }
+  .detail-body{
+    flex:1; overflow:auto; display:grid; grid-template-columns:340px 1fr; gap:0;
+  }
+  .detail-form{
+    padding:20px; border-right:1px solid var(--line); overflow:auto;
+    display:flex; flex-direction:column; gap:14px;
+  }
+  .field{ display:flex; flex-direction:column; gap:5px; }
+  .field label{ font-size:0.76rem; color:var(--ink-soft); font-weight:500; }
+  .field input, .field select, .field textarea{
+    padding:9px 11px; border:1px solid var(--line-strong); background:var(--bg-elevated);
+    color:var(--ink); border-radius:3px; font-size:0.88rem;
+  }
+  .field textarea{ resize:vertical; min-height:70px; }
+  .field-row{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .detail-viewer{ display:flex; flex-direction:column; background:var(--bg-sunk); }
+  .viewer-bar{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding:10px 16px; border-bottom:1px solid var(--line); font-size:0.8rem; color:var(--ink-soft);
+    flex-wrap:wrap;
+  }
+  .viewer-bar .fname{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .detail-viewer iframe{ flex:1; border:none; width:100%; background:#525659; }
+  .detail-actions{ display:flex; gap:10px; flex-wrap:wrap; margin-top:6px; }
+  .save-hint{ font-size:0.74rem; color:var(--ink-faint); }
+
+  @media (max-width: 860px){
+    .detail-body{ grid-template-columns:1fr; grid-auto-rows:min-content 60vh; }
+    .detail-form{ border-right:none; border-bottom:1px solid var(--line); }
+  }
+  @media (max-width: 560px){
+    .field-row{ grid-template-columns:1fr; }
+    .detail{ width:100%; }
+  }
+</style>
+
+<header class="app">
+  <a class="brand" href="index.html">
+    <svg class="mark" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <rect width="40" height="40" fill="var(--accent)"/>
+      <path d="M4 24c4-5 8 5 12 0s8-5 12 0 8 5 8 5" stroke="var(--accent-ink)" stroke-width="2" fill="none" stroke-linecap="round"/>
+    </svg>
+    <span class="brand-text">TAKAHARA不動産<small>物件管理ツール(社内用)</small></span>
+  </a>
+  <div class="header-actions">
+    <input type="file" id="fileInput" accept="application/pdf" multiple hidden>
+    <button class="btn" id="importBtn">PDFを取り込む</button>
+  </div>
+</header>
+
+<div class="toolbar">
+  <div class="search">
+    <svg viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.6"/><path d="M20 20l-4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+    <input type="text" id="searchInput" placeholder="物件名・住所・取込元などで検索">
+  </div>
+  <select id="dealFilter">
+    <option value="">すべての種別</option>
+    <option value="sale">売買</option>
+    <option value="rent">賃貸</option>
+    <option value="unknown">種別未設定</option>
+  </select>
+  <select id="sortSelect">
+    <option value="new">取込日時が新しい順</option>
+    <option value="old">取込日時が古い順</option>
+    <option value="price-asc">価格が低い順</option>
+    <option value="price-desc">価格が高い順</option>
+    <option value="area-desc">面積が広い順</option>
+  </select>
+  <span class="count-pill" id="countPill"></span>
+</div>
+
+<main>
+  <div class="dropzone" id="dropzone">
+    ここにPDFファイルをドラッグ&ドロップ、または <strong>「PDFを取り込む」</strong> ボタンから選択してください。取り込んだPDFから住所・価格・間取りなどを自動抽出し、一覧に追加します。
+  </div>
+
+  <div id="listArea"></div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<div class="overlay" id="overlay">
+  <div class="detail">
+    <div class="detail-head">
+      <h2 id="detailTitle">物件詳細</h2>
+      <button class="btn ghost small" id="closeDetail">閉じる ✕</button>
+    </div>
+    <div class="detail-body">
+      <div class="detail-form" id="detailForm">
+        <div class="field">
+          <label for="f-title">物件名</label>
+          <input id="f-title" type="text" placeholder="例: THE TOWER 大濠">
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="f-deal">種別</label>
+            <select id="f-deal">
+              <option value="sale">売買</option>
+              <option value="rent">賃貸</option>
+              <option value="unknown">未設定</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="f-price">価格・賃料</label>
+            <input id="f-price" type="text" placeholder="例: 4,980万円 / 8.5万円">
+          </div>
+        </div>
+        <div class="field">
+          <label for="f-address">所在地</label>
+          <input id="f-address" type="text" placeholder="例: 福岡市中央区大濠1丁目">
+        </div>
+        <div class="field">
+          <label for="f-transport">交通</label>
+          <input id="f-transport" type="text" placeholder="例: 地下鉄空港線「大濠公園」徒歩6分">
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="f-layout">間取り</label>
+            <input id="f-layout" type="text" placeholder="例: 3LDK">
+          </div>
+          <div class="field">
+            <label for="f-area">専有面積</label>
+            <input id="f-area" type="text" placeholder="例: 82.4㎡">
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="f-buildyear">築年</label>
+            <input id="f-buildyear" type="text" placeholder="例: 築8年 / 新築">
+          </div>
+          <div class="field">
+            <label for="f-source">取込元</label>
+            <input id="f-source" type="text" placeholder="例: 〇〇不動産 / △△ポータル">
+          </div>
+        </div>
+        <div class="field">
+          <label for="f-notes">メモ</label>
+          <textarea id="f-notes" placeholder="自由メモ"></textarea>
+        </div>
+        <div class="detail-actions">
+          <button class="btn small" id="saveBtn">保存する</button>
+          <button class="btn danger small" id="deleteBtn">削除する</button>
+        </div>
+        <span class="save-hint" id="saveHint"></span>
+      </div>
+      <div class="detail-viewer">
+        <div class="viewer-bar">
+          <span class="fname" id="viewerFilename"></span>
+          <a class="btn ghost small" id="openNewTab" target="_blank" rel="noopener">別タブで開く</a>
+        </div>
+        <iframe id="pdfFrame" title="PDFプレビュー"></iframe>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="vendor/pdfjs/pdf.min.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  if (window.pdfjsLib) {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = "vendor/pdfjs/pdf.worker.min.js";
+  }
+
+  /* ---------------- IndexedDB helper ---------------- */
+  var DB_NAME = "takahara-property-manager";
+  var DB_VERSION = 1;
+  var dbPromise = new Promise(function(resolve, reject){
+    var req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = function(){
+      var db = req.result;
+      if (!db.objectStoreNames.contains("properties")) {
+        db.createObjectStore("properties", { keyPath: "id", autoIncrement: true });
+      }
+      if (!db.objectStoreNames.contains("files")) {
+        db.createObjectStore("files", { keyPath: "id", autoIncrement: true });
+      }
+    };
+    req.onsuccess = function(){ resolve(req.result); };
+    req.onerror = function(){ reject(req.error); };
+  });
+
+  function tx(storeNames, mode){
+    return dbPromise.then(function(db){ return db.transaction(storeNames, mode); });
+  }
+  function reqToPromise(req){
+    return new Promise(function(resolve, reject){
+      req.onsuccess = function(){ resolve(req.result); };
+      req.onerror = function(){ reject(req.error); };
+    });
+  }
+
+  function addFile(blob){
+    return tx(["files"], "readwrite").then(function(t){
+      return reqToPromise(t.objectStore("files").add({ blob: blob }));
+    });
+  }
+  function getFile(id){
+    return tx(["files"], "readonly").then(function(t){
+      return reqToPromise(t.objectStore("files").get(id));
+    });
+  }
+  function deleteFile(id){
+    return tx(["files"], "readwrite").then(function(t){
+      return reqToPromise(t.objectStore("files").delete(id));
+    });
+  }
+  function addProperty(rec){
+    return tx(["properties"], "readwrite").then(function(t){
+      return reqToPromise(t.objectStore("properties").add(rec));
+    });
+  }
+  function putProperty(rec){
+    return tx(["properties"], "readwrite").then(function(t){
+      return reqToPromise(t.objectStore("properties").put(rec));
+    });
+  }
+  function deleteProperty(id){
+    return tx(["properties"], "readwrite").then(function(t){
+      return reqToPromise(t.objectStore("properties").delete(id));
+    });
+  }
+  function getAllProperties(){
+    return tx(["properties"], "readonly").then(function(t){
+      return reqToPromise(t.objectStore("properties").getAll());
+    });
+  }
+
+  /* ---------------- state ---------------- */
+  var properties = [];
+  var currentDetailId = null;
+  var currentObjectUrl = null;
+
+  var listArea = document.getElementById("listArea");
+  var dropzone = document.getElementById("dropzone");
+  var fileInput = document.getElementById("fileInput");
+  var importBtn = document.getElementById("importBtn");
+  var searchInput = document.getElementById("searchInput");
+  var dealFilter = document.getElementById("dealFilter");
+  var sortSelect = document.getElementById("sortSelect");
+  var countPill = document.getElementById("countPill");
+  var toastEl = document.getElementById("toast");
+  var overlay = document.getElementById("overlay");
+
+  function showToast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add("show");
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(function(){ toastEl.classList.remove("show"); }, 2600);
+  }
+
+  function escapeHtml(s){
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
+      return { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c];
+    });
+  }
+
+  function parseNumeric(str){
+    if (!str) return null;
+    var m = String(str).replace(/[,，]/g, "").match(/[0-9]+(\.[0-9]+)?/);
+    return m ? parseFloat(m[0]) : null;
+  }
+
+  /* ---------------- PDF processing ---------------- */
+  function extractFieldsFromText(text){
+    var fields = {};
+    var norm = text.replace(/\r/g, "");
+
+    var dealType = "unknown";
+    if (/賃料|賃貸/.test(norm)) dealType = "rent";
+    if (/価格|売買|販売価格/.test(norm)) dealType = "sale";
+    fields.dealType = dealType;
+
+    var priceMatch =
+      norm.match(/(?:販売価格|価格)[\s:：]*([0-9,，]+\s*万円)/) ||
+      norm.match(/賃料[\s:：]*([0-9,，]+(?:\.[0-9]+)?\s*万?円)/) ||
+      norm.match(/([0-9,，]{2,}\s*万円)/);
+    if (priceMatch) fields.price = priceMatch[1].trim();
+
+    var addrMatch = norm.match(/所在地[\s:：]*([^\n]+)/);
+    if (addrMatch) fields.address = addrMatch[1].trim();
+
+    var transportMatch = norm.match(/(?:交通|最寄駅)[\s:：]*([^\n]+)/);
+    if (transportMatch) fields.transport = transportMatch[1].trim();
+
+    var layoutMatch = norm.match(/([1-9][SLDKsldk]{1,4})/);
+    if (layoutMatch) fields.layout = layoutMatch[1].toUpperCase();
+
+    var areaMatch = norm.match(/(?:専有面積|建物面積|面積)[\s:：]*([0-9]+(?:\.[0-9]+)?\s*㎡)/);
+    if (areaMatch) fields.area = areaMatch[1].trim();
+
+    var buildYearMatch = norm.match(/築年月?[\s:：]*([^\n、,，]{2,20})/) || norm.match(/(新築)/);
+    if (buildYearMatch) fields.buildYear = buildYearMatch[1].trim();
+
+    var titleMatch = norm.match(/(?:物件名|マンション名|建物名)[\s:：]*([^\n]+)/);
+    if (titleMatch) fields.title = titleMatch[1].trim();
+
+    return fields;
+  }
+
+  function renderThumbnail(pdf){
+    return pdf.getPage(1).then(function(page){
+      var viewport = page.getViewport({ scale: 1 });
+      var targetWidth = 320;
+      var scale = targetWidth / viewport.width;
+      var scaledViewport = page.getViewport({ scale: scale });
+      var canvas = document.createElement("canvas");
+      canvas.width = scaledViewport.width;
+      canvas.height = scaledViewport.height;
+      var ctx = canvas.getContext("2d");
+      return page.render({ canvasContext: ctx, viewport: scaledViewport }).promise.then(function(){
+        return canvas.toDataURL("image/jpeg", 0.75);
+      });
+    });
+  }
+
+  function itemsToText(items){
+    var lines = [];
+    var currentLine = "";
+    items.forEach(function(item){
+      if (typeof item.str !== "string") return;
+      currentLine += item.str;
+      if (item.hasEOL){
+        lines.push(currentLine);
+        currentLine = "";
+      }
+    });
+    if (currentLine) lines.push(currentLine);
+    return lines.join("\n");
+  }
+
+  function extractAllText(pdf){
+    var maxPages = Math.min(pdf.numPages, 5);
+    var pagePromises = [];
+    for (var i = 1; i <= maxPages; i++){
+      pagePromises.push(pdf.getPage(i).then(function(page){
+        return page.getTextContent().then(function(tc){
+          return itemsToText(tc.items);
+        });
+      }));
+    }
+    return Promise.all(pagePromises).then(function(texts){ return texts.join("\n"); });
+  }
+
+  function processPdfFile(file){
+    return file.arrayBuffer().then(function(buf){
+      return addFile(new Blob([buf], { type: "application/pdf" })).then(function(fileId){
+        var loadingBuf = buf.slice(0);
+        return pdfjsLib.getDocument({ data: loadingBuf }).promise.then(function(pdf){
+          return Promise.all([renderThumbnail(pdf), extractAllText(pdf)]).then(function(results){
+            var thumb = results[0];
+            var text = results[1];
+            var fields = extractFieldsFromText(text);
+            var rec = {
+              fileId: fileId,
+              filename: file.name,
+              title: fields.title || file.name.replace(/\.pdf$/i, ""),
+              dealType: fields.dealType || "unknown",
+              price: fields.price || "",
+              address: fields.address || "",
+              transport: fields.transport || "",
+              layout: fields.layout || "",
+              area: fields.area || "",
+              buildYear: fields.buildYear || "",
+              source: "",
+              notes: "",
+              thumb: thumb,
+              createdAt: Date.now()
+            };
+            return addProperty(rec);
+          });
+        }).catch(function(err){
+          console.error("PDF解析に失敗しました", err);
+          var rec = {
+            fileId: fileId,
+            filename: file.name,
+            title: file.name.replace(/\.pdf$/i, ""),
+            dealType: "unknown",
+            price: "", address: "", transport: "", layout: "", area: "", buildYear: "",
+            source: "", notes: "", thumb: null,
+            createdAt: Date.now()
+          };
+          return addProperty(rec);
+        });
+      });
+    });
+  }
+
+  function importFiles(fileList){
+    var files = Array.prototype.filter.call(fileList, function(f){
+      return f.type === "application/pdf" || /\.pdf$/i.test(f.name);
+    });
+    if (!files.length){
+      showToast("PDFファイルを選択してください。");
+      return;
+    }
+    showToast(files.length + "件のPDFを取り込んでいます…");
+    var chain = files.reduce(function(p, f){
+      return p.then(function(){ return processPdfFile(f); });
+    }, Promise.resolve());
+    chain.then(function(){
+      return loadProperties();
+    }).then(function(){
+      showToast(files.length + "件の物件を取り込みました。");
+    }).catch(function(err){
+      console.error(err);
+      showToast("取り込み中にエラーが発生しました。");
+    });
+  }
+
+  /* ---------------- rendering ---------------- */
+  function dealLabel(type){
+    if (type === "sale") return "売買";
+    if (type === "rent") return "賃貸";
+    return "未設定";
+  }
+
+  function getFilteredSorted(){
+    var q = searchInput.value.trim().toLowerCase();
+    var deal = dealFilter.value;
+    var sort = sortSelect.value;
+
+    var list = properties.filter(function(p){
+      if (deal && p.dealType !== deal) return false;
+      if (!q) return true;
+      var hay = [p.title, p.address, p.transport, p.source, p.notes, p.filename].join(" ").toLowerCase();
+      return hay.indexOf(q) !== -1;
+    });
+
+    list = list.slice();
+    if (sort === "new") list.sort(function(a,b){ return b.createdAt - a.createdAt; });
+    else if (sort === "old") list.sort(function(a,b){ return a.createdAt - b.createdAt; });
+    else if (sort === "price-asc") list.sort(function(a,b){ return (parseNumeric(a.price) || Infinity) - (parseNumeric(b.price) || Infinity); });
+    else if (sort === "price-desc") list.sort(function(a,b){ return (parseNumeric(b.price) || -Infinity) - (parseNumeric(a.price) || -Infinity); });
+    else if (sort === "area-desc") list.sort(function(a,b){ return (parseNumeric(b.area) || -Infinity) - (parseNumeric(a.area) || -Infinity); });
+
+    return list;
+  }
+
+  function renderList(){
+    var list = getFilteredSorted();
+    countPill.textContent = properties.length + "件中 " + list.length + "件を表示";
+
+    if (!properties.length){
+      listArea.innerHTML = '<div class="empty-state"><h2>まだ物件がありません</h2><p>PDFの物件概要書を取り込むと、ここに一覧が表示されます。</p></div>';
+      return;
+    }
+    if (!list.length){
+      listArea.innerHTML = '<div class="empty-state"><h2>該当する物件がありません</h2><p>検索条件や絞り込みを変更してください。</p></div>';
+      return;
+    }
+
+    var html = '<div class="grid">';
+    list.forEach(function(p){
+      var thumbHtml = p.thumb
+        ? '<img src="' + p.thumb + '" alt="">'
+        : '<span class="noimg">プレビューなし</span>';
+      html += '' +
+        '<button class="card" data-id="' + p.id + '">' +
+          '<div class="card-thumb">' + thumbHtml +
+            '<span class="card-tag ' + p.dealType + '">' + dealLabel(p.dealType) + '</span>' +
+          '</div>' +
+          '<div class="card-body">' +
+            '<div class="card-addr">' + escapeHtml(p.address || "住所未設定") + '</div>' +
+            '<div class="card-title">' + escapeHtml(p.title || p.filename) + '</div>' +
+            '<div class="card-meta">' +
+              (p.layout ? '<span>' + escapeHtml(p.layout) + '</span>' : '') +
+              (p.area ? '<span>' + escapeHtml(p.area) + '</span>' : '') +
+              (p.buildYear ? '<span>' + escapeHtml(p.buildYear) + '</span>' : '') +
+            '</div>' +
+            '<div class="card-foot">' +
+              '<span class="card-price">' + escapeHtml(p.price || "価格未設定") + '</span>' +
+              '<span class="card-source" title="' + escapeHtml(p.source) + '">' + escapeHtml(p.source || "") + '</span>' +
+            '</div>' +
+          '</div>' +
+        '</button>';
+    });
+    html += '</div>';
+    listArea.innerHTML = html;
+
+    Array.prototype.forEach.call(listArea.querySelectorAll(".card"), function(card){
+      card.addEventListener("click", function(){
+        openDetail(parseInt(card.getAttribute("data-id"), 10));
+      });
+    });
+  }
+
+  function loadProperties(){
+    return getAllProperties().then(function(all){
+      properties = all;
+      renderList();
+    });
+  }
+
+  /* ---------------- detail overlay ---------------- */
+  var detailFields = ["title","dealType","price","address","transport","layout","area","buildYear","source","notes"];
+  var fieldEls = {
+    title: document.getElementById("f-title"),
+    dealType: document.getElementById("f-deal"),
+    price: document.getElementById("f-price"),
+    address: document.getElementById("f-address"),
+    transport: document.getElementById("f-transport"),
+    layout: document.getElementById("f-layout"),
+    area: document.getElementById("f-area"),
+    buildYear: document.getElementById("f-buildyear"),
+    source: document.getElementById("f-source"),
+    notes: document.getElementById("f-notes")
+  };
+  var pdfFrame = document.getElementById("pdfFrame");
+  var openNewTab = document.getElementById("openNewTab");
+  var viewerFilename = document.getElementById("viewerFilename");
+  var detailTitle = document.getElementById("detailTitle");
+  var saveHint = document.getElementById("saveHint");
+
+  function openDetail(id){
+    var p = properties.find(function(x){ return x.id === id; });
+    if (!p) return;
+    currentDetailId = id;
+    detailTitle.textContent = p.title || p.filename;
+    detailFields.forEach(function(k){ fieldEls[k].value = p[k] || ""; });
+    viewerFilename.textContent = p.filename || "";
+    saveHint.textContent = "";
+
+    if (currentObjectUrl){ URL.revokeObjectURL(currentObjectUrl); currentObjectUrl = null; }
+    pdfFrame.src = "about:blank";
+    openNewTab.removeAttribute("href");
+
+    getFile(p.fileId).then(function(fileRec){
+      if (!fileRec || !fileRec.blob) return;
+      var url = URL.createObjectURL(fileRec.blob);
+      currentObjectUrl = url;
+      pdfFrame.src = url;
+      openNewTab.href = url;
+    });
+
+    overlay.classList.add("show");
+  }
+
+  function closeDetail(){
+    overlay.classList.remove("show");
+    currentDetailId = null;
+    if (currentObjectUrl){ URL.revokeObjectURL(currentObjectUrl); currentObjectUrl = null; }
+    pdfFrame.src = "about:blank";
+  }
+
+  document.getElementById("closeDetail").addEventListener("click", closeDetail);
+  overlay.addEventListener("click", function(e){ if (e.target === overlay) closeDetail(); });
+  document.addEventListener("keydown", function(e){
+    if (e.key === "Escape" && overlay.classList.contains("show")) closeDetail();
+  });
+
+  document.getElementById("saveBtn").addEventListener("click", function(){
+    if (currentDetailId == null) return;
+    var p = properties.find(function(x){ return x.id === currentDetailId; });
+    if (!p) return;
+    detailFields.forEach(function(k){ p[k] = fieldEls[k].value; });
+    putProperty(p).then(function(){
+      saveHint.textContent = "保存しました。";
+      detailTitle.textContent = p.title || p.filename;
+      renderList();
+      setTimeout(function(){ saveHint.textContent = ""; }, 2000);
+    });
+  });
+
+  document.getElementById("deleteBtn").addEventListener("click", function(){
+    if (currentDetailId == null) return;
+    if (!confirm("この物件をリストから削除します。よろしいですか?")) return;
+    var p = properties.find(function(x){ return x.id === currentDetailId; });
+    if (!p) return;
+    var fileId = p.fileId;
+    deleteProperty(p.id).then(function(){
+      return deleteFile(fileId);
+    }).then(function(){
+      closeDetail();
+      return loadProperties();
+    }).then(function(){
+      showToast("削除しました。");
+    });
+  });
+
+  /* ---------------- import wiring ---------------- */
+  importBtn.addEventListener("click", function(){ fileInput.click(); });
+  fileInput.addEventListener("change", function(){
+    if (fileInput.files.length) importFiles(fileInput.files);
+    fileInput.value = "";
+  });
+
+  ["dragenter","dragover"].forEach(function(evt){
+    dropzone.addEventListener(evt, function(e){
+      e.preventDefault();
+      dropzone.classList.add("active");
+    });
+  });
+  ["dragleave","drop"].forEach(function(evt){
+    dropzone.addEventListener(evt, function(e){
+      e.preventDefault();
+      dropzone.classList.remove("active");
+    });
+  });
+  dropzone.addEventListener("drop", function(e){
+    if (e.dataTransfer && e.dataTransfer.files.length){
+      importFiles(e.dataTransfer.files);
+    }
+  });
+  window.addEventListener("dragover", function(e){ e.preventDefault(); });
+  window.addEventListener("drop", function(e){ e.preventDefault(); });
+
+  searchInput.addEventListener("input", renderList);
+  dealFilter.addEventListener("change", renderList);
+  sortSelect.addEventListener("change", renderList);
+
+  /* ---------------- init ---------------- */
+  loadProperties();
+})();
+</script>
