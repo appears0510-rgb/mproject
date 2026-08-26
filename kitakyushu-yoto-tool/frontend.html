@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>北九州市 用途地域・建ぺい率・容積率 検索</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#ece7de; --bg-elevated:#f7f4ee; --bg-sunk:#e2ddd2;
+    --ink:#1b2023; --ink-soft:#4b5459; --ink-faint:#7c8388;
+    --accent:#1f6f6b; --accent-ink:#f7f4ee; --accent-soft:#e3ede9;
+    --accent-2:#b5573c; --line:rgba(27,32,35,0.14); --line-strong:rgba(27,32,35,0.28);
+    --warn:#8a5b1f; --warn-bg:#f4e6cf;
+    --err:#a3372c; --err-bg:#f6e0dc;
+    --font-display:"Shippori Mincho","Hiragino Mincho ProN","Yu Mincho",serif;
+    --font-body:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#12171a; --bg-elevated:#1a2124; --bg-sunk:#0d1113;
+      --ink:#ece7de; --ink-soft:#a9b2b4; --ink-faint:#727c7e;
+      --accent:#4fbdb6; --accent-ink:#0e1516; --accent-soft:#1c2d2c;
+      --accent-2:#d97c5d; --line:rgba(236,231,222,0.14); --line-strong:rgba(236,231,222,0.28);
+      --warn:#e0b262; --warn-bg:#332510;
+      --err:#e6786a; --err-bg:#3a1c17;
+    }
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:var(--font-body); line-height:1.75; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{ max-width:820px; margin:0 auto; padding:clamp(24px,4vw,56px) 20px 80px; }
+  h1{
+    font-family:var(--font-display); font-weight:700;
+    font-size:clamp(1.5rem,1.2vw+1.1rem,2rem); margin:0 0 6px; letter-spacing:0.02em;
+  }
+  .lead{ color:var(--ink-soft); margin:0 0 32px; font-size:0.95rem; }
+  .eyebrow{
+    display:inline-flex; align-items:center; gap:0.6em;
+    font-size:0.74rem; font-weight:700; letter-spacing:0.2em;
+    color:var(--accent); text-transform:uppercase; margin-bottom:10px;
+  }
+  .eyebrow::before{ content:""; width:20px; height:1px; background:var(--accent); }
+
+  form.search{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:8px; }
+  input[type=text]{
+    flex:1; min-width:240px; font-family:var(--font-body); font-size:1rem;
+    padding:13px 16px; background:var(--bg-elevated); border:1px solid var(--line-strong);
+    color:var(--ink); border-radius:2px;
+  }
+  input[type=text]:focus-visible, button:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+  button{
+    font-family:var(--font-body); font-weight:700; font-size:0.95rem;
+    padding:13px 26px; background:var(--accent); color:var(--accent-ink);
+    border:1px solid var(--accent); border-radius:2px; cursor:pointer;
+    transition:opacity .2s ease;
+  }
+  button:hover{ opacity:0.9; }
+  button:disabled{ opacity:0.6; cursor:default; }
+  .hint{ font-size:0.78rem; color:var(--ink-faint); margin:0 0 30px; }
+
+  .status{ font-size:0.9rem; margin:14px 0; min-height:1.4em; }
+  .status.loading{ color:var(--ink-soft); }
+  .status.error{ background:var(--err-bg); color:var(--err); padding:12px 16px; border-radius:2px; }
+  .status.warn{ background:var(--warn-bg); color:var(--warn); padding:12px 16px; border-radius:2px; }
+
+  .card{
+    background:var(--bg-elevated); border:1px solid var(--line); border-radius:2px;
+    padding:24px 26px; margin-top:18px;
+  }
+  .card h2{ font-family:var(--font-display); font-size:1.15rem; margin:0 0 16px; }
+  .result-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:16px 24px; }
+  .result-grid .item dt{ font-size:0.76rem; color:var(--ink-faint); letter-spacing:0.04em; margin-bottom:4px; }
+  .result-grid .item dd{ margin:0; font-size:1.15rem; font-weight:700; font-family:var(--font-display); }
+  .result-grid .item dd.small{ font-size:0.92rem; font-weight:500; font-family:var(--font-body); }
+
+  details{ margin-top:20px; }
+  summary{ cursor:pointer; font-size:0.85rem; color:var(--ink-soft); }
+  pre{
+    background:var(--bg-sunk); padding:14px 16px; overflow-x:auto; font-size:0.78rem;
+    border-radius:2px; margin-top:10px; white-space:pre-wrap; word-break:break-word;
+  }
+
+  .checklist{ margin-top:22px; }
+  .checklist h2{ font-family:var(--font-display); font-size:1.05rem; margin:0 0 12px; }
+  .checklist ul{ margin:0; padding-left:1.3em; color:var(--ink-soft); font-size:0.9rem; display:grid; gap:8px; }
+  .checklist a{ color:var(--accent); }
+
+  footer{ margin-top:40px; font-size:0.76rem; color:var(--ink-faint); }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <span class="eyebrow">KITAKYUSHU CITY / ZONING LOOKUP</span>
+    <h1>北九州市 用途地域・建ぺい率・容積率 検索</h1>
+    <p class="lead">住所を入力すると、国土交通省「不動産情報ライブラリ」の都市計画決定GISデータから、その地点の用途地域・建ぺい率・容積率を検索します。重要事項説明書の作成補助用のツールです。</p>
+
+    <form class="search" id="searchForm">
+      <input type="text" id="address" name="address" placeholder="例: 北九州市小倉北区浅野三丁目1-1" autocomplete="off" required>
+      <button type="submit" id="searchBtn">検索する</button>
+    </form>
+    <p class="hint">※ 北九州市内の住所を想定しています。番地までできるだけ詳しく入力すると精度が上がります。</p>
+
+    <div class="status" id="status" role="status" aria-live="polite"></div>
+
+    <div id="resultArea"></div>
+
+    <div class="checklist">
+      <h2>この検索だけではわからない項目（別途ご確認ください）</h2>
+      <ul>
+        <li>防火地域・準防火地域の指定</li>
+        <li>高度地区、地区計画、風致地区、日影規制などの指定</li>
+        <li>前面道路の種別・幅員（42条2項道路のセットバック要否を含む）</li>
+        <li>造成宅地防災区域、土砂災害警戒区域などの災害関連区域</li>
+        <li>上下水道・ガスなどの供給処理施設の整備状況</li>
+      </ul>
+      <ul>
+        <li><a href="https://www.city.kitakyushu.lg.jp/contents/924_01088.html" target="_blank" rel="noopener">北九州市「都市計画の調べ方」（公式ページ）</a></li>
+        <li><a href="https://experience.arcgis.com/experience/f3d6e1d8b9d3483ca5e11cfefff1f5c8/" target="_blank" rel="noopener">G-motty（地域情報ポータル）都市計画図</a></li>
+      </ul>
+    </div>
+
+    <footer>
+      住所検索: 国土地理院 住所検索API ／ 用途地域データ: 国土交通省 不動産情報ライブラリ API (XKT002)。
+      本ツールの結果は参考情報であり、法的な証明力を持ちません。重要事項説明書への記載前に、必ず北九州市都市計画課等で最終確認してください。
+    </footer>
+  </div>
+
+<script>
+const form = document.getElementById('searchForm');
+const input = document.getElementById('address');
+const btn = document.getElementById('searchBtn');
+const statusEl = document.getElementById('status');
+const resultArea = document.getElementById('resultArea');
+
+function setStatus(kind, text){
+  statusEl.className = 'status' + (kind ? ' ' + kind : '');
+  statusEl.textContent = text || '';
+}
+
+function esc(s){
+  const d = document.createElement('div');
+  d.textContent = s == null ? '' : String(s);
+  return d.innerHTML;
+}
+
+form.addEventListener('submit', async function(e){
+  e.preventDefault();
+  const address = input.value.trim();
+  if (!address) return;
+
+  btn.disabled = true;
+  resultArea.innerHTML = '';
+  setStatus('loading', '検索中です…（国土地理院・不動産情報ライブラリへ問い合わせています）');
+
+  try {
+    const res = await fetch('/api/lookup?address=' + encodeURIComponent(address));
+    const data = await res.json();
+
+    if (!res.ok) {
+      setStatus('error', data.error || ('検索に失敗しました (HTTP ' + res.status + ')'));
+      return;
+    }
+    if (data.error && !data.zone) {
+      setStatus(data.geocoded ? 'warn' : 'error', data.error);
+      if (!data.geocoded) return;
+    } else {
+      setStatus('', '');
+    }
+
+    let html = '';
+    if (data.geocoded) {
+      html += '<div class="card"><h2>検索地点</h2><div class="result-grid">';
+      html += '<div class="item"><dt>ヒットした住所</dt><dd class="small">' + esc(data.geocoded.matched_title) + '</dd></div>';
+      html += '<div class="item"><dt>緯度・経度</dt><dd class="small">' + data.geocoded.lat.toFixed(6) + ', ' + data.geocoded.lon.toFixed(6) + '</dd></div>';
+      html += '</div>';
+      if (data.in_scope === false) {
+        html += '<p style="margin-top:14px;color:var(--warn);font-size:0.85rem;">※ 入力住所に「北九州市」が含まれていません。想定エリア外の可能性があります。</p>';
+      }
+      html += '</div>';
+    }
+
+    if (data.zone) {
+      const z = data.zone;
+      html += '<div class="card"><h2>用途地域情報</h2><div class="result-grid">';
+      html += '<div class="item"><dt>用途地域</dt><dd>' + esc(z.use_area || '—') + '</dd></div>';
+      html += '<div class="item"><dt>建ぺい率</dt><dd>' + esc(z.building_coverage_ratio || '—') + '</dd></div>';
+      html += '<div class="item"><dt>容積率</dt><dd>' + esc(z.floor_area_ratio || '—') + '</dd></div>';
+      html += '<div class="item"><dt>市区町村</dt><dd class="small">' + esc(z.city_name || '—') + '</dd></div>';
+      html += '<div class="item"><dt>区域設定年月日</dt><dd class="small">' + esc(z.decision_date || '—') + '</dd></div>';
+      html += '<div class="item"><dt>告示番号</dt><dd class="small">' + esc(z.notice_number || '—') + '</dd></div>';
+      html += '</div>';
+      html += '<details><summary>取得した生データを表示</summary><pre>' + esc(JSON.stringify(z.raw, null, 2)) + '</pre></details>';
+      html += '</div>';
+    }
+
+    resultArea.innerHTML = html;
+  } catch (err) {
+    setStatus('error', '通信エラーが発生しました。サーバー(server.py)が起動しているか確認してください。');
+  } finally {
+    btn.disabled = false;
+  }
+});
+</script>
+</body>
+</html>
