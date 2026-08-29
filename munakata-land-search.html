@@ -1,0 +1,445 @@
+<meta charset="UTF-8">
+<title>宗像市 土地検索 | 80坪以上・1500万円以下から探す</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;600;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg:#f3f0e7;
+    --bg-elevated:#ffffff;
+    --bg-sunk:#e7e1d2;
+    --ink:#1a2427;
+    --ink-soft:#4b5758;
+    --ink-faint:#7c8788;
+    --accent:#0f5f6b;
+    --accent-ink:#f3f0e7;
+    --accent-soft:#e0ebe9;
+    --gold:#a9782f;
+    --gold-soft:#f2e6cc;
+    --line:rgba(26,36,39,0.14);
+    --line-strong:rgba(26,36,39,0.28);
+    --shadow:0 20px 50px -25px rgba(15,25,28,0.35);
+    --ok:#2f7a4f;
+    --font-display:"Shippori Mincho","Hiragino Mincho ProN","Yu Mincho",serif;
+    --font-body:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",sans-serif;
+    --container:1180px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#10171a; --bg-elevated:#182123; --bg-sunk:#0c1213;
+      --ink:#ece7de; --ink-soft:#a7b1b2; --ink-faint:#707b7c;
+      --accent:#4bb2ac; --accent-ink:#0c1516; --accent-soft:#1a2b2a;
+      --gold:#d8ac5e; --gold-soft:#2c2517;
+      --line:rgba(236,231,222,0.14); --line-strong:rgba(236,231,222,0.28);
+      --shadow:0 20px 50px -25px rgba(0,0,0,0.6);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#10171a; --bg-elevated:#182123; --bg-sunk:#0c1213;
+    --ink:#ece7de; --ink-soft:#a7b1b2; --ink-faint:#707b7c;
+    --accent:#4bb2ac; --accent-ink:#0c1516; --accent-soft:#1a2b2a;
+    --gold:#d8ac5e; --gold-soft:#2c2517;
+    --line:rgba(236,231,222,0.14); --line-strong:rgba(236,231,222,0.28);
+    --shadow:0 20px 50px -25px rgba(0,0,0,0.6);
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:var(--font-body); font-size:16px; line-height:1.7;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit;}
+  .wrap{ max-width:var(--container); margin:0 auto; padding-inline:clamp(16px,4vw,44px); }
+  h1,h2,h3{ font-family:var(--font-display); font-weight:700; margin:0; line-height:1.4; }
+  .tabnum{ font-variant-numeric:tabular-nums; }
+  button, input, select{ font-family:var(--font-body); }
+  input:focus-visible, select:focus-visible, button:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+
+  /* header */
+  header.site{
+    background:linear-gradient(160deg,#0e3540,#0f5f6b 55%,#166e63);
+    color:#f6f2e6;
+    position:relative; overflow:hidden;
+  }
+  header.site .waves{ position:absolute; inset:0; opacity:0.5; }
+  .header-inner{ position:relative; z-index:1; padding-block:clamp(34px,6vw,56px) clamp(28px,5vw,44px); }
+  .brand-row{ display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+  .brand{ display:flex; align-items:center; gap:12px; text-decoration:none; color:inherit; }
+  .brand .mark{ width:38px; height:38px; flex:none; }
+  .brand-text b{ font-family:var(--font-display); font-size:1.3rem; letter-spacing:0.04em; display:block; }
+  .brand-text span{ font-size:0.68rem; letter-spacing:0.2em; color:rgba(246,242,230,0.7); }
+  .header-badge{
+    display:inline-flex; align-items:center; gap:8px;
+    font-size:0.74rem; letter-spacing:0.1em; padding:6px 14px;
+    background:rgba(246,242,230,0.14); border:1px solid rgba(246,242,230,0.3);
+    border-radius:999px; color:#f6f2e6;
+  }
+  .header-title{ margin-top:clamp(22px,4vw,36px); max-width:26ch; font-size:clamp(1.7rem,2.2vw+1rem,2.6rem); color:#fbf8ee; }
+  .header-title em{ font-style:normal; color:var(--gold-soft); }
+  .header-lead{ margin-top:14px; max-width:56ch; color:rgba(246,242,230,0.86); font-size:1rem; }
+  .header-stats{ display:flex; gap:clamp(20px,3vw,40px); margin-top:28px; flex-wrap:wrap; }
+  .header-stats .stat b{ display:block; font-family:var(--font-display); font-size:1.5rem; }
+  .header-stats .stat span{ font-size:0.76rem; color:rgba(246,242,230,0.72); letter-spacing:0.04em; }
+
+  /* filter bar */
+  .filter-shell{ position:sticky; top:0; z-index:20; background:var(--bg); border-bottom:1px solid var(--line); }
+  .filter-panel{ padding-block:18px; }
+  .filter-grid{
+    display:grid; grid-template-columns:repeat(4,1fr) auto; gap:14px 16px; align-items:end;
+  }
+  .field{ display:flex; flex-direction:column; gap:6px; min-width:0; }
+  .field label{ font-size:0.76rem; color:var(--ink-soft); font-weight:700; letter-spacing:0.02em; }
+  .field .hint{ font-size:0.7rem; color:var(--ink-faint); font-weight:500; }
+  .field input[type="number"], .field input[type="text"], .field select{
+    padding:10px 12px; border:1px solid var(--line-strong); background:var(--bg-elevated);
+    color:var(--ink); border-radius:6px; font-size:0.94rem; width:100%;
+  }
+  .num-with-unit{ position:relative; }
+  .num-with-unit input{ padding-right:44px; }
+  .num-with-unit .unit{
+    position:absolute; right:12px; top:50%; transform:translateY(-50%);
+    font-size:0.78rem; color:var(--ink-faint); pointer-events:none;
+  }
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    padding:10px 20px; background:var(--accent); color:var(--accent-ink);
+    font-weight:700; font-size:0.88rem; letter-spacing:0.02em;
+    border:1px solid var(--accent); border-radius:6px; cursor:pointer;
+    transition:transform .15s ease, box-shadow .15s ease, opacity .15s ease;
+    white-space:nowrap;
+  }
+  .btn:hover{ opacity:0.92; box-shadow:var(--shadow); }
+  .btn.ghost{ background:transparent; color:var(--ink); border-color:var(--line-strong); }
+  .filter-chips{ display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; }
+  .chip{
+    font-size:0.76rem; padding:5px 12px; border-radius:999px;
+    background:var(--accent-soft); color:var(--accent); border:1px solid transparent;
+    font-weight:700; letter-spacing:0.02em;
+  }
+  .chip.gold{ background:var(--gold-soft); color:var(--gold); }
+
+  /* results */
+  .results{ padding-block:clamp(28px,4vw,48px) clamp(56px,7vw,88px); }
+  .results-head{ display:flex; align-items:baseline; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:20px; }
+  .results-count{ font-size:0.94rem; color:var(--ink-soft); }
+  .results-count b{ font-family:var(--font-display); font-size:1.3rem; color:var(--accent); font-weight:700; }
+  .sort-field{ display:flex; align-items:center; gap:8px; font-size:0.84rem; color:var(--ink-soft); }
+  .sort-field select{ padding:8px 10px; border:1px solid var(--line-strong); background:var(--bg-elevated); border-radius:6px; color:var(--ink); }
+
+  .land-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:18px; }
+  .land-card{
+    background:var(--bg-elevated); border:1px solid var(--line); border-radius:10px;
+    padding:20px 22px; display:flex; flex-direction:column; gap:12px;
+    transition:transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+  }
+  .land-card:hover{ transform:translateY(-4px); box-shadow:var(--shadow); border-color:var(--line-strong); }
+  .land-card .top-row{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
+  .land-card .area-name{ font-family:var(--font-display); font-weight:700; font-size:1.15rem; }
+  .land-card .area-sub{ font-size:0.74rem; color:var(--ink-faint); margin-top:2px; }
+  .fit-badge{
+    font-size:0.68rem; font-weight:700; letter-spacing:0.04em; padding:4px 9px;
+    background:var(--ok); color:#fff; border-radius:999px; white-space:nowrap; flex:none;
+  }
+  .land-card .price-row{ display:flex; align-items:baseline; gap:8px; padding-top:6px; border-top:1px solid var(--line); }
+  .land-card .price{ font-family:var(--font-display); font-weight:700; font-size:1.5rem; color:var(--accent); }
+  .land-card .unit-price{ font-size:0.78rem; color:var(--ink-faint); }
+  .land-card .meta-row{ display:flex; flex-wrap:wrap; gap:8px 14px; font-size:0.86rem; color:var(--ink-soft); }
+  .land-card .meta-row span{ display:inline-flex; align-items:center; gap:5px; }
+  .land-card .note{ font-size:0.82rem; color:var(--ink-soft); background:var(--bg-sunk); padding:10px 12px; border-radius:6px; }
+  .land-card .tags{ display:flex; flex-wrap:wrap; gap:6px; }
+  .land-card .tag{ font-size:0.72rem; padding:3px 9px; border-radius:999px; background:var(--accent-soft); color:var(--accent); font-weight:600; }
+
+  .empty-state{
+    text-align:center; padding:64px 20px; color:var(--ink-soft);
+    border:1px dashed var(--line-strong); border-radius:10px; background:var(--bg-elevated);
+  }
+  .empty-state h3{ font-size:1.2rem; margin-bottom:8px; }
+
+  .disclaimer{ background:var(--bg-sunk); border-top:1px solid var(--line); }
+  .disclaimer .wrap{ padding-block:24px; font-size:0.8rem; color:var(--ink-faint); }
+
+  footer.site{ background:#0e2027; color:rgba(246,242,230,0.65); padding-block:28px; font-size:0.78rem; }
+  footer.site .wrap{ display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px; }
+
+  @media (max-width: 980px){
+    .filter-grid{ grid-template-columns:repeat(2,1fr); }
+    .filter-grid > *:last-child{ grid-column:1 / -1; }
+    .land-grid{ grid-template-columns:repeat(2,1fr); }
+  }
+  @media (max-width: 640px){
+    .filter-grid{ grid-template-columns:1fr; }
+    .land-grid{ grid-template-columns:1fr; }
+    .header-stats{ gap:22px; }
+    .results-head{ flex-direction:column; align-items:flex-start; }
+  }
+</style>
+
+<header class="site">
+  <svg class="waves" viewBox="0 0 1440 400" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path d="M0 300 Q120 270 240 300 T480 300 T720 300 T960 300 T1200 300 T1440 290 V400 H0 Z" fill="rgba(246,242,230,0.06)"/>
+    <path d="M0 340 Q120 315 240 340 T480 340 T720 340 T960 340 T1200 340 T1440 330 V400 H0 Z" fill="rgba(246,242,230,0.1)"/>
+  </svg>
+  <div class="header-inner wrap">
+    <div class="brand-row">
+      <a class="brand" href="#top">
+        <svg class="mark" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <rect width="40" height="40" rx="6" fill="rgba(246,242,230,0.16)"/>
+          <path d="M8 26c4-4 8 4 12 0s8-4 12 0" stroke="#f6f2e6" stroke-width="2" fill="none" stroke-linecap="round"/>
+          <circle cx="20" cy="14" r="4" fill="#e8c785"/>
+        </svg>
+        <span class="brand-text"><b>宗像市 土地検索</b><span>MUNAKATA LAND SEARCH</span></span>
+      </a>
+      <span class="header-badge">福岡県 宗像市 対応</span>
+    </div>
+    <h1 class="header-title">宗像市の<em>広い土地</em>を、<br>予算内で見つける。</h1>
+    <p class="header-lead">宗像大社や玄界灘に近い宗像市内の土地情報から、面積・価格などの条件で絞り込んで検索できます。初期条件は「80坪以上・1500万円以下」です。</p>
+    <div class="header-stats">
+      <div class="stat"><b class="tabnum" id="statTotal">-</b><span>掲載件数</span></div>
+      <div class="stat"><b class="tabnum" id="statMatch">-</b><span>現在の条件に一致</span></div>
+      <div class="stat"><b class="tabnum" id="statAreaMax">-</b><span>坪数レンジ</span></div>
+    </div>
+  </div>
+</header>
+
+<div class="filter-shell">
+  <div class="wrap filter-panel">
+    <div class="filter-grid">
+      <div class="field">
+        <label for="f-tsubo">土地面積(坪) 以上</label>
+        <div class="num-with-unit">
+          <input type="number" id="f-tsubo" min="0" step="1" value="80">
+          <span class="unit">坪〜</span>
+        </div>
+        <span class="hint">1坪 ≒ 3.31㎡</span>
+      </div>
+      <div class="field">
+        <label for="f-price">価格(万円) 以下</label>
+        <div class="num-with-unit">
+          <input type="number" id="f-price" min="0" step="10" value="1500">
+          <span class="unit">万円〜</span>
+        </div>
+        <span class="hint">上限価格を指定</span>
+      </div>
+      <div class="field">
+        <label for="f-keyword">エリア・町名で検索</label>
+        <input type="text" id="f-keyword" placeholder="例: 東郷、赤間、神湊 など">
+      </div>
+      <div class="field">
+        <label for="f-landuse">用途地域</label>
+        <select id="f-landuse">
+          <option value="">すべて</option>
+        </select>
+      </div>
+      <div class="field">
+        <button class="btn ghost" id="resetBtn" type="button">条件をリセット</button>
+      </div>
+    </div>
+    <div class="filter-chips" id="filterChips"></div>
+  </div>
+</div>
+
+<main id="top">
+  <section class="results">
+    <div class="wrap">
+      <div class="results-head">
+        <div class="results-count"><b class="tabnum" id="resultCount">0</b> 件の土地が見つかりました</div>
+        <div class="sort-field">
+          <label for="f-sort">並び替え</label>
+          <select id="f-sort">
+            <option value="price-asc">価格が安い順</option>
+            <option value="price-desc">価格が高い順</option>
+            <option value="tsubo-desc">面積が広い順</option>
+            <option value="unit-asc">坪単価が安い順</option>
+          </select>
+        </div>
+      </div>
+      <div class="land-grid" id="landGrid"></div>
+      <div class="empty-state" id="emptyState" hidden>
+        <h3>条件に一致する土地が見つかりませんでした</h3>
+        <p>面積の下限や価格の上限を調整するか、「条件をリセット」をお試しください。</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="disclaimer">
+  <div class="wrap">
+    ※本ページは宗像市内の土地検索を試すためのデモアプリです。掲載している物件情報はすべてサンプルデータであり、実在の売買情報ではありません。
+  </div>
+</div>
+
+<footer class="site">
+  <div class="wrap">
+    <span>© 2026 宗像市 土地検索(デモ)</span>
+    <span>福岡県宗像市 / MUNAKATA CITY, FUKUOKA</span>
+  </div>
+</footer>
+
+<script>
+  var LISTINGS = [
+    { area:"東郷", sub:"宗像市東郷", tsubo:92, price:1280, landuse:"第一種低層住居専用地域", station:"東郷駅 徒歩12分", note:"駅近の閑静な住宅地。宗像大社まで車で約10分。", tags:["南向き","建築条件なし"] },
+    { area:"赤間", sub:"宗像市赤間", tsubo:85, price:1450, landuse:"第一種住居地域", station:"赤間駅 徒歩15分", note:"赤間駅前商店街まで徒歩圏内。生活利便性良好。", tags:["角地"] },
+    { area:"自由ヶ丘", sub:"宗像市自由ヶ丘", tsubo:65, price:980, landuse:"第一種低層住居専用地域", station:"東郷駅 徒歩20分", note:"閑静な分譲地内の一区画。", tags:["分譲地内"] },
+    { area:"日の里", sub:"宗像市日の里", tsubo:88, price:1180, landuse:"第一種住居地域", station:"教育大前駅 徒歩18分", note:"団地内の落ち着いたエリア。公園が近い。", tags:["公園近く"] },
+    { area:"河東", sub:"宗像市河東", tsubo:110, price:1580, landuse:"準工業地域", station:"東郷駅 徒歩25分", note:"広めの区画。事業用途にも対応可能。", tags:["広め区画"] },
+    { area:"神湊", sub:"宗像市神湊", tsubo:105, price:1350, landuse:"市街化調整区域(要確認)", station:"神湊港 徒歩8分", note:"海まで徒歩5分。大島行きフェリー乗り場近く。", tags:["海近く"] },
+    { area:"池田", sub:"宗像市池田", tsubo:130, price:890, landuse:"市街化調整区域", station:"東郷駅 車15分", note:"のどかな田園地帯。広い敷地で家庭菜園にも。", tags:["広め区画","田園地帯"] },
+    { area:"田野", sub:"宗像市田野", tsubo:95, price:1490, landuse:"第一種住居地域", station:"東郷駅 車12分", note:"新興住宅地に近く、周辺開発が進行中。", tags:["開発エリア"] },
+    { area:"鐘崎", sub:"宗像市鐘崎", tsubo:82, price:1120, landuse:"第一種住居地域", station:"鐘崎漁港 徒歩10分", note:"漁港近くの静かな漁師町エリア。", tags:["漁港近く"] },
+    { area:"白浜町", sub:"宗像市白浜町", tsubo:150, price:1980, landuse:"第一種低層住居専用地域", station:"東郷駅 車18分", note:"高台から玄界灘を一望できる眺望良好な区画。", tags:["海一望","広め区画"] },
+    { area:"陵厳寺", sub:"宗像市陵厳寺", tsubo:70, price:780, landuse:"第一種低層住居専用地域", station:"東郷駅 車10分", note:"住宅街の中の落ち着いた区画。", tags:[] },
+    { area:"冨地原", sub:"宗像市冨地原", tsubo:100, price:1250, landuse:"第一種住居地域", station:"東郷駅 車8分", note:"周辺に商業施設が多く生活利便性が高い。", tags:["商業施設近く"] },
+    { area:"王丸", sub:"宗像市王丸", tsubo:90, price:1050, landuse:"第一種低層住居専用地域", station:"教育大前駅 徒歩22分", note:"小学校が近く、子育て世帯に人気のエリア。", tags:["小学校近く"] },
+    { area:"上八", sub:"宗像市上八", tsubo:118, price:1390, landuse:"第一種住居地域", station:"教育大前駅 徒歩25分", note:"宗像大社まで車で約7分の落ち着いたエリア。", tags:["宗像大社近く","広め区画"] },
+    { area:"吉留", sub:"宗像市吉留", tsubo:84, price:1470, landuse:"第一種住居地域", station:"東郷駅 車10分", note:"近隣にスーパー・病院が揃う住宅地。", tags:[] },
+    { area:"三郎丸", sub:"宗像市三郎丸", tsubo:78, price:1180, landuse:"第一種低層住居専用地域", station:"東郷駅 車9分", note:"住宅密集地からやや離れた静かな区画。", tags:[] },
+    { area:"石丸", sub:"宗像市石丸", tsubo:96, price:1320, landuse:"第一種住居地域", station:"赤間駅 車10分", note:"赤間インターまで車で約6分とアクセス良好。", tags:["インター近く"] },
+    { area:"稲元", sub:"宗像市稲元", tsubo:132, price:1580, landuse:"第一種住居地域", station:"赤間駅 徒歩28分", note:"広い敷地で二世帯住宅の建築にも対応。", tags:["広め区画","二世帯向け"] },
+    { area:"光陽台", sub:"宗像市光陽台", tsubo:89, price:1420, landuse:"第一種低層住居専用地域", station:"教育大前駅 徒歩15分", note:"造成済みの新興住宅地。区画整備済み。", tags:["造成済み"] },
+    { area:"深田", sub:"宗像市深田", tsubo:81, price:990, landuse:"第一種住居地域", station:"東郷駅 車7分", note:"閑静な住宅街の一角。周辺に緑が多い。", tags:[] },
+    { area:"江口", sub:"宗像市江口", tsubo:102, price:1250, landuse:"第一種住居地域", station:"東郷駅 車6分", note:"買い物施設が充実したエリアで暮らしやすい。", tags:["商業施設近く"] },
+    { area:"原町", sub:"宗像市原町", tsubo:76, price:1080, landuse:"第一種低層住居専用地域", station:"東郷駅 徒歩30分", note:"静かな住宅地。バス停が近い。", tags:[] },
+    { area:"大穂", sub:"宗像市大穂", tsubo:120, price:1495, landuse:"第一種住居地域", station:"赤間駅 車12分", note:"広めの区画で駐車スペースを多く確保可能。", tags:["広め区画"] },
+    { area:"用山", sub:"宗像市用山", tsubo:95, price:1150, landuse:"市街化調整区域", station:"東郷駅 車14分", note:"自然豊かな環境。週末の別荘用地としても人気。", tags:["自然豊か"] }
+  ];
+
+  var TSUBO_TO_SQM = 3.30578;
+
+  function formatMan(v){ return v.toLocaleString('ja-JP'); }
+  function unitPrice(item){ return item.price / item.tsubo; }
+
+  var elTsubo = document.getElementById('f-tsubo');
+  var elPrice = document.getElementById('f-price');
+  var elKeyword = document.getElementById('f-keyword');
+  var elLanduse = document.getElementById('f-landuse');
+  var elSort = document.getElementById('f-sort');
+  var elGrid = document.getElementById('landGrid');
+  var elEmpty = document.getElementById('emptyState');
+  var elCount = document.getElementById('resultCount');
+  var elChips = document.getElementById('filterChips');
+  var elStatTotal = document.getElementById('statTotal');
+  var elStatMatch = document.getElementById('statMatch');
+  var elStatAreaMax = document.getElementById('statAreaMax');
+  var resetBtn = document.getElementById('resetBtn');
+
+  var DEFAULTS = { tsubo:80, price:1500 };
+
+  function populateLanduseOptions(){
+    var set = {};
+    LISTINGS.forEach(function(item){ set[item.landuse] = true; });
+    Object.keys(set).sort().forEach(function(lu){
+      var opt = document.createElement('option');
+      opt.value = lu; opt.textContent = lu;
+      elLanduse.appendChild(opt);
+    });
+  }
+
+  function currentFilters(){
+    return {
+      minTsubo: parseFloat(elTsubo.value) || 0,
+      maxPrice: elPrice.value === '' ? Infinity : (parseFloat(elPrice.value) || 0),
+      keyword: elKeyword.value.trim(),
+      landuse: elLanduse.value,
+      sort: elSort.value
+    };
+  }
+
+  function applyFilters(){
+    var f = currentFilters();
+    var results = LISTINGS.filter(function(item){
+      if (item.tsubo < f.minTsubo) return false;
+      if (item.price > f.maxPrice) return false;
+      if (f.keyword && item.area.indexOf(f.keyword) === -1 && item.sub.indexOf(f.keyword) === -1) return false;
+      if (f.landuse && item.landuse !== f.landuse) return false;
+      return true;
+    });
+
+    results.sort(function(a,b){
+      switch(f.sort){
+        case 'price-desc': return b.price - a.price;
+        case 'tsubo-desc': return b.tsubo - a.tsubo;
+        case 'unit-asc': return unitPrice(a) - unitPrice(b);
+        default: return a.price - b.price;
+      }
+    });
+
+    renderChips(f);
+    renderResults(results, f);
+    renderStats(results);
+  }
+
+  function renderChips(f){
+    var chips = [];
+    chips.push('<span class="chip">' + f.minTsubo + '坪以上</span>');
+    if (isFinite(f.maxPrice)) chips.push('<span class="chip">' + formatMan(f.maxPrice) + '万円以下</span>');
+    if (f.keyword) chips.push('<span class="chip gold">エリア: ' + escapeHtml(f.keyword) + '</span>');
+    if (f.landuse) chips.push('<span class="chip gold">' + escapeHtml(f.landuse) + '</span>');
+    elChips.innerHTML = chips.join('');
+  }
+
+  function escapeHtml(s){
+    return s.replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+
+  function renderResults(results, f){
+    elCount.textContent = results.length;
+    elGrid.innerHTML = '';
+    if (results.length === 0){
+      elEmpty.hidden = false;
+      return;
+    }
+    elEmpty.hidden = true;
+
+    results.forEach(function(item){
+      var sqm = (item.tsubo * TSUBO_TO_SQM).toFixed(1);
+      var up = (unitPrice(item)).toFixed(1);
+      var isDefaultFit = item.tsubo >= DEFAULTS.tsubo && item.price <= DEFAULTS.price;
+
+      var card = document.createElement('article');
+      card.className = 'land-card';
+      card.innerHTML =
+        '<div class="top-row">' +
+          '<div><div class="area-name">' + escapeHtml(item.area) + '</div><div class="area-sub">' + escapeHtml(item.sub) + '</div></div>' +
+          (isDefaultFit ? '<span class="fit-badge">80坪以上 / 1500万円以下</span>' : '') +
+        '</div>' +
+        '<div class="price-row"><span class="price tabnum">' + formatMan(item.price) + '<span style="font-size:0.55em;">万円</span></span><span class="unit-price">坪単価 約' + up + '万円/坪</span></div>' +
+        '<div class="meta-row">' +
+          '<span class="tabnum">' + item.tsubo + '坪(約' + sqm + '㎡)</span>' +
+          '<span>' + escapeHtml(item.landuse) + '</span>' +
+          '<span>' + escapeHtml(item.station) + '</span>' +
+        '</div>' +
+        '<div class="note">' + escapeHtml(item.note) + '</div>' +
+        (item.tags.length ? '<div class="tags">' + item.tags.map(function(t){ return '<span class="tag">' + escapeHtml(t) + '</span>'; }).join('') + '</div>' : '');
+      elGrid.appendChild(card);
+    });
+  }
+
+  function renderStats(results){
+    elStatTotal.textContent = LISTINGS.length;
+    elStatMatch.textContent = results.length;
+    var min = Math.min.apply(null, LISTINGS.map(function(i){ return i.tsubo; }));
+    var max = Math.max.apply(null, LISTINGS.map(function(i){ return i.tsubo; }));
+    elStatAreaMax.textContent = min + '〜' + max + '坪';
+  }
+
+  [elTsubo, elPrice, elKeyword, elLanduse, elSort].forEach(function(el){
+    el.addEventListener('input', applyFilters);
+    el.addEventListener('change', applyFilters);
+  });
+
+  resetBtn.addEventListener('click', function(){
+    elTsubo.value = DEFAULTS.tsubo;
+    elPrice.value = DEFAULTS.price;
+    elKeyword.value = '';
+    elLanduse.value = '';
+    elSort.value = 'price-asc';
+    applyFilters();
+  });
+
+  populateLanduseOptions();
+  applyFilters();
+</script>
