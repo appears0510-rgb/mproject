@@ -1,4 +1,4 @@
-<title>案件管理AI ｜ TAKAHARA不動産</title>
+<title>案件管理AI</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;600;700;800&family=Zen+Kaku+Gothic+New:wght@300;400;500;700;900&display=swap" rel="stylesheet">
@@ -276,15 +276,15 @@
 
 <header class="app-header">
   <div class="wrap nav-row">
-    <a class="brand" href="index.html">
+    <div class="brand">
       <svg class="mark" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <rect width="40" height="40" fill="var(--accent)"/>
-        <path d="M4 24c4-5 8 5 12 0s8-5 12 0 8 5 8 5" stroke="var(--accent-ink)" stroke-width="2" fill="none" stroke-linecap="round"/>
-        <path d="M4 30c4-5 8 5 12 0s8-5 12 0 8 5 8 5" stroke="var(--accent-ink)" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.55"/>
+        <rect width="40" height="40" rx="10" fill="var(--accent)"/>
+        <path d="M10 22 20 12l10 10" stroke="var(--accent-ink)" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M13 20v9h14v-9" stroke="var(--accent-ink)" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
-      <span>TAKAHARA不動産<small>TAKAHARA REAL ESTATE&nbsp;/&nbsp;FUKUOKA</small></span>
-    </a>
-    <div class="app-title">案件管理AI（プロトタイプ）</div>
+      <span>案件管理AI<small>DEAL MANAGEMENT ASSISTANT</small></span>
+    </div>
+    <div class="app-title">不動産営業向けプロトタイプ</div>
   </div>
 </header>
 
@@ -925,10 +925,10 @@
       "\nご興味がございましたら、詳細資料をお送りいたします。ご検討のほどよろしくお願いいたします。";
 
     if(channel === "line"){
-      return greet + "\n\nいつもお世話になっております。TAKAHARA不動産です。\n\n" + body;
+      return greet + "\n\nいつもお世話になっております。◯◯不動産の担当です。\n\n" + body;
     }
     var subject = "【物件のご紹介】" + prop.address + prop.type + "（" + prop.area + "坪）";
-    return "件名：" + subject + "\n\n" + greet + "\n\nいつもお世話になっております。TAKAHARA不動産でございます。\n\n" + body + "\n\n何卒よろしくお願い申し上げます。";
+    return "件名：" + subject + "\n\n" + greet + "\n\nいつもお世話になっております。◯◯不動産でございます。\n\n" + body + "\n\n何卒よろしくお願い申し上げます。";
   }
 
   function openCompose(propId, companyId){
