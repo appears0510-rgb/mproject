@@ -1,0 +1,1100 @@
+<title>案件管理AI ｜ TAKAHARA不動産</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;600;700;800&family=Zen+Kaku+Gothic+New:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg:#ece7de;
+    --bg-elevated:#f7f4ee;
+    --bg-sunk:#e2ddd2;
+    --ink:#1b2023;
+    --ink-soft:#4b5459;
+    --ink-faint:#7c8388;
+    --accent:#1f6f6b;
+    --accent-ink:#f7f4ee;
+    --accent-soft:#e3ede9;
+    --accent-2:#b5573c;
+    --accent-3:#3f5bd9;
+    --danger:#b53c3c;
+    --line:rgba(27,32,35,0.14);
+    --line-strong:rgba(27,32,35,0.28);
+    --shadow:0 20px 50px -25px rgba(20,25,28,0.35);
+
+    --font-display:"Shippori Mincho","Hiragino Mincho ProN","Yu Mincho",serif;
+    --font-body:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",sans-serif;
+
+    --container:1180px;
+  }
+
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#12171a;
+      --bg-elevated:#1a2124;
+      --bg-sunk:#0d1113;
+      --ink:#ece7de;
+      --ink-soft:#a9b2b4;
+      --ink-faint:#727c7e;
+      --accent:#4fbdb6;
+      --accent-ink:#0e1516;
+      --accent-soft:#1c2d2c;
+      --accent-2:#d97c5d;
+      --accent-3:#93a5ff;
+      --danger:#e18080;
+      --line:rgba(236,231,222,0.14);
+      --line-strong:rgba(236,231,222,0.28);
+      --shadow:0 20px 50px -25px rgba(0,0,0,0.6);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#12171a;
+    --bg-elevated:#1a2124;
+    --bg-sunk:#0d1113;
+    --ink:#ece7de;
+    --ink-soft:#a9b2b4;
+    --ink-faint:#727c7e;
+    --accent:#4fbdb6;
+    --accent-ink:#0e1516;
+    --accent-soft:#1c2d2c;
+    --accent-2:#d97c5d;
+    --accent-3:#93a5ff;
+    --danger:#e18080;
+    --line:rgba(236,231,222,0.14);
+    --line-strong:rgba(236,231,222,0.28);
+    --shadow:0 20px 50px -25px rgba(0,0,0,0.6);
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:var(--font-body);
+    font-size:15.5px;
+    line-height:1.7;
+    -webkit-font-smoothing:antialiased;
+  }
+  img,svg{display:block; max-width:100%;}
+  a{color:inherit;}
+  button, input, select, textarea{ font-family:inherit; font-size:inherit; color:inherit; }
+
+  .wrap{
+    max-width:var(--container);
+    margin:0 auto;
+    padding-inline:clamp(20px, 4vw, 48px);
+  }
+
+  h1,h2,h3,h4{
+    font-family:var(--font-display);
+    font-weight:700;
+    line-height:1.4;
+    margin:0;
+    letter-spacing:0.02em;
+  }
+
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    padding:10px 18px; border-radius:999px;
+    background:var(--accent); color:var(--accent-ink);
+    font-weight:700; font-size:0.86rem; letter-spacing:0.02em;
+    border:1px solid transparent; cursor:pointer;
+    text-decoration:none; white-space:nowrap;
+    transition:opacity .15s ease, transform .15s ease;
+  }
+  .btn:hover{ opacity:0.88; }
+  .btn:active{ transform:scale(0.98); }
+  .btn.ghost{
+    background:transparent; color:var(--ink); border-color:var(--line-strong);
+  }
+  .btn.small{ padding:6px 14px; font-size:0.78rem; }
+  .btn.danger{ background:var(--danger); color:#fff; }
+
+  /* ---------- header ---------- */
+  header.app-header{
+    position:sticky; top:0; z-index:50;
+    background:color-mix(in srgb, var(--bg) 92%, transparent);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  .nav-row{
+    display:flex; align-items:center; justify-content:space-between;
+    padding-block:14px; gap:20px; flex-wrap:wrap;
+  }
+  .brand{
+    display:flex; align-items:center; gap:10px;
+    font-family:var(--font-display); font-weight:700; font-size:1.1rem;
+    text-decoration:none;
+  }
+  .brand .mark{ width:30px; height:30px; flex:none; }
+  .brand small{
+    display:block; font-family:var(--font-body); font-weight:500;
+    font-size:0.6rem; letter-spacing:0.14em; color:var(--ink-faint);
+  }
+  .app-title{
+    font-size:0.72rem; font-weight:700; letter-spacing:0.2em;
+    color:var(--accent); text-transform:uppercase;
+    display:flex; align-items:center; gap:8px;
+  }
+  .app-title::before{ content:""; width:18px; height:1px; background:var(--accent); }
+
+  /* ---------- tabs ---------- */
+  .tabbar{
+    display:flex; gap:4px; border-bottom:1px solid var(--line);
+    margin-bottom:28px; overflow-x:auto;
+  }
+  .tabbar button{
+    padding:13px 18px; border:none; background:none; cursor:pointer;
+    font-weight:700; font-size:0.9rem; color:var(--ink-faint);
+    border-bottom:2px solid transparent; white-space:nowrap;
+  }
+  .tabbar button.active{ color:var(--ink); border-bottom-color:var(--accent); }
+  .tabpanel{ display:none; }
+  .tabpanel.active{ display:block; }
+
+  .section-head{
+    display:flex; align-items:baseline; justify-content:space-between;
+    gap:16px; margin-bottom:16px; flex-wrap:wrap;
+  }
+  .section-head h2{ font-size:1.3rem; }
+  .hint{ color:var(--ink-faint); font-size:0.82rem; }
+
+  .grid-cards{ display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:16px; }
+  .card{
+    background:var(--bg-elevated); border:1px solid var(--line); border-radius:14px;
+    padding:20px; box-shadow:var(--shadow);
+  }
+  .card h3{ font-size:1.02rem; margin-bottom:6px; }
+
+  .badge{
+    display:inline-flex; align-items:center; gap:4px; padding:3px 11px;
+    border-radius:999px; font-size:0.7rem; font-weight:700; letter-spacing:.02em;
+  }
+  .badge.house{ background:color-mix(in srgb, var(--accent) 18%, transparent); color:var(--accent); }
+  .badge.tateuri{ background:color-mix(in srgb, var(--accent-2) 18%, transparent); color:var(--accent-2); }
+  .badge.apart{ background:color-mix(in srgb, var(--accent-3) 18%, transparent); color:var(--accent-3); }
+  .badge.jiba{ background:color-mix(in srgb, var(--ink) 12%, transparent); color:var(--ink-soft); }
+  .badge.kojin{ background:color-mix(in srgb, var(--ink) 8%, transparent); color:var(--ink-faint); }
+  .badge-row{ display:flex; flex-wrap:wrap; gap:6px; margin:8px 0; }
+
+  .score-chip{
+    display:inline-flex; align-items:center; justify-content:center;
+    min-width:38px; height:38px; border-radius:50%; font-weight:800;
+    background:var(--accent); color:var(--accent-ink); font-size:0.95rem; flex:none;
+  }
+  .score-chip.mid{ background:var(--accent-2); }
+  .score-chip.low{ background:var(--ink-faint); color:var(--bg-elevated); }
+
+  .prop-meta{ color:var(--ink-soft); font-size:0.86rem; margin:2px 0; }
+  .reason-list{ margin:10px 0 0; padding:0; list-style:none; font-size:0.8rem; color:var(--ink-soft); display:flex; flex-direction:column; gap:3px; }
+  .reason-list li::before{ content:"・"; color:var(--accent-2); }
+
+  .priority-row{
+    display:flex; gap:14px; align-items:flex-start; padding:16px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .priority-row:last-child{ border-bottom:none; }
+  .priority-row .body{ flex:1; min-width:0; }
+  .priority-row .body h4{ font-size:0.98rem; font-family:var(--font-body); font-weight:700; }
+
+  .alert-box{
+    background:color-mix(in srgb, var(--accent-2) 10%, var(--bg-elevated));
+    border:1px solid color-mix(in srgb, var(--accent-2) 35%, var(--line));
+    border-radius:12px; padding:14px 18px; margin-bottom:10px; font-size:0.86rem;
+  }
+  .alert-box b{ color:var(--accent-2); }
+  .alert-box.empty{
+    background:var(--bg-elevated); border-color:var(--line); color:var(--ink-faint);
+  }
+
+  table{ width:100%; border-collapse:collapse; font-size:0.86rem; }
+  th,td{ text-align:left; padding:10px 8px; border-bottom:1px solid var(--line); vertical-align:middle; }
+  th{ color:var(--ink-faint); font-weight:700; font-size:0.74rem; letter-spacing:0.06em; text-transform:uppercase; }
+  td.num{ font-variant-numeric:tabular-nums; }
+  .table-wrap{ overflow-x:auto; }
+
+  select, input[type=text], input[type=number], input[type=date], input[type=email], input[type=tel], textarea{
+    width:100%; padding:9px 12px; border-radius:8px; border:1px solid var(--line-strong);
+    background:var(--bg); color:var(--ink);
+  }
+  label{ display:block; font-size:0.78rem; font-weight:700; color:var(--ink-soft); margin-bottom:5px; }
+  .field{ margin-bottom:14px; }
+  .field-row{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  @media (max-width:520px){ .field-row{ grid-template-columns:1fr; } }
+
+  .chip-filter{ display:flex; gap:6px; flex-wrap:wrap; margin-bottom:16px; }
+  .chip-filter button{
+    padding:7px 14px; border-radius:999px; border:1px solid var(--line-strong);
+    background:var(--bg-elevated); cursor:pointer; font-size:0.8rem; font-weight:700; color:var(--ink-soft);
+  }
+  .chip-filter button.active{ background:var(--ink); color:var(--bg-elevated); border-color:var(--ink); }
+
+  /* ---------- modal ---------- */
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(10,12,13,0.55); z-index:200;
+    display:flex; align-items:flex-start; justify-content:center;
+    padding:5vh 16px; overflow-y:auto;
+  }
+  .modal-overlay[hidden]{ display:none; }
+  .modal{
+    background:var(--bg-elevated); border-radius:16px; padding:26px;
+    max-width:640px; width:100%; box-shadow:var(--shadow); position:relative;
+  }
+  .modal-close{
+    position:absolute; top:16px; right:16px; background:none; border:none;
+    font-size:1.3rem; cursor:pointer; color:var(--ink-faint); line-height:1;
+  }
+  .modal h3{ font-size:1.15rem; margin-bottom:18px; padding-right:24px; }
+
+  .status-select{ min-width:110px; }
+  .action-item{ display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid var(--line); }
+  .action-item:last-child{ border-bottom:none; }
+  .action-item.overdue .due{ color:var(--danger); font-weight:700; }
+  .action-item .txt{ flex:1; }
+  .action-item.done .txt{ text-decoration:line-through; color:var(--ink-faint); }
+  .due{ font-size:0.78rem; color:var(--ink-faint); font-variant-numeric:tabular-nums; }
+
+  .msg-tabs{ display:flex; gap:6px; margin-bottom:10px; }
+  .msg-tabs button{
+    padding:6px 14px; border-radius:8px; border:1px solid var(--line-strong);
+    background:var(--bg); cursor:pointer; font-size:0.78rem; font-weight:700; color:var(--ink-soft);
+  }
+  .msg-tabs button.active{ background:var(--accent); color:var(--accent-ink); border-color:var(--accent); }
+  .msg-output{ min-height:180px; white-space:pre-wrap; font-size:0.86rem; }
+
+  .toast{
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+    background:var(--ink); color:var(--bg); padding:11px 22px; border-radius:999px;
+    font-size:0.84rem; font-weight:700; z-index:300; box-shadow:var(--shadow);
+    opacity:0; transition:opacity .2s ease;
+  }
+  .toast.show{ opacity:1; }
+
+  .empty-state{ text-align:center; padding:50px 20px; color:var(--ink-faint); }
+
+  footer.app-footer{ padding:40px 0; text-align:center; color:var(--ink-faint); font-size:0.78rem; }
+</style>
+
+<header class="app-header">
+  <div class="wrap nav-row">
+    <a class="brand" href="index.html">
+      <svg class="mark" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <rect width="40" height="40" fill="var(--accent)"/>
+        <path d="M4 24c4-5 8 5 12 0s8-5 12 0 8 5 8 5" stroke="var(--accent-ink)" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <path d="M4 30c4-5 8 5 12 0s8-5 12 0 8 5 8 5" stroke="var(--accent-ink)" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.55"/>
+      </svg>
+      <span>TAKAHARA不動産<small>TAKAHARA REAL ESTATE&nbsp;/&nbsp;FUKUOKA</small></span>
+    </a>
+    <div class="app-title">案件管理AI（プロトタイプ）</div>
+  </div>
+</header>
+
+<main class="wrap" style="padding-top:28px; padding-bottom:80px;">
+  <div class="section-head">
+    <div>
+      <h2>案件管理AI</h2>
+      <p class="hint">物件・買主/業者・紹介履歴・アクションをまとめて管理し、AIが営業の優先順位と紹介漏れを提案します。データはこの端末のブラウザ内（localStorage）にのみ保存されます。</p>
+    </div>
+    <button class="btn ghost small" id="resetDemoBtn" type="button">デモデータをリセット</button>
+  </div>
+
+  <nav class="tabbar" id="tabbar">
+    <button data-tab="dashboard" class="active">ダッシュボード</button>
+    <button data-tab="properties">案件一覧</button>
+    <button data-tab="companies">買主・業者</button>
+    <button data-tab="report">日報</button>
+  </nav>
+
+  <section class="tabpanel active" id="tab-dashboard">
+    <div class="section-head">
+      <h2>AIの営業優先順位提案</h2>
+      <span class="hint">💡 未紹介の業者・期限切れアクション・登録経過日数からルールベースAIがスコア算出（プロトタイプロジック）</span>
+    </div>
+    <div class="card" id="priorityCard" style="margin-bottom:24px;"></div>
+
+    <div class="section-head">
+      <h2>紹介漏れアラート</h2>
+    </div>
+    <div id="alertList" style="margin-bottom:24px;"></div>
+
+    <div class="section-head">
+      <h2>本日・期限切れのアクション</h2>
+    </div>
+    <div class="card" id="todayActions"></div>
+  </section>
+
+  <section class="tabpanel" id="tab-properties">
+    <div class="section-head">
+      <h2>案件一覧</h2>
+      <button class="btn small" id="addPropertyBtn" type="button">＋ 新規案件を登録</button>
+    </div>
+    <div class="grid-cards" id="propertyGrid"></div>
+  </section>
+
+  <section class="tabpanel" id="tab-companies">
+    <div class="section-head">
+      <h2>買主・業者一覧</h2>
+      <button class="btn small" id="addCompanyBtn" type="button">＋ 新規登録</button>
+    </div>
+    <div class="chip-filter" id="companyFilter"></div>
+    <div class="table-wrap card">
+      <table id="companyTable"></table>
+    </div>
+  </section>
+
+  <section class="tabpanel" id="tab-report">
+    <div class="section-head">
+      <h2>日報の自動作成</h2>
+    </div>
+    <div class="card">
+      <div class="field-row" style="align-items:end;">
+        <div class="field" style="margin-bottom:0;">
+          <label for="reportDate">対象日</label>
+          <input type="date" id="reportDate">
+        </div>
+        <div class="field" style="margin-bottom:0; display:flex; gap:10px;">
+          <button class="btn" id="genReportBtn" type="button">日報を生成</button>
+          <button class="btn ghost" id="copyReportBtn" type="button">コピー</button>
+        </div>
+      </div>
+      <textarea id="reportOutput" class="msg-output" rows="16" readonly style="margin-top:16px;"></textarea>
+    </div>
+  </section>
+</main>
+
+<footer class="app-footer">案件管理AI（プロトタイプ） ／ すべてのデータはブラウザ内にローカル保存されます。</footer>
+
+<div class="modal-overlay" id="modalRoot" hidden></div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  var STORAGE_KEY = "dealAI_v1";
+
+  var CATEGORY_META = {
+    house:   { label:"ハウスメーカー向け", cls:"house" },
+    tateuri: { label:"建売業者向け",     cls:"tateuri" },
+    apart:   { label:"アパートメーカー向け", cls:"apart" },
+    jiba:    { label:"地場仲介向け",     cls:"jiba" },
+    kojin:   { label:"個人買主",         cls:"kojin" }
+  };
+  var BUSINESS_CATS = ["house","tateuri","apart","jiba"];
+  var STATUS_OPTIONS = ["未紹介","紹介済み","検討中","成約","謝絶"];
+
+  function uid(prefix){ return prefix + "_" + Math.random().toString(36).slice(2,9); }
+  function todayStr(){ return new Date().toISOString().slice(0,10); }
+  function daysBetween(a,b){
+    var d1 = new Date(a+"T00:00:00"), d2 = new Date(b+"T00:00:00");
+    return Math.round((d2-d1)/86400000);
+  }
+  function fmtDate(s){
+    if(!s) return "";
+    var d = new Date(s+"T00:00:00");
+    return (d.getMonth()+1)+"/"+d.getDate();
+  }
+  function esc(s){
+    return String(s==null?"":s).replace(/[&<>"']/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+    });
+  }
+
+  function seedData(){
+    var p1 = uid("p");
+    var c1 = uid("c"), c2 = uid("c"), c3 = uid("c"), c4 = uid("c"), c5 = uid("c");
+    var today = todayStr();
+    var tomorrow = new Date(Date.now()+86400000).toISOString().slice(0,10);
+    return {
+      properties: [
+        {
+          id:p1, address:"福岡県宗像市", type:"土地", area:150, price:"1,800万円",
+          memo:"南向き、造成済み。最寄り駅まで徒歩12分。",
+          createdAt: today, categories: ["house","tateuri","apart","jiba"]
+        }
+      ],
+      companies: [
+        { id:c1, name:"◯◯ハウジング", category:"house", contact:"田中", tel:"092-000-1111", email:"tanaka@example.com", line:"" },
+        { id:c2, name:"△△ホームズ",   category:"house", contact:"佐藤", tel:"092-000-2222", email:"", line:"@sato-homes" },
+        { id:c3, name:"□□建設(建売)", category:"tateuri", contact:"鈴木", tel:"092-000-3333", email:"suzuki@example.com", line:"" },
+        { id:c4, name:"九州アパート開発", category:"apart", contact:"山本", tel:"092-000-4444", email:"", line:"" },
+        { id:c5, name:"宗像地所",     category:"jiba", contact:"高橋", tel:"0940-00-5555", email:"takahashi@example.com", line:"" }
+      ],
+      introductions: [
+        { id: uid("i"), propertyId:p1, companyId:c5, date: today, status:"検討中", note:"" }
+      ],
+      actions: [
+        { id: uid("a"), propertyId:p1, text:"現地写真を追加で撮影して資料を更新する", dueDate: tomorrow, done:false, createdAt: today, doneAt:null }
+      ]
+    };
+  }
+
+  var state = load();
+
+  function load(){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if(raw) return JSON.parse(raw);
+    }catch(e){}
+    var seeded = seedData();
+    save(seeded);
+    return seeded;
+  }
+  function save(s){
+    state = s || state;
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
+  }
+
+  function classify(prop){
+    var cats = [];
+    var area = Number(prop.area) || 0;
+    if(prop.type === "土地"){
+      cats.push("jiba");
+      if(area >= 80) cats.push("house");
+      if(area >= 60 && area <= 400) cats.push("tateuri");
+      if(area >= 150) cats.push("apart");
+    } else if(prop.type === "中古戸建"){
+      cats.push("jiba"); cats.push("tateuri");
+    } else if(prop.type === "中古マンション"){
+      cats.push("jiba");
+    } else if(prop.type === "収益物件"){
+      cats.push("apart"); cats.push("jiba");
+    } else {
+      cats.push("jiba");
+    }
+    var seen = {};
+    return cats.filter(function(c){ if(seen[c]) return false; seen[c]=true; return true; });
+  }
+
+  function targetCompaniesFor(prop){
+    return state.companies.filter(function(c){ return prop.categories.indexOf(c.category) !== -1; });
+  }
+  function introducedCompanyIds(propId){
+    return state.introductions.filter(function(i){ return i.propertyId === propId; }).map(function(i){ return i.companyId; });
+  }
+  function missingCompaniesFor(prop){
+    var introducedIds = introducedCompanyIds(prop.id);
+    return targetCompaniesFor(prop).filter(function(c){ return introducedIds.indexOf(c.id) === -1; });
+  }
+
+  function propertyActions(propId, includeDone){
+    return state.actions.filter(function(a){ return a.propertyId === propId && (includeDone || !a.done); });
+  }
+
+  function priorityInfo(prop){
+    var today = todayStr();
+    var missing = missingCompaniesFor(prop);
+    var openActions = propertyActions(prop.id, false);
+    var overdue = openActions.filter(function(a){ return a.dueDate && a.dueDate < today; });
+    var dueSoon = openActions.filter(function(a){ return a.dueDate && a.dueDate >= today && daysBetween(today, a.dueDate) <= 2; });
+    var age = Math.max(0, daysBetween(prop.createdAt, today));
+
+    var score = 0;
+    score += missing.length * 30;
+    score += overdue.length * 40;
+    score += dueSoon.length * 15;
+    score += Math.min(age, 14);
+
+    var reasons = [];
+    if(missing.length) reasons.push("未紹介の業者が" + missing.length + "件あります");
+    if(overdue.length) reasons.push("期限切れのアクションが" + overdue.length + "件あります");
+    if(dueSoon.length) reasons.push("2日以内が期限のアクションが" + dueSoon.length + "件あります");
+    if(age >= 7) reasons.push("登録から" + age + "日経過しています");
+    if(!reasons.length) reasons.push("現時点で緊急の対応はありません");
+
+    return { score:score, missing:missing, overdue:overdue, dueSoon:dueSoon, age:age, reasons:reasons };
+  }
+
+  function propertyName(p){
+    return p.address + " " + p.type + "（" + p.area + "坪）";
+  }
+
+  function categoryBadges(cats){
+    return cats.map(function(c){
+      var m = CATEGORY_META[c];
+      return '<span class="badge ' + m.cls + '">' + esc(m.label) + '</span>';
+    }).join("");
+  }
+
+  /* ---------------- render: dashboard ---------------- */
+  function renderDashboard(){
+    var rows = state.properties.map(function(p){
+      return { p:p, info: priorityInfo(p) };
+    }).sort(function(a,b){ return b.info.score - a.info.score; });
+
+    var pc = document.getElementById("priorityCard");
+    if(!rows.length){
+      pc.innerHTML = '<div class="empty-state">まだ案件が登録されていません。「案件一覧」から登録してください。</div>';
+    } else {
+      pc.innerHTML = rows.map(function(r){
+        var cls = r.info.score >= 60 ? "" : (r.info.score >= 25 ? "mid" : "low");
+        return (
+          '<div class="priority-row">' +
+            '<div class="score-chip ' + cls + '">' + r.info.score + '</div>' +
+            '<div class="body">' +
+              '<h4>' + esc(propertyName(r.p)) + '</h4>' +
+              '<div class="badge-row">' + categoryBadges(r.p.categories) + '</div>' +
+              '<ul class="reason-list">' + r.info.reasons.map(function(x){ return '<li>'+esc(x)+'</li>'; }).join("") + '</ul>' +
+            '</div>' +
+            '<button class="btn ghost small" onclick="DealAI.openDetail(\'' + r.p.id + '\')">詳細を見る</button>' +
+          '</div>'
+        );
+      }).join("");
+    }
+
+    var alertHtml = "";
+    var anyAlert = false;
+    rows.forEach(function(r){
+      if(r.info.missing.length){
+        anyAlert = true;
+        var names = r.info.missing.map(function(c){ return c.name; });
+        var shown = names.slice(0,3).join("・");
+        var rest = names.length > 3 ? " ほか" + (names.length-3) + "件" : "";
+        alertHtml += '<div class="alert-box"><b>「' + esc(propertyName(r.p)) + '」</b> は、まだ <b>' + esc(shown) + rest + '</b> に紹介していません。</div>';
+      }
+    });
+    document.getElementById("alertList").innerHTML = anyAlert ? alertHtml : '<div class="alert-box empty">紹介漏れの案件はありません。</div>';
+
+    var today = todayStr();
+    var actionRows = [];
+    state.properties.forEach(function(p){
+      propertyActions(p.id, false).forEach(function(a){
+        if(a.dueDate && a.dueDate <= today){
+          actionRows.push({ a:a, p:p });
+        }
+      });
+    });
+    actionRows.sort(function(x,y){ return (x.a.dueDate||"").localeCompare(y.a.dueDate||""); });
+    var ta = document.getElementById("todayActions");
+    if(!actionRows.length){
+      ta.innerHTML = '<div class="empty-state">本日期限・期限切れのアクションはありません。</div>';
+    } else {
+      ta.innerHTML = actionRows.map(function(r){
+        var overdue = r.a.dueDate < today;
+        return (
+          '<div class="action-item' + (overdue ? " overdue" : "") + '">' +
+            '<input type="checkbox" onchange="DealAI.toggleAction(\'' + r.a.id + '\')">' +
+            '<span class="txt">' + esc(propertyName(r.p)) + '　―　' + esc(r.a.text) + '</span>' +
+            '<span class="due">' + fmtDate(r.a.dueDate) + (overdue ? "（期限切れ）" : "（本日）") + '</span>' +
+          '</div>'
+        );
+      }).join("");
+    }
+  }
+
+  /* ---------------- render: properties ---------------- */
+  function renderProperties(){
+    var grid = document.getElementById("propertyGrid");
+    if(!state.properties.length){
+      grid.innerHTML = '<div class="empty-state">案件がまだありません。「＋ 新規案件を登録」から追加してください。</div>';
+      return;
+    }
+    grid.innerHTML = state.properties.map(function(p){
+      var missing = missingCompaniesFor(p);
+      var openActions = propertyActions(p.id, false);
+      return (
+        '<div class="card">' +
+          '<h3>' + esc(propertyName(p)) + '</h3>' +
+          '<div class="prop-meta">価格：' + esc(p.price||"未設定") + '</div>' +
+          '<div class="prop-meta">登録日：' + esc(p.createdAt) + '</div>' +
+          '<div class="badge-row">' + categoryBadges(p.categories) + '</div>' +
+          '<div class="prop-meta" style="margin-top:8px;">未紹介：' + missing.length + '件／未完了アクション：' + openActions.length + '件</div>' +
+          '<div style="margin-top:14px; display:flex; gap:8px;">' +
+            '<button class="btn small" onclick="DealAI.openDetail(\'' + p.id + '\')">詳細</button>' +
+            '<button class="btn ghost small" onclick="DealAI.openPropertyForm(\'' + p.id + '\')">編集</button>' +
+          '</div>' +
+        '</div>'
+      );
+    }).join("");
+  }
+
+  /* ---------------- render: companies ---------------- */
+  var companyFilterState = "all";
+  function renderCompanyFilter(){
+    var el = document.getElementById("companyFilter");
+    var opts = [["all","すべて"]].concat(Object.keys(CATEGORY_META).map(function(k){ return [k, CATEGORY_META[k].label]; }));
+    el.innerHTML = opts.map(function(o){
+      return '<button data-cat="' + o[0] + '" class="' + (companyFilterState===o[0] ? "active" : "") + '">' + esc(o[1]) + '</button>';
+    }).join("");
+    Array.prototype.forEach.call(el.querySelectorAll("button"), function(btn){
+      btn.addEventListener("click", function(){
+        companyFilterState = btn.getAttribute("data-cat");
+        renderCompanyFilter();
+        renderCompanies();
+      });
+    });
+  }
+  function renderCompanies(){
+    var list = state.companies.filter(function(c){
+      return companyFilterState === "all" || c.category === companyFilterState;
+    });
+    var table = document.getElementById("companyTable");
+    var head = '<thead><tr><th>名前</th><th>種別</th><th>担当者</th><th>電話</th><th>メール/LINE</th><th></th></tr></thead>';
+    if(!list.length){
+      table.innerHTML = head + '<tbody><tr><td colspan="6" style="color:var(--ink-faint);">該当する登録はありません。</td></tr></tbody>';
+      return;
+    }
+    var body = list.map(function(c){
+      var m = CATEGORY_META[c.category] || CATEGORY_META.jiba;
+      return (
+        '<tr>' +
+          '<td>' + esc(c.name) + '</td>' +
+          '<td><span class="badge ' + m.cls + '">' + esc(m.label) + '</span></td>' +
+          '<td>' + esc(c.contact||"") + '</td>' +
+          '<td>' + esc(c.tel||"") + '</td>' +
+          '<td>' + esc(c.email||"") + (c.line ? '　'+esc(c.line) : '') + '</td>' +
+          '<td style="white-space:nowrap;">' +
+            '<button class="btn ghost small" onclick="DealAI.openCompanyForm(\'' + c.id + '\')">編集</button> ' +
+            '<button class="btn danger small" onclick="DealAI.deleteCompany(\'' + c.id + '\')">削除</button>' +
+          '</td>' +
+        '</tr>'
+      );
+    }).join("");
+    table.innerHTML = head + '<tbody>' + body + '</tbody>';
+  }
+
+  /* ---------------- modal helpers ---------------- */
+  var modalRoot = document.getElementById("modalRoot");
+  function openModal(html){
+    modalRoot.innerHTML = '<div class="modal">' +
+      '<button class="modal-close" onclick="DealAI.closeModal()">×</button>' + html + '</div>';
+    modalRoot.hidden = false;
+  }
+  function closeModal(){ modalRoot.hidden = true; modalRoot.innerHTML = ""; }
+  modalRoot.addEventListener("click", function(e){ if(e.target === modalRoot) closeModal(); });
+
+  function showToast(msg){
+    var t = document.getElementById("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(function(){ t.classList.remove("show"); }, 2200);
+  }
+
+  /* ---------------- property form ---------------- */
+  function openPropertyForm(id){
+    var p = id ? state.properties.find(function(x){ return x.id === id; }) : null;
+    var html =
+      '<h3>' + (p ? "案件を編集" : "新規案件を登録") + '</h3>' +
+      '<form id="propertyForm">' +
+        '<div class="field"><label>所在地</label><input type="text" id="f_address" placeholder="例：福岡県宗像市" value="' + esc(p?p.address:"") + '" required></div>' +
+        '<div class="field-row">' +
+          '<div class="field"><label>種別</label><select id="f_type">' +
+            ["土地","中古戸建","中古マンション","収益物件","新築戸建"].map(function(t){
+              return '<option' + (p&&p.type===t ? ' selected' : '') + '>' + t + '</option>';
+            }).join("") +
+          '</select></div>' +
+          '<div class="field"><label>面積（坪）</label><input type="number" id="f_area" min="0" step="0.1" value="' + (p?p.area:"") + '" required></div>' +
+        '</div>' +
+        '<div class="field"><label>価格</label><input type="text" id="f_price" placeholder="例：1,800万円" value="' + esc(p?p.price:"") + '"></div>' +
+        '<div class="field"><label>メモ</label><textarea id="f_memo" rows="3">' + esc(p?p.memo:"") + '</textarea></div>' +
+        '<div style="display:flex; gap:10px; justify-content:flex-end;">' +
+          (p ? '<button type="button" class="btn danger" onclick="DealAI.deleteProperty(\'' + p.id + '\')">削除</button>' : '') +
+          '<button type="submit" class="btn">' + (p ? "更新する" : "登録してAI分類する") + '</button>' +
+        '</div>' +
+      '</form>';
+    openModal(html);
+    document.getElementById("propertyForm").addEventListener("submit", function(e){
+      e.preventDefault();
+      var data = {
+        address: document.getElementById("f_address").value.trim(),
+        type: document.getElementById("f_type").value,
+        area: Number(document.getElementById("f_area").value) || 0,
+        price: document.getElementById("f_price").value.trim(),
+        memo: document.getElementById("f_memo").value.trim()
+      };
+      if(!data.address || !data.area){ showToast("所在地と面積を入力してください"); return; }
+      if(p){
+        Object.assign(p, data);
+        p.categories = classify(p);
+      } else {
+        var np = Object.assign({ id: uid("p"), createdAt: todayStr() }, data);
+        np.categories = classify(np);
+        state.properties.push(np);
+      }
+      save();
+      closeModal();
+      renderAll();
+      showToast(p ? "案件を更新しました" : "案件を登録し、AIが分類しました");
+    });
+  }
+
+  function deleteProperty(id){
+    if(!confirm("この案件を削除しますか？関連する紹介履歴・アクションも削除されます。")) return;
+    state.properties = state.properties.filter(function(p){ return p.id !== id; });
+    state.introductions = state.introductions.filter(function(i){ return i.propertyId !== id; });
+    state.actions = state.actions.filter(function(a){ return a.propertyId !== id; });
+    save();
+    closeModal();
+    renderAll();
+    showToast("案件を削除しました");
+  }
+
+  /* ---------------- company form ---------------- */
+  function openCompanyForm(id){
+    var c = id ? state.companies.find(function(x){ return x.id === id; }) : null;
+    var html =
+      '<h3>' + (c ? "登録先を編集" : "買主・業者を新規登録") + '</h3>' +
+      '<form id="companyForm">' +
+        '<div class="field"><label>名前</label><input type="text" id="g_name" value="' + esc(c?c.name:"") + '" required></div>' +
+        '<div class="field"><label>種別</label><select id="g_category">' +
+          Object.keys(CATEGORY_META).map(function(k){
+            return '<option value="' + k + '"' + (c&&c.category===k ? ' selected' : '') + '>' + CATEGORY_META[k].label + '</option>';
+          }).join("") +
+        '</select></div>' +
+        '<div class="field-row">' +
+          '<div class="field"><label>担当者名</label><input type="text" id="g_contact" value="' + esc(c?c.contact:"") + '"></div>' +
+          '<div class="field"><label>電話番号</label><input type="tel" id="g_tel" value="' + esc(c?c.tel:"") + '"></div>' +
+        '</div>' +
+        '<div class="field-row">' +
+          '<div class="field"><label>メール</label><input type="email" id="g_email" value="' + esc(c?c.email:"") + '"></div>' +
+          '<div class="field"><label>LINE ID</label><input type="text" id="g_line" value="' + esc(c?c.line:"") + '"></div>' +
+        '</div>' +
+        '<div style="display:flex; gap:10px; justify-content:flex-end;">' +
+          '<button type="submit" class="btn">' + (c ? "更新する" : "登録する") + '</button>' +
+        '</div>' +
+      '</form>';
+    openModal(html);
+    document.getElementById("companyForm").addEventListener("submit", function(e){
+      e.preventDefault();
+      var data = {
+        name: document.getElementById("g_name").value.trim(),
+        category: document.getElementById("g_category").value,
+        contact: document.getElementById("g_contact").value.trim(),
+        tel: document.getElementById("g_tel").value.trim(),
+        email: document.getElementById("g_email").value.trim(),
+        line: document.getElementById("g_line").value.trim()
+      };
+      if(!data.name){ showToast("名前を入力してください"); return; }
+      if(c){
+        Object.assign(c, data);
+      } else {
+        state.companies.push(Object.assign({ id: uid("c") }, data));
+      }
+      save();
+      closeModal();
+      renderAll();
+      showToast(c ? "更新しました" : "登録しました");
+    });
+  }
+  function deleteCompany(id){
+    if(!confirm("この登録先を削除しますか？")) return;
+    state.companies = state.companies.filter(function(c){ return c.id !== id; });
+    state.introductions = state.introductions.filter(function(i){ return i.companyId !== id; });
+    save();
+    closeModal();
+    renderAll();
+    showToast("削除しました");
+  }
+
+  /* ---------------- property detail ---------------- */
+  function introStatusFor(propId, companyId){
+    var rec = state.introductions.find(function(i){ return i.propertyId===propId && i.companyId===companyId; });
+    return rec ? rec.status : "未紹介";
+  }
+  function setIntroStatus(propId, companyId, status){
+    var rec = state.introductions.find(function(i){ return i.propertyId===propId && i.companyId===companyId; });
+    if(!rec){
+      rec = { id: uid("i"), propertyId:propId, companyId:companyId, date: todayStr(), status:status, note:"" };
+      state.introductions.push(rec);
+    } else {
+      rec.status = status;
+      if(status !== "未紹介" && !rec.date) rec.date = todayStr();
+    }
+    save();
+  }
+
+  function openDetail(id){
+    var p = state.properties.find(function(x){ return x.id === id; });
+    if(!p) return;
+    var targets = targetCompaniesFor(p);
+    var extraIds = introducedCompanyIds(p.id).filter(function(cid){ return !targets.some(function(t){ return t.id===cid; }); });
+    var extra = state.companies.filter(function(c){ return extraIds.indexOf(c.id) !== -1; });
+    var rows = targets.concat(extra);
+
+    var otherCompanies = state.companies.filter(function(c){ return !rows.some(function(r){ return r.id === c.id; }); });
+
+    var introRowsHtml = rows.length ? rows.map(function(c){
+      var status = introStatusFor(p.id, c.id);
+      var m = CATEGORY_META[c.category] || CATEGORY_META.jiba;
+      return (
+        '<tr>' +
+          '<td>' + esc(c.name) + '<div><span class="badge ' + m.cls + '">' + esc(m.label) + '</span></div></td>' +
+          '<td>' +
+            '<select class="status-select" onchange="DealAI.changeIntroStatus(\'' + p.id + '\',\'' + c.id + '\',this.value)">' +
+              STATUS_OPTIONS.map(function(s){ return '<option' + (s===status?' selected':'') + '>' + s + '</option>'; }).join("") +
+            '</select>' +
+          '</td>' +
+          '<td>' +
+            '<button class="btn ghost small" onclick="DealAI.openCompose(\'' + p.id + '\',\'' + c.id + '\')">文面生成</button>' +
+          '</td>' +
+        '</tr>'
+      );
+    }).join("") : '<tr><td colspan="3" style="color:var(--ink-faint);">対象の登録先がまだありません。「買主・業者」タブから登録してください。</td></tr>';
+
+    var actions = propertyActions(p.id, true).sort(function(a,b){ return (a.done?1:0)-(b.done?1:0) || (a.dueDate||"").localeCompare(b.dueDate||""); });
+    var today = todayStr();
+    var actionsHtml = actions.length ? actions.map(function(a){
+      var overdue = !a.done && a.dueDate && a.dueDate < today;
+      return (
+        '<div class="action-item' + (overdue?" overdue":"") + (a.done?" done":"") + '">' +
+          '<input type="checkbox" ' + (a.done?"checked":"") + ' onchange="DealAI.toggleAction(\'' + a.id + '\')">' +
+          '<span class="txt">' + esc(a.text) + '</span>' +
+          (a.dueDate ? '<span class="due">' + fmtDate(a.dueDate) + '</span>' : '') +
+          '<button class="btn ghost small" onclick="DealAI.deleteAction(\'' + a.id + '\')">削除</button>' +
+        '</div>'
+      );
+    }).join("") : '<div class="hint">アクションはまだありません。</div>';
+
+    var html =
+      '<h3>' + esc(propertyName(p)) + '</h3>' +
+      '<div class="badge-row">' + categoryBadges(p.categories) + '</div>' +
+      '<p class="prop-meta">価格：' + esc(p.price||"未設定") + '　／　登録日：' + esc(p.createdAt) + '</p>' +
+      (p.memo ? '<p class="prop-meta">' + esc(p.memo) + '</p>' : '') +
+
+      '<h4 style="margin-top:22px; font-size:0.95rem;">紹介状況</h4>' +
+      '<div class="table-wrap"><table><thead><tr><th>相手先</th><th>ステータス</th><th></th></tr></thead><tbody>' + introRowsHtml + '</tbody></table></div>' +
+      (otherCompanies.length ?
+        '<div style="margin-top:10px; display:flex; gap:8px; align-items:center;">' +
+          '<select id="otherCompanySelect" style="max-width:240px;">' +
+            otherCompanies.map(function(c){ return '<option value="'+c.id+'">'+esc(c.name)+'</option>'; }).join("") +
+          '</select>' +
+          '<button class="btn ghost small" type="button" onclick="DealAI.addManualIntro(\'' + p.id + '\')">＋ この相手にも紹介記録を追加</button>' +
+        '</div>' : ''
+      ) +
+
+      '<h4 style="margin-top:22px; font-size:0.95rem;">次回アクション</h4>' +
+      '<div id="actionsList">' + actionsHtml + '</div>' +
+      '<form id="actionForm" style="display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;">' +
+        '<input type="text" id="newActionText" placeholder="例：資料を送付する" style="flex:1; min-width:160px;" required>' +
+        '<input type="date" id="newActionDue" style="max-width:160px;">' +
+        '<button class="btn small" type="submit">追加</button>' +
+      '</form>';
+
+    openModal(html);
+    document.getElementById("actionForm").addEventListener("submit", function(e){
+      e.preventDefault();
+      var text = document.getElementById("newActionText").value.trim();
+      var due = document.getElementById("newActionDue").value;
+      if(!text) return;
+      state.actions.push({ id: uid("a"), propertyId: p.id, text:text, dueDate: due||null, done:false, createdAt: todayStr(), doneAt:null });
+      save();
+      openDetail(p.id);
+      renderAll();
+    });
+  }
+
+  function changeIntroStatus(propId, companyId, status){
+    setIntroStatus(propId, companyId, status);
+    renderAll();
+    openDetail(propId);
+  }
+  function addManualIntro(propId){
+    var sel = document.getElementById("otherCompanySelect");
+    if(!sel || !sel.value) return;
+    setIntroStatus(propId, sel.value, "紹介済み");
+    renderAll();
+    openDetail(propId);
+  }
+
+  function toggleAction(id){
+    var a = state.actions.find(function(x){ return x.id === id; });
+    if(!a) return;
+    a.done = !a.done;
+    a.doneAt = a.done ? todayStr() : null;
+    save();
+    renderAll();
+    if(!modalRoot.hidden && document.getElementById("actionsList")) openDetail(a.propertyId);
+  }
+  function deleteAction(id){
+    var a = state.actions.find(function(x){ return x.id === id; });
+    state.actions = state.actions.filter(function(x){ return x.id !== id; });
+    save();
+    renderAll();
+    if(a) openDetail(a.propertyId);
+  }
+
+  /* ---------------- message composer ---------------- */
+  function generateMessage(prop, company, channel){
+    var greet = company.contact ? (company.contact + "様") : (company.name + " ご担当者様");
+    var body =
+      "新着物件のご紹介です。\n\n" +
+      "■物件：" + prop.address + " " + prop.type + "\n" +
+      "■面積：" + prop.area + "坪\n" +
+      "■価格：" + (prop.price || "ご相談") + "\n" +
+      (prop.memo ? "■備考：" + prop.memo + "\n" : "") +
+      "\nご興味がございましたら、詳細資料をお送りいたします。ご検討のほどよろしくお願いいたします。";
+
+    if(channel === "line"){
+      return greet + "\n\nいつもお世話になっております。TAKAHARA不動産です。\n\n" + body;
+    }
+    var subject = "【物件のご紹介】" + prop.address + prop.type + "（" + prop.area + "坪）";
+    return "件名：" + subject + "\n\n" + greet + "\n\nいつもお世話になっております。TAKAHARA不動産でございます。\n\n" + body + "\n\n何卒よろしくお願い申し上げます。";
+  }
+
+  function openCompose(propId, companyId){
+    var p = state.properties.find(function(x){ return x.id === propId; });
+    var c = state.companies.find(function(x){ return x.id === companyId; });
+    if(!p || !c) return;
+    var html =
+      '<h3>紹介文面の自動生成</h3>' +
+      '<p class="hint">' + esc(c.name) + '（' + esc(CATEGORY_META[c.category].label) + '）宛　／　' + esc(propertyName(p)) + '</p>' +
+      '<div class="msg-tabs">' +
+        '<button data-ch="line" class="active">LINE用</button>' +
+        '<button data-ch="email">メール用</button>' +
+      '</div>' +
+      '<textarea id="composeOutput" class="msg-output" rows="12" readonly></textarea>' +
+      '<div style="display:flex; gap:10px; justify-content:flex-end; margin-top:12px;">' +
+        '<button class="btn ghost" id="composeCopyBtn" type="button">コピー</button>' +
+      '</div>';
+    openModal(html);
+    var out = document.getElementById("composeOutput");
+    var channel = "line";
+    function refresh(){ out.value = generateMessage(p, c, channel); }
+    refresh();
+    var tabs = modalRoot.querySelectorAll(".msg-tabs button");
+    Array.prototype.forEach.call(tabs, function(btn){
+      btn.addEventListener("click", function(){
+        Array.prototype.forEach.call(tabs, function(b){ b.classList.remove("active"); });
+        btn.classList.add("active");
+        channel = btn.getAttribute("data-ch");
+        refresh();
+      });
+    });
+    document.getElementById("composeCopyBtn").addEventListener("click", function(){
+      copyText(out.value);
+    });
+  }
+
+  function copyText(text){
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ showToast("コピーしました"); }, function(){ fallbackCopy(text); });
+    } else {
+      fallbackCopy(text);
+    }
+  }
+  function fallbackCopy(text){
+    var ta = document.createElement("textarea");
+    ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta); ta.select();
+    try{ document.execCommand("copy"); showToast("コピーしました"); }catch(e){ showToast("コピーできませんでした"); }
+    document.body.removeChild(ta);
+  }
+
+  /* ---------------- report ---------------- */
+  function generateReport(dateStr){
+    var props = state.properties;
+    var lines = [];
+    lines.push("日報　" + dateStr);
+    lines.push("");
+
+    var newProps = props.filter(function(p){ return p.createdAt === dateStr; });
+    lines.push("■本日登録した案件（" + newProps.length + "件）");
+    if(newProps.length){
+      newProps.forEach(function(p){ lines.push("・" + propertyName(p) + "／分類：" + p.categories.map(function(c){return CATEGORY_META[c].label;}).join("、")); });
+    } else lines.push("・なし");
+    lines.push("");
+
+    var intros = state.introductions.filter(function(i){ return i.date === dateStr; });
+    lines.push("■本日の紹介活動（" + intros.length + "件）");
+    if(intros.length){
+      intros.forEach(function(i){
+        var p = props.find(function(x){ return x.id===i.propertyId; });
+        var c = state.companies.find(function(x){ return x.id===i.companyId; });
+        if(p && c) lines.push("・" + propertyName(p) + " → " + c.name + "（" + i.status + "）");
+      });
+    } else lines.push("・なし");
+    lines.push("");
+
+    var doneActions = state.actions.filter(function(a){ return a.doneAt === dateStr; });
+    lines.push("■本日完了したアクション（" + doneActions.length + "件）");
+    if(doneActions.length){
+      doneActions.forEach(function(a){
+        var p = props.find(function(x){ return x.id===a.propertyId; });
+        lines.push("・" + (p?propertyName(p):"") + "／" + a.text);
+      });
+    } else lines.push("・なし");
+    lines.push("");
+
+    var upcoming = state.actions.filter(function(a){ return !a.done && a.dueDate && a.dueDate >= dateStr && daysBetween(dateStr, a.dueDate) <= 3; });
+    lines.push("■今後3日以内が期限の予定（" + upcoming.length + "件）");
+    if(upcoming.length){
+      upcoming.sort(function(x,y){ return x.dueDate.localeCompare(y.dueDate); });
+      upcoming.forEach(function(a){
+        var p = props.find(function(x){ return x.id===a.propertyId; });
+        lines.push("・" + fmtDate(a.dueDate) + "　" + (p?propertyName(p):"") + "／" + a.text);
+      });
+    } else lines.push("・なし");
+    lines.push("");
+
+    var alerts = props.map(function(p){ return { p:p, missing: missingCompaniesFor(p) }; }).filter(function(x){ return x.missing.length; });
+    lines.push("■紹介漏れアラート（" + alerts.length + "件）");
+    if(alerts.length){
+      alerts.forEach(function(x){
+        lines.push("・" + propertyName(x.p) + "：" + x.missing.map(function(c){return c.name;}).join("・") + " 未紹介");
+      });
+    } else lines.push("・なし");
+
+    return lines.join("\n");
+  }
+
+  /* ---------------- global render / init ---------------- */
+  function renderAll(){
+    renderDashboard();
+    renderProperties();
+    renderCompanyFilter();
+    renderCompanies();
+  }
+
+  function initTabs(){
+    var bar = document.getElementById("tabbar");
+    var btns = bar.querySelectorAll("button");
+    Array.prototype.forEach.call(btns, function(btn){
+      btn.addEventListener("click", function(){
+        Array.prototype.forEach.call(btns, function(b){ b.classList.remove("active"); });
+        btn.classList.add("active");
+        Array.prototype.forEach.call(document.querySelectorAll(".tabpanel"), function(panel){ panel.classList.remove("active"); });
+        document.getElementById("tab-" + btn.getAttribute("data-tab")).classList.add("active");
+      });
+    });
+  }
+
+  function init(){
+    initTabs();
+    renderAll();
+    document.getElementById("addPropertyBtn").addEventListener("click", function(){ openPropertyForm(null); });
+    document.getElementById("addCompanyBtn").addEventListener("click", function(){ openCompanyForm(null); });
+    document.getElementById("resetDemoBtn").addEventListener("click", function(){
+      if(!confirm("すべてのデータを削除して、デモデータに戻しますか？")) return;
+      save(seedData());
+      renderAll();
+      showToast("デモデータに戻しました");
+    });
+
+    var reportDate = document.getElementById("reportDate");
+    reportDate.value = todayStr();
+    document.getElementById("genReportBtn").addEventListener("click", function(){
+      document.getElementById("reportOutput").value = generateReport(reportDate.value || todayStr());
+    });
+    document.getElementById("copyReportBtn").addEventListener("click", function(){
+      copyText(document.getElementById("reportOutput").value);
+    });
+    document.getElementById("reportOutput").value = generateReport(todayStr());
+  }
+
+  document.addEventListener("DOMContentLoaded", init);
+
+  window.DealAI = {
+    openDetail: openDetail,
+    openPropertyForm: openPropertyForm,
+    deleteProperty: deleteProperty,
+    openCompanyForm: openCompanyForm,
+    deleteCompany: deleteCompany,
+    closeModal: closeModal,
+    changeIntroStatus: changeIntroStatus,
+    addManualIntro: addManualIntro,
+    toggleAction: toggleAction,
+    deleteAction: deleteAction,
+    openCompose: openCompose
+  };
+})();
+</script>
