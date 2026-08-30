@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>物件紹介メール作成ツール | TAKAHARA不動産</title>
+<title>物件紹介メール作成ツール</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -146,13 +146,36 @@
   <div class="wrap">
     <div>
       <h1>物件紹介メール作成ツール</h1>
-      <span class="badge">TAKAHARA不動産 / 社内用</span>
+      <span class="badge">土地・物件の紹介メールを作成</span>
     </div>
-    <a class="back" href="./index.html">← サイトトップへ戻る</a>
   </div>
 </header>
 
 <div class="wrap">
+
+  <!-- ================= STEP 0: SENDER ================= -->
+  <section class="panel">
+    <h2><span class="num">00</span>差出人情報</h2>
+    <p class="desc">メールの署名・差出人として使う情報を入力してください。この端末のブラウザ内にのみ保存されます。</p>
+    <div class="grid g3">
+      <div class="field">
+        <label for="s-name">会社名・氏名</label>
+        <input type="text" id="s-name" placeholder="例：○○不動産株式会社">
+      </div>
+      <div class="field">
+        <label for="s-email">メールアドレス</label>
+        <input type="email" id="s-email" placeholder="例：info@example.com">
+      </div>
+      <div class="field">
+        <label for="s-tel">電話番号</label>
+        <input type="text" id="s-tel" placeholder="例：090-0000-0000">
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="primary" id="btn-save-sender">差出人情報を保存</button>
+      <span class="muted" id="sender-saved-hint"></span>
+    </div>
+  </section>
 
   <!-- ================= STEP 1: PROPERTY ================= -->
   <section class="panel">
@@ -194,7 +217,7 @@
       </div>
       <div class="field" style="grid-column:span 2;">
         <label for="p-url">参考URL（自社サイトの物件ページなど）</label>
-        <input type="url" id="p-url" placeholder="https://takahara-realestate.example/properties/xxxx">
+        <input type="url" id="p-url" placeholder="https://example.com/properties/xxxx">
       </div>
       <div class="field" style="grid-column:1/-1;">
         <label for="p-notes">特徴・備考</label>
@@ -357,10 +380,7 @@
 (function(){
   "use strict";
 
-  var STORE_KEY = "takahara_referral_tool_v1";
-  var SELF_EMAIL = "info@takahara-realestate.example";
-  var SELF_NAME = "TAKAHARA不動産株式会社";
-  var SELF_TEL = "090-2716-4857";
+  var STORE_KEY = "referral_tool_v1";
 
   var SAMPLE_RECIPIENTS = [
     { company:"北九州ハウジング株式会社(サンプル)", person:"田中様", email:"sample-info@kitakyu-housing.example.jp", category:"建売業者", area:"北九州市" },
@@ -371,13 +391,14 @@
     { company:"博多エステート(サンプル)", person:"", email:"sample-contact@hakata-estate.example.jp", category:"不動産業者", area:"福岡市" }
   ];
 
-  var state = { property:{}, recipients:[], selected:{} };
+  var state = { sender:{}, property:{}, recipients:[], selected:{} };
 
   function load(){
     try{
       var raw = localStorage.getItem(STORE_KEY);
       if(raw){
         var data = JSON.parse(raw);
+        state.sender = data.sender || {};
         state.property = data.property || {};
         state.recipients = data.recipients || [];
         return;
@@ -391,7 +412,7 @@
 
   function save(){
     try{
-      localStorage.setItem(STORE_KEY, JSON.stringify({ property:state.property, recipients:state.recipients }));
+      localStorage.setItem(STORE_KEY, JSON.stringify({ sender:state.sender, property:state.property, recipients:state.recipients }));
     }catch(e){}
   }
 
@@ -410,6 +431,32 @@
       return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c];
     });
   }
+
+  // ---------- sender ----------
+  var sFields = ["name","email","tel"];
+  function fillSenderForm(){
+    sFields.forEach(function(f){
+      var el = document.getElementById("s-" + f);
+      if(el && state.sender[f] != null) el.value = state.sender[f];
+    });
+  }
+  function readSenderForm(){
+    var s = {};
+    sFields.forEach(function(f){
+      var el = document.getElementById("s-" + f);
+      s[f] = el ? el.value.trim() : "";
+    });
+    return s;
+  }
+
+  document.getElementById("btn-save-sender").addEventListener("click", function(){
+    state.sender = readSenderForm();
+    save();
+    document.getElementById("sender-saved-hint").textContent = "保存しました";
+    setTimeout(function(){ document.getElementById("sender-saved-hint").textContent = ""; }, 2000);
+    userEditedTemplate = false;
+    renderEmail();
+  });
 
   // ---------- property ----------
   var pFields = ["type","name","address","access","price","land","building","url","notes"];
@@ -587,10 +634,12 @@
 
   function defaultBody(){
     var p = state.property;
+    var s = state.sender;
+    var senderName = s.name || "（差出人情報を入力してください）";
     var lines = [];
     lines.push("{担当者}");
     lines.push("");
-    lines.push(SELF_NAME + "の担当でございます。いつもお世話になっております。");
+    lines.push(senderName + "の担当でございます。いつもお世話になっております。");
     lines.push("下記の物件がございましたので、ご紹介させていただきます。");
     lines.push("");
     lines.push("---------------------------------");
@@ -608,9 +657,9 @@
     lines.push("ご興味をお持ちいただけましたら、本メールへの返信、またはお電話にてお気軽にご連絡ください。");
     lines.push("何卒よろしくお願い申し上げます。");
     lines.push("");
-    lines.push(SELF_NAME);
-    lines.push("TEL：" + SELF_TEL);
-    lines.push("Mail：" + SELF_EMAIL);
+    lines.push(senderName);
+    if(s.tel) lines.push("TEL：" + s.tel);
+    if(s.email) lines.push("Mail：" + s.email);
     return lines.join("\n");
   }
 
@@ -681,7 +730,7 @@
 
     // bulk warning
     var addrs = sel.map(function(r){ return r.email; });
-    var estimatedLen = ("mailto:" + SELF_EMAIL + "?bcc=" + addrs.join(",") + "&subject=" + subject + "&body=" + body).length;
+    var estimatedLen = ("mailto:" + (state.sender.email || "") + "?bcc=" + addrs.join(",") + "&subject=" + subject + "&body=" + body).length;
     var warnEl = document.getElementById("bulk-warning");
     if(estimatedLen > 1800 && sel.length){
       warnEl.innerHTML = '<div class="warn">宛先が多いため、お使いのメールソフトによっては一括送信リンクが正しく開けない場合があります（目安：URLの長さが約' + estimatedLen + '文字）。その場合は「20件ずつに分割して開く」をお試しください。</div>';
@@ -700,15 +749,17 @@
   document.getElementById("btn-bulk-send").addEventListener("click", function(){
     var sel = selectedRecipients();
     if(!sel.length){ toast("送信先を選択してください"); return; }
+    if(!state.sender.email){ toast("先に「差出人情報」でメールアドレスを保存してください"); return; }
     var subject = document.getElementById("mail-subject").value;
     var body = document.getElementById("mail-body").value.split("{担当者}").join("ご担当者様");
     var bcc = sel.map(function(r){ return r.email; }).join(",");
-    window.location.href = mailtoUrl(SELF_EMAIL, subject, body, bcc);
+    window.location.href = mailtoUrl(state.sender.email, subject, body, bcc);
   });
 
   document.getElementById("btn-bulk-split").addEventListener("click", function(){
     var sel = selectedRecipients();
     if(!sel.length){ toast("送信先を選択してください"); return; }
+    if(!state.sender.email){ toast("先に「差出人情報」でメールアドレスを保存してください"); return; }
     var subject = document.getElementById("mail-subject").value;
     var body = document.getElementById("mail-body").value.split("{担当者}").join("ご担当者様");
     var chunkSize = 20;
@@ -718,7 +769,7 @@
     chunks.forEach(function(chunk, idx){
       setTimeout(function(){
         var bcc = chunk.map(function(r){ return r.email; }).join(",");
-        window.open(mailtoUrl(SELF_EMAIL, subject, body, bcc), "_blank");
+        window.open(mailtoUrl(state.sender.email, subject, body, bcc), "_blank");
       }, idx * 400);
     });
   });
@@ -740,6 +791,7 @@
 
   // ---------- init ----------
   load();
+  fillSenderForm();
   fillPropertyForm();
   renderRecipients();
   renderEmail();
