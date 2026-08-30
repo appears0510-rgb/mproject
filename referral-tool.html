@@ -1,0 +1,749 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>物件紹介メール作成ツール | TAKAHARA不動産</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;600;700;800&family=Zen+Kaku+Gothic+New:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#ece7de;
+    --bg-elevated:#f7f4ee;
+    --bg-sunk:#e2ddd2;
+    --ink:#1b2023;
+    --ink-soft:#4b5459;
+    --ink-faint:#7c8388;
+    --accent:#1f6f6b;
+    --accent-ink:#f7f4ee;
+    --accent-soft:#e3ede9;
+    --accent-2:#b5573c;
+    --line:rgba(27,32,35,0.14);
+    --line-strong:rgba(27,32,35,0.28);
+    --font-display:"Shippori Mincho","Hiragino Mincho ProN","Yu Mincho",serif;
+    --font-body:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",sans-serif;
+    --danger:#b5573c;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#12171a; --bg-elevated:#1a2124; --bg-sunk:#0d1113;
+      --ink:#ece7de; --ink-soft:#a9b2b4; --ink-faint:#727c7e;
+      --accent:#4fbdb6; --accent-ink:#0e1516; --accent-soft:#1c2d2c; --accent-2:#d97c5d;
+      --line:rgba(236,231,222,0.14); --line-strong:rgba(236,231,222,0.28);
+    }
+  }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:var(--font-body); line-height:1.7; padding-bottom:80px;
+  }
+  a{ color:inherit; }
+  .wrap{ max-width:1080px; margin:0 auto; padding:0 20px; }
+  header.top{
+    border-bottom:1px solid var(--line); background:var(--bg-elevated);
+    padding:20px 0; margin-bottom:32px;
+  }
+  header.top .wrap{ display:flex; align-items:baseline; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+  header.top h1{
+    font-family:var(--font-display); font-weight:700; font-size:1.3rem; margin:0;
+  }
+  header.top .back{ font-size:0.8rem; color:var(--ink-soft); text-decoration:none; border-bottom:1px solid var(--line-strong); }
+  .badge{
+    display:inline-block; font-size:0.68rem; letter-spacing:0.08em; color:var(--ink-faint);
+    background:var(--bg-sunk); border:1px solid var(--line); border-radius:99px; padding:2px 10px; margin-top:4px;
+  }
+  section.panel{
+    background:var(--bg-elevated); border:1px solid var(--line); border-radius:14px;
+    padding:24px clamp(16px,3vw,32px); margin-bottom:28px;
+  }
+  section.panel > h2{
+    font-family:var(--font-display); font-size:1.08rem; font-weight:700; margin:0 0 4px;
+    display:flex; align-items:center; gap:8px;
+  }
+  section.panel > h2 .num{ color:var(--accent); font-size:0.85em; }
+  section.panel > p.desc{ margin:0 0 18px; font-size:0.83rem; color:var(--ink-soft); }
+
+  label{ display:block; font-size:0.75rem; color:var(--ink-soft); margin-bottom:4px; }
+  input[type=text], input[type=email], input[type=number], input[type=url], select, textarea{
+    width:100%; font:inherit; font-size:0.88rem; color:var(--ink);
+    background:var(--bg); border:1px solid var(--line-strong); border-radius:8px;
+    padding:9px 10px; font-family:var(--font-body);
+  }
+  textarea{ resize:vertical; }
+  input:focus, select:focus, textarea:focus{ outline:2px solid var(--accent); outline-offset:1px; }
+
+  .grid{ display:grid; gap:14px; }
+  .g2{ grid-template-columns:repeat(2,1fr); }
+  .g3{ grid-template-columns:repeat(3,1fr); }
+  .g4{ grid-template-columns:repeat(4,1fr); }
+  @media (max-width:720px){ .g2,.g3,.g4{ grid-template-columns:1fr; } }
+  .field{ display:flex; flex-direction:column; }
+
+  button{
+    font-family:var(--font-body); font-weight:700; font-size:0.82rem; letter-spacing:0.02em;
+    border-radius:8px; border:1px solid var(--line-strong); background:var(--bg);
+    color:var(--ink); padding:9px 16px; cursor:pointer;
+  }
+  button:hover{ border-color:var(--accent); color:var(--accent); }
+  button.primary{ background:var(--accent); color:var(--accent-ink); border-color:var(--accent); }
+  button.primary:hover{ opacity:0.9; color:var(--accent-ink); }
+  button.danger{ color:var(--danger); border-color:var(--danger); background:transparent; }
+  button.danger:hover{ background:var(--danger); color:#fff; }
+  button.small{ padding:5px 10px; font-size:0.72rem; }
+  button:disabled{ opacity:0.4; cursor:not-allowed; }
+  .btn-row{ display:flex; gap:10px; flex-wrap:wrap; margin-top:14px; }
+
+  table{ width:100%; border-collapse:collapse; font-size:0.83rem; }
+  thead th{
+    text-align:left; font-weight:700; color:var(--ink-soft); font-size:0.72rem;
+    letter-spacing:0.04em; border-bottom:1px solid var(--line-strong); padding:6px 8px;
+  }
+  tbody td{ border-bottom:1px solid var(--line); padding:8px; vertical-align:top; }
+  tbody tr:hover{ background:var(--bg-sunk); }
+  .tablewrap{ overflow-x:auto; }
+  .tag{
+    display:inline-block; font-size:0.68rem; padding:2px 8px; border-radius:99px;
+    background:var(--accent-soft); color:var(--accent); white-space:nowrap;
+  }
+  .tag.area-fk{ background:var(--accent-soft); color:var(--accent); }
+  .tag.area-kk{ background:rgba(181,87,60,0.14); color:var(--accent-2); }
+  .muted{ color:var(--ink-faint); font-size:0.78rem; }
+  .filters{ display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; margin-bottom:14px; }
+  .filters .field{ min-width:150px; }
+  .count-pill{
+    font-size:0.78rem; color:var(--ink-soft); background:var(--bg-sunk);
+    border:1px solid var(--line); border-radius:99px; padding:4px 12px; display:inline-block;
+  }
+  .warn{
+    font-size:0.78rem; color:var(--accent-2); background:rgba(181,87,60,0.1);
+    border:1px solid rgba(181,87,60,0.3); border-radius:8px; padding:10px 12px; margin-top:12px;
+  }
+  .send-list{ display:flex; flex-direction:column; gap:8px; margin-top:14px; }
+  .send-row{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    border:1px solid var(--line); border-radius:8px; padding:8px 12px; background:var(--bg);
+  }
+  .send-row .who b{ font-size:0.85rem; }
+  .send-row .who span{ display:block; font-size:0.72rem; color:var(--ink-faint); }
+  details{ border:1px solid var(--line); border-radius:8px; padding:10px 14px; background:var(--bg); }
+  details summary{ cursor:pointer; font-size:0.8rem; font-weight:700; color:var(--ink-soft); }
+  code{ font-family:monospace; font-size:0.75em; background:var(--bg-sunk); padding:1px 5px; border-radius:4px; }
+  .toast{
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+    background:var(--ink); color:var(--bg-elevated); padding:10px 20px; border-radius:99px;
+    font-size:0.82rem; opacity:0; pointer-events:none; transition:opacity .25s;
+  }
+  .toast.show{ opacity:1; }
+  fieldset{ border:1px dashed var(--line-strong); border-radius:10px; padding:14px; margin:0; }
+  legend{ font-size:0.78rem; font-weight:700; color:var(--ink-soft); padding:0 6px; }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <div>
+      <h1>物件紹介メール作成ツール</h1>
+      <span class="badge">TAKAHARA不動産 / 社内用</span>
+    </div>
+    <a class="back" href="./index.html">← サイトトップへ戻る</a>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- ================= STEP 1: PROPERTY ================= -->
+  <section class="panel">
+    <h2><span class="num">01</span>紹介する物件情報</h2>
+    <p class="desc">紹介したい土地・物件の情報を入力してください。入力内容はメール本文に自動で差し込まれます。</p>
+    <div class="grid g3">
+      <div class="field">
+        <label for="p-type">物件種別</label>
+        <select id="p-type">
+          <option>土地</option>
+          <option>一戸建て</option>
+          <option>マンション</option>
+          <option>その他</option>
+        </select>
+      </div>
+      <div class="field" style="grid-column:span 2;">
+        <label for="p-name">物件名</label>
+        <input type="text" id="p-name" placeholder="例：小倉北区○○町 分譲用地">
+      </div>
+      <div class="field" style="grid-column:span 2;">
+        <label for="p-address">所在地</label>
+        <input type="text" id="p-address" placeholder="例：福岡県北九州市小倉北区○○町2丁目">
+      </div>
+      <div class="field">
+        <label for="p-access">交通・最寄り</label>
+        <input type="text" id="p-access" placeholder="例：西鉄バス「○○」停 徒歩5分">
+      </div>
+      <div class="field">
+        <label for="p-price">価格（万円）</label>
+        <input type="number" id="p-price" placeholder="例：1980">
+      </div>
+      <div class="field">
+        <label for="p-land">土地面積（㎡）</label>
+        <input type="number" id="p-land" placeholder="例：165.28">
+      </div>
+      <div class="field">
+        <label for="p-building">建物面積（㎡）</label>
+        <input type="number" id="p-building" placeholder="更地・土地のみの場合は空欄">
+      </div>
+      <div class="field" style="grid-column:span 2;">
+        <label for="p-url">参考URL（自社サイトの物件ページなど）</label>
+        <input type="url" id="p-url" placeholder="https://takahara-realestate.example/properties/xxxx">
+      </div>
+      <div class="field" style="grid-column:1/-1;">
+        <label for="p-notes">特徴・備考</label>
+        <textarea id="p-notes" rows="3" placeholder="例：建築条件なし。分割分譲も相談可。学区良好、南向き接道。"></textarea>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="primary" id="btn-save-property">物件情報を保存</button>
+      <span class="muted" id="property-saved-hint"></span>
+    </div>
+  </section>
+
+  <!-- ================= STEP 2: RECIPIENTS ================= -->
+  <section class="panel">
+    <h2><span class="num">02</span>送信先（建売業者・不動産業者）</h2>
+    <p class="desc">北九州市・福岡市エリアの送信先を管理します。行のチェックを入れた宛先が、下部のメール作成対象になります。データはこの端末のブラウザ内にのみ保存されます。</p>
+
+    <fieldset>
+      <legend>宛先を追加</legend>
+      <div class="grid g4">
+        <div class="field">
+          <label for="r-company">会社名 *</label>
+          <input type="text" id="r-company" placeholder="例：○○ハウジング株式会社">
+        </div>
+        <div class="field">
+          <label for="r-person">担当者名</label>
+          <input type="text" id="r-person" placeholder="例：山田様">
+        </div>
+        <div class="field">
+          <label for="r-email">メールアドレス *</label>
+          <input type="email" id="r-email" placeholder="info@example.jp">
+        </div>
+        <div class="field">
+          <label for="r-category">種別</label>
+          <select id="r-category">
+            <option>建売業者</option>
+            <option>不動産業者</option>
+            <option>その他</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="r-area">エリア</label>
+          <select id="r-area">
+            <option>福岡市</option>
+            <option>北九州市</option>
+            <option>その他</option>
+          </select>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="primary small" id="btn-add-recipient">＋ リストに追加</button>
+        <span class="muted" id="add-recipient-hint"></span>
+      </div>
+    </fieldset>
+
+    <div style="height:16px;"></div>
+
+    <div class="filters">
+      <div class="field">
+        <label for="f-area">エリアで絞り込み</label>
+        <select id="f-area">
+          <option value="">すべて</option>
+          <option>福岡市</option>
+          <option>北九州市</option>
+          <option>その他</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="f-category">種別で絞り込み</label>
+        <select id="f-category">
+          <option value="">すべて</option>
+          <option>建売業者</option>
+          <option>不動産業者</option>
+          <option>その他</option>
+        </select>
+      </div>
+      <div class="field" style="flex:1; min-width:180px;">
+        <label for="f-search">会社名検索</label>
+        <input type="text" id="f-search" placeholder="会社名の一部を入力">
+      </div>
+      <div class="field">
+        <button class="small" id="btn-select-all">絞り込み結果を全選択</button>
+      </div>
+      <div class="field">
+        <button class="small" id="btn-select-none">選択解除</button>
+      </div>
+    </div>
+
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr>
+            <th></th><th>会社名</th><th>担当者</th><th>メールアドレス</th><th>種別</th><th>エリア</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="recipient-tbody"></tbody>
+      </table>
+    </div>
+    <p class="muted" id="recipient-empty-hint" style="display:none;">送信先が登録されていません。上の「宛先を追加」から入力してください。</p>
+
+    <details style="margin-top:16px;">
+      <summary>リストの一括インポート／エクスポート（CSV貼り付け）</summary>
+      <p class="muted" style="margin-top:10px;">1行につき「会社名,担当者名,メールアドレス,種別,エリア」の順にカンマ区切りで入力してください（担当者・種別・エリアは省略可）。</p>
+      <textarea id="csv-area" rows="5" placeholder="○○ハウジング株式会社,山田様,info@example.jp,建売業者,福岡市"></textarea>
+      <div class="btn-row">
+        <button class="small" id="btn-csv-import">貼り付けた内容をリストに追加</button>
+        <button class="small" id="btn-csv-export">現在のリストをCSVで書き出す</button>
+      </div>
+    </details>
+  </section>
+
+  <!-- ================= STEP 3: EMAIL ================= -->
+  <section class="panel">
+    <h2><span class="num">03</span>紹介メールを作成・送信</h2>
+    <p class="desc">選択中の送信先へ、お使いのメールソフト（Gmail・Outlookなど）を使って送信します。サーバーを経由せず、この端末からメールソフトが起動します。</p>
+
+    <p><span class="count-pill" id="selected-count-pill">選択中の送信先：0件</span></p>
+
+    <div class="grid" style="gap:14px;">
+      <div class="field">
+        <label for="mail-subject">件名</label>
+        <input type="text" id="mail-subject">
+      </div>
+      <div class="field">
+        <label for="mail-body">本文（<code>{会社名}</code> <code>{担当者}</code> はワンクリック送信時に宛先ごとへ自動で差し込まれます）</label>
+        <textarea id="mail-body" rows="14"></textarea>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="small" id="btn-reset-template">テンプレートに戻す</button>
+    </div>
+
+    <div style="height:8px;"></div>
+
+    <div class="grid g2">
+      <fieldset>
+        <legend>方法A：1件ずつ個別送信（宛名を差し込み・確実）</legend>
+        <p class="muted">下のボタンを1つずつクリックすると、その宛先向けにパーソナライズされたメールがメールソフトで開きます。</p>
+        <div class="send-list" id="individual-send-list"></div>
+      </fieldset>
+
+      <fieldset>
+        <legend>方法B：一括送信（BCCでまとめて1通）</legend>
+        <p class="muted">選択した宛先全員をBCCに入れた1通のメールをまとめて開きます。件数が多いと開けない場合があるため、その際は下の「分割して開く」をお使いください。</p>
+        <div class="btn-row">
+          <button class="primary" id="btn-bulk-send">BCC一括でメールを開く</button>
+          <button id="btn-bulk-split">20件ずつに分割して開く</button>
+          <button id="btn-copy-addresses">宛先一覧をコピー</button>
+        </div>
+        <div id="bulk-warning"></div>
+      </fieldset>
+    </div>
+  </section>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  var STORE_KEY = "takahara_referral_tool_v1";
+  var SELF_EMAIL = "info@takahara-realestate.example";
+  var SELF_NAME = "TAKAHARA不動産株式会社";
+  var SELF_TEL = "090-2716-4857";
+
+  var SAMPLE_RECIPIENTS = [
+    { company:"北九州ハウジング株式会社(サンプル)", person:"田中様", email:"sample-info@kitakyu-housing.example.jp", category:"建売業者", area:"北九州市" },
+    { company:"小倉不動産センター(サンプル)", person:"", email:"sample-contact@kokura-fudousan.example.jp", category:"不動産業者", area:"北九州市" },
+    { company:"八幡建設ホーム(サンプル)", person:"佐藤様", email:"sample-sales@yahata-home.example.jp", category:"建売業者", area:"北九州市" },
+    { company:"福岡シティホームズ(サンプル)", person:"", email:"sample-info@fukuoka-cityhomes.example.jp", category:"建売業者", area:"福岡市" },
+    { company:"天神不動産パートナーズ(サンプル)", person:"鈴木様", email:"sample-info@tenjin-fudousan.example.jp", category:"不動産業者", area:"福岡市" },
+    { company:"博多エステート(サンプル)", person:"", email:"sample-contact@hakata-estate.example.jp", category:"不動産業者", area:"福岡市" }
+  ];
+
+  var state = { property:{}, recipients:[], selected:{} };
+
+  function load(){
+    try{
+      var raw = localStorage.getItem(STORE_KEY);
+      if(raw){
+        var data = JSON.parse(raw);
+        state.property = data.property || {};
+        state.recipients = data.recipients || [];
+        return;
+      }
+    }catch(e){}
+    state.recipients = SAMPLE_RECIPIENTS.map(function(r, i){
+      r.id = "r" + i;
+      return r;
+    });
+  }
+
+  function save(){
+    try{
+      localStorage.setItem(STORE_KEY, JSON.stringify({ property:state.property, recipients:state.recipients }));
+    }catch(e){}
+  }
+
+  function uid(){ return "r" + Date.now() + Math.floor(Math.random()*10000); }
+
+  function toast(msg){
+    var t = document.getElementById("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(toast._h);
+    toast._h = setTimeout(function(){ t.classList.remove("show"); }, 2200);
+  }
+
+  function esc(s){
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c];
+    });
+  }
+
+  // ---------- property ----------
+  var pFields = ["type","name","address","access","price","land","building","url","notes"];
+  function fillPropertyForm(){
+    pFields.forEach(function(f){
+      var el = document.getElementById("p-" + f);
+      if(el && state.property[f] != null) el.value = state.property[f];
+    });
+  }
+  function readPropertyForm(){
+    var p = {};
+    pFields.forEach(function(f){
+      var el = document.getElementById("p-" + f);
+      p[f] = el ? el.value.trim() : "";
+    });
+    return p;
+  }
+
+  document.getElementById("btn-save-property").addEventListener("click", function(){
+    state.property = readPropertyForm();
+    save();
+    document.getElementById("property-saved-hint").textContent = "保存しました";
+    setTimeout(function(){ document.getElementById("property-saved-hint").textContent = ""; }, 2000);
+    renderEmail();
+  });
+
+  // ---------- recipients ----------
+  function currentFilters(){
+    return {
+      area: document.getElementById("f-area").value,
+      category: document.getElementById("f-category").value,
+      search: document.getElementById("f-search").value.trim().toLowerCase()
+    };
+  }
+
+  function filteredRecipients(){
+    var f = currentFilters();
+    return state.recipients.filter(function(r){
+      if(f.area && r.area !== f.area) return false;
+      if(f.category && r.category !== f.category) return false;
+      if(f.search && r.company.toLowerCase().indexOf(f.search) === -1) return false;
+      return true;
+    });
+  }
+
+  function renderRecipients(){
+    var tbody = document.getElementById("recipient-tbody");
+    var list = filteredRecipients();
+    tbody.innerHTML = "";
+    document.getElementById("recipient-empty-hint").style.display = state.recipients.length ? "none" : "block";
+
+    list.forEach(function(r){
+      var tr = document.createElement("tr");
+      var areaClass = r.area === "福岡市" ? "area-fk" : (r.area === "北九州市" ? "area-kk" : "");
+      tr.innerHTML =
+        '<td><input type="checkbox" data-id="' + esc(r.id) + '" class="row-check" ' + (state.selected[r.id] ? "checked" : "") + '></td>' +
+        '<td>' + esc(r.company) + '</td>' +
+        '<td>' + esc(r.person) + '</td>' +
+        '<td>' + esc(r.email) + '</td>' +
+        '<td><span class="tag">' + esc(r.category) + '</span></td>' +
+        '<td><span class="tag ' + areaClass + '">' + esc(r.area) + '</span></td>' +
+        '<td><button class="small danger" data-del="' + esc(r.id) + '">削除</button></td>';
+      tbody.appendChild(tr);
+    });
+
+    tbody.querySelectorAll(".row-check").forEach(function(cb){
+      cb.addEventListener("change", function(){
+        if(cb.checked) state.selected[cb.dataset.id] = true;
+        else delete state.selected[cb.dataset.id];
+        renderEmail();
+      });
+    });
+    tbody.querySelectorAll("[data-del]").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        var id = btn.dataset.del;
+        if(!confirm("この送信先を削除しますか？")) return;
+        state.recipients = state.recipients.filter(function(r){ return r.id !== id; });
+        delete state.selected[id];
+        save();
+        renderRecipients();
+        renderEmail();
+      });
+    });
+  }
+
+  ["f-area","f-category","f-search"].forEach(function(id){
+    document.getElementById(id).addEventListener("input", renderRecipients);
+    document.getElementById(id).addEventListener("change", renderRecipients);
+  });
+
+  document.getElementById("btn-select-all").addEventListener("click", function(){
+    filteredRecipients().forEach(function(r){ state.selected[r.id] = true; });
+    renderRecipients();
+    renderEmail();
+  });
+  document.getElementById("btn-select-none").addEventListener("click", function(){
+    state.selected = {};
+    renderRecipients();
+    renderEmail();
+  });
+
+  document.getElementById("btn-add-recipient").addEventListener("click", function(){
+    var company = document.getElementById("r-company").value.trim();
+    var email = document.getElementById("r-email").value.trim();
+    var hint = document.getElementById("add-recipient-hint");
+    if(!company || !email){
+      hint.textContent = "会社名とメールアドレスは必須です";
+      hint.style.color = "var(--accent-2)";
+      return;
+    }
+    state.recipients.push({
+      id: uid(),
+      company: company,
+      person: document.getElementById("r-person").value.trim(),
+      email: email,
+      category: document.getElementById("r-category").value,
+      area: document.getElementById("r-area").value
+    });
+    ["r-company","r-person","r-email"].forEach(function(id){ document.getElementById(id).value = ""; });
+    hint.textContent = "追加しました";
+    hint.style.color = "var(--ink-soft)";
+    setTimeout(function(){ hint.textContent = ""; }, 2000);
+    save();
+    renderRecipients();
+  });
+
+  // CSV import/export
+  document.getElementById("btn-csv-import").addEventListener("click", function(){
+    var raw = document.getElementById("csv-area").value;
+    var lines = raw.split(/\r?\n/).map(function(l){ return l.trim(); }).filter(Boolean);
+    var added = 0;
+    lines.forEach(function(line){
+      var parts = line.split(",").map(function(p){ return p.trim(); });
+      if(!parts[0] || !parts[1] && !parts[2]) {
+        // allow 2-col minimal: company,email
+      }
+      var company = parts[0] || "";
+      var second = parts[1] || "";
+      var third = parts[2] || "";
+      var email, person, category, area;
+      if(third || parts.length >= 3){
+        person = second; email = third; category = parts[3] || "その他"; area = parts[4] || "その他";
+      } else {
+        person = ""; email = second; category = parts[2] || "その他"; area = parts[3] || "その他";
+      }
+      if(!company || !email || email.indexOf("@") === -1) return;
+      state.recipients.push({ id: uid(), company: company, person: person, email: email, category: category, area: area });
+      added++;
+    });
+    if(added){
+      save();
+      renderRecipients();
+      document.getElementById("csv-area").value = "";
+      toast(added + "件を追加しました");
+    } else {
+      toast("追加できる行が見つかりませんでした");
+    }
+  });
+
+  document.getElementById("btn-csv-export").addEventListener("click", function(){
+    var csv = state.recipients.map(function(r){
+      return [r.company, r.person, r.email, r.category, r.area].join(",");
+    }).join("\n");
+    document.getElementById("csv-area").value = csv;
+    toast("CSVを下のテキスト欄に出力しました");
+  });
+
+  // ---------- email template ----------
+  function defaultSubject(){
+    var p = state.property;
+    var name = p.name || "物件";
+    var addr = p.address ? "（" + p.address + "）" : "";
+    return "【物件のご紹介】" + name + addr;
+  }
+
+  function defaultBody(){
+    var p = state.property;
+    var lines = [];
+    lines.push("{担当者}");
+    lines.push("");
+    lines.push(SELF_NAME + "の担当でございます。いつもお世話になっております。");
+    lines.push("下記の物件がございましたので、ご紹介させていただきます。");
+    lines.push("");
+    lines.push("---------------------------------");
+    lines.push("■物件種別：" + (p.type || ""));
+    lines.push("■物件名　：" + (p.name || ""));
+    lines.push("■所在地　：" + (p.address || ""));
+    if(p.access) lines.push("■交通　　：" + p.access);
+    if(p.price) lines.push("■価格　　：" + p.price + "万円");
+    if(p.land) lines.push("■土地面積：" + p.land + "㎡");
+    if(p.building) lines.push("■建物面積：" + p.building + "㎡");
+    if(p.notes) lines.push("■特徴・備考：\n" + p.notes);
+    if(p.url) lines.push("■詳細URL：" + p.url);
+    lines.push("---------------------------------");
+    lines.push("");
+    lines.push("ご興味をお持ちいただけましたら、本メールへの返信、またはお電話にてお気軽にご連絡ください。");
+    lines.push("何卒よろしくお願い申し上げます。");
+    lines.push("");
+    lines.push(SELF_NAME);
+    lines.push("TEL：" + SELF_TEL);
+    lines.push("Mail：" + SELF_EMAIL);
+    return lines.join("\n");
+  }
+
+  var userEditedTemplate = false;
+  document.getElementById("mail-subject").addEventListener("input", function(){ userEditedTemplate = true; });
+  document.getElementById("mail-body").addEventListener("input", function(){ userEditedTemplate = true; });
+
+  document.getElementById("btn-reset-template").addEventListener("click", function(){
+    document.getElementById("mail-subject").value = defaultSubject();
+    document.getElementById("mail-body").value = defaultBody();
+    userEditedTemplate = false;
+    renderEmail();
+  });
+
+  function selectedRecipients(){
+    return state.recipients.filter(function(r){ return state.selected[r.id]; });
+  }
+
+  function personalize(text, r){
+    var greeting = r.person ? (r.company + " " + r.person) : (r.company + " ご担当者様");
+    return text.split("{担当者}").join(greeting).split("{会社名}").join(r.company);
+  }
+
+  function mailtoUrl(to, subject, body, bcc){
+    var parts = [];
+    parts.push("mailto:" + encodeURIComponent(to));
+    var q = [];
+    if(bcc) q.push("bcc=" + encodeURIComponent(bcc));
+    q.push("subject=" + encodeURIComponent(subject));
+    q.push("body=" + encodeURIComponent(body));
+    return parts[0] + "?" + q.join("&");
+  }
+
+  function renderEmail(){
+    if(!userEditedTemplate){
+      document.getElementById("mail-subject").value = defaultSubject();
+      document.getElementById("mail-body").value = defaultBody();
+    }
+    var sel = selectedRecipients();
+    document.getElementById("selected-count-pill").textContent = "選択中の送信先：" + sel.length + "件";
+
+    // individual list
+    var subject = document.getElementById("mail-subject").value;
+    var body = document.getElementById("mail-body").value;
+    var wrap = document.getElementById("individual-send-list");
+    wrap.innerHTML = "";
+    if(!sel.length){
+      wrap.innerHTML = '<p class="muted">上の表で送信先にチェックを入れてください。</p>';
+    } else {
+      sel.forEach(function(r){
+        var row = document.createElement("div");
+        row.className = "send-row";
+        row.innerHTML =
+          '<div class="who"><b>' + esc(r.company) + '</b><span>' + esc(r.email) + '</span></div>' +
+          '<a href="#" class="ind-send" data-id="' + esc(r.id) + '"><button class="small primary">メールを開く</button></a>';
+        wrap.appendChild(row);
+      });
+      wrap.querySelectorAll(".ind-send").forEach(function(a){
+        a.addEventListener("click", function(ev){
+          ev.preventDefault();
+          var r = state.recipients.filter(function(x){ return x.id === a.dataset.id; })[0];
+          if(!r) return;
+          var pb = personalize(body, r);
+          window.location.href = mailtoUrl(r.email, subject, pb);
+        });
+      });
+    }
+
+    // bulk warning
+    var addrs = sel.map(function(r){ return r.email; });
+    var estimatedLen = ("mailto:" + SELF_EMAIL + "?bcc=" + addrs.join(",") + "&subject=" + subject + "&body=" + body).length;
+    var warnEl = document.getElementById("bulk-warning");
+    if(estimatedLen > 1800 && sel.length){
+      warnEl.innerHTML = '<div class="warn">宛先が多いため、お使いのメールソフトによっては一括送信リンクが正しく開けない場合があります（目安：URLの長さが約' + estimatedLen + '文字）。その場合は「20件ずつに分割して開く」をお試しください。</div>';
+    } else {
+      warnEl.innerHTML = "";
+    }
+  }
+
+  ["mail-subject","mail-body"].forEach(function(id){
+    document.getElementById(id).addEventListener("input", function(){
+      var sel = selectedRecipients();
+      document.getElementById("selected-count-pill").textContent = "選択中の送信先：" + sel.length + "件";
+    });
+  });
+
+  document.getElementById("btn-bulk-send").addEventListener("click", function(){
+    var sel = selectedRecipients();
+    if(!sel.length){ toast("送信先を選択してください"); return; }
+    var subject = document.getElementById("mail-subject").value;
+    var body = document.getElementById("mail-body").value.split("{担当者}").join("ご担当者様");
+    var bcc = sel.map(function(r){ return r.email; }).join(",");
+    window.location.href = mailtoUrl(SELF_EMAIL, subject, body, bcc);
+  });
+
+  document.getElementById("btn-bulk-split").addEventListener("click", function(){
+    var sel = selectedRecipients();
+    if(!sel.length){ toast("送信先を選択してください"); return; }
+    var subject = document.getElementById("mail-subject").value;
+    var body = document.getElementById("mail-body").value.split("{担当者}").join("ご担当者様");
+    var chunkSize = 20;
+    var chunks = [];
+    for(var i=0;i<sel.length;i+=chunkSize){ chunks.push(sel.slice(i, i+chunkSize)); }
+    toast(chunks.length + "件のメールを順番に開きます（ポップアップ許可が必要な場合があります）");
+    chunks.forEach(function(chunk, idx){
+      setTimeout(function(){
+        var bcc = chunk.map(function(r){ return r.email; }).join(",");
+        window.open(mailtoUrl(SELF_EMAIL, subject, body, bcc), "_blank");
+      }, idx * 400);
+    });
+  });
+
+  document.getElementById("btn-copy-addresses").addEventListener("click", function(){
+    var sel = selectedRecipients();
+    if(!sel.length){ toast("送信先を選択してください"); return; }
+    var text = sel.map(function(r){ return r.email; }).join(", ");
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){
+        toast("宛先一覧をコピーしました（" + sel.length + "件）");
+      }, function(){
+        toast("コピーに失敗しました");
+      });
+    } else {
+      toast("このブラウザはコピー機能に対応していません");
+    }
+  });
+
+  // ---------- init ----------
+  load();
+  fillPropertyForm();
+  renderRecipients();
+  renderEmail();
+})();
+</script>
+</body>
+</html>
