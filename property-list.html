@@ -153,6 +153,21 @@
   .stat span{ font-size:0.7rem; color:var(--ink-faint); }
   .empty{ text-align:center; padding:32px 12px; color:var(--ink-faint); font-size:0.85rem; }
   #edit-banner{ display:none; }
+  .dropzone{
+    border:1.5px dashed var(--line-strong); border-radius:10px; padding:16px; text-align:center;
+    background:var(--bg); font-size:0.82rem; color:var(--ink-soft); cursor:pointer;
+  }
+  .dropzone.over{ border-color:var(--accent); background:var(--accent-soft); color:var(--accent); }
+  .dropzone b{ color:var(--accent); }
+  .att-bar{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-top:10px; font-size:0.8rem; }
+  .att-bar .fname{ font-weight:700; word-break:break-all; }
+  .preview{
+    margin-top:10px; background:var(--bg-sunk); border:1px solid var(--line); border-radius:10px;
+    padding:10px; max-height:640px; overflow:auto; display:flex; flex-direction:column; gap:10px; align-items:center;
+  }
+  .preview canvas, .preview img{ max-width:100%; height:auto; background:#fff; box-shadow:0 1px 4px rgba(0,0,0,0.15); }
+  .thumb{ max-width:260px; max-height:190px; border:1px solid var(--line); border-radius:6px; background:#fff; display:block; margin-bottom:10px; }
+  .clip{ font-size:0.75em; color:var(--ink-faint); margin-left:4px; }
 </style>
 </head>
 <body>
@@ -171,12 +186,28 @@
   <!-- ================= STEP 1: INPUT ================= -->
   <section class="panel" id="input-panel">
     <h2><span class="num">01</span>物件概要を登録</h2>
-    <p class="desc">メール・FAX・チャットなどで届いた物件概要の文面をそのまま貼り付けて「自動読み取り」を押すと、各項目に振り分けます。内容を確認・修正してから保存してください。</p>
+    <p class="desc">届いた物件概要書のPDFを添付するか、メールなどの文面を貼り付けて「自動読み取り」を押すと、各項目に振り分けます。内容を確認・修正してから保存してください。</p>
 
     <div class="warn" id="edit-banner">編集中：<span id="edit-name"></span>　<button class="small" id="btn-cancel-edit">編集をやめる</button></div>
 
     <div class="field" style="margin-top:12px;">
-      <label for="raw">届いた物件概要（貼り付け）</label>
+      <label>物件資料（PDF・画像）</label>
+      <div class="dropzone" id="dropzone" tabindex="0" role="button">
+        届いた物件概要書のPDFや画像をここにドラッグ、または<b>クリックして選択</b><br>
+        <span class="muted">文字情報のあるPDFは自動で読み取ります。スキャンしたPDFはプレビューを見ながら入力できます。</span>
+      </div>
+      <input type="file" id="att-file" accept="application/pdf,image/*" style="display:none;">
+      <div class="att-bar" id="att-bar" style="display:none;">
+        <span>添付：<span class="fname" id="att-name"></span></span>
+        <button class="small" id="btn-rotate">プレビューを回転</button>
+        <button class="small" id="btn-att-open">別タブで開く</button>
+        <button class="small danger" id="btn-att-remove">添付を外す</button>
+      </div>
+      <div class="preview" id="preview" style="display:none;"></div>
+    </div>
+
+    <div class="field" style="margin-top:16px;">
+      <label for="raw">届いた物件概要の文面（メール本文などを貼り付け）</label>
       <textarea id="raw" rows="9" placeholder="例：&#10;■物件名　小倉北区○○町 売地&#10;■所在地　福岡県北九州市小倉北区○○町2丁目&#10;■価格　1,980万円&#10;■土地面積　165.30㎡（50.00坪）&#10;■用途地域　第一種住居地域&#10;■建ぺい率/容積率　60%/200%&#10;■交通　JR小倉駅 徒歩12分&#10;■取引態様　専任媒介"></textarea>
     </div>
     <div class="btn-row">
@@ -256,6 +287,14 @@
         <label for="f-deal">取引態様</label>
         <input type="text" id="f-deal" placeholder="例：専任媒介">
       </div>
+      <div class="field">
+        <label for="f-handover">引渡時期</label>
+        <input type="text" id="f-handover" placeholder="例：相談">
+      </div>
+      <div class="field">
+        <label for="f-road">前面道路</label>
+        <input type="text" id="f-road" placeholder="例：西側 公道 幅員約4m">
+      </div>
       <div class="field span2">
         <label for="f-access">交通</label>
         <input type="text" id="f-access" placeholder="例：JR小倉駅 徒歩12分">
@@ -268,7 +307,7 @@
     <div class="warn" id="dup-warn" style="display:none;"></div>
     <div class="btn-row">
       <button class="primary" id="btn-save">一覧に保存</button>
-      <span class="muted">保存データはこの端末のブラウザ内にのみ保存されます。定期的に「バックアップ」してください。</span>
+      <span class="muted">保存データ（添付資料を含む）はこの端末のブラウザ内にのみ保存されます。定期的に「バックアップ」してください。</span>
     </div>
   </section>
 
@@ -348,10 +387,10 @@
   var STORE_KEY = "property_stock_v1";
   var TYPES = ["土地","一戸建て","マンション","収益物件","事業用","その他"];
   var STATUSES = ["新着","検討中","紹介済","見送り","成約済"];
-  var FIELDS = ["receivedAt","source","type","status","name","address","price","landArea","buildingArea","layout","built","zoning","coverage","deal","access","memo"];
+  var FIELDS = ["receivedAt","source","type","status","name","address","price","landArea","buildingArea","layout","built","zoning","coverage","deal","handover","road","access","memo"];
   var NUM_FIELDS = { price:1, landArea:1, buildingArea:1 };
 
-  var state = { items:[], editingId:null, openId:null, sortKey:"receivedAt", sortDir:-1 };
+  var state = { items:[], editingId:null, openId:null, sortKey:"receivedAt", sortDir:-1, att:null, attChanged:false, rotation:0 };
 
   function load(){
     try{
@@ -422,7 +461,10 @@
     }
     var yen = t.match(/(\d{5,})円/);
     if(yen) return parseFloat(yen[1]) / 10000;
-    return num(t);
+    var n = num(t);
+    // 単位なしの大きな数値（例：80,000,000）は円とみなす
+    if(n != null && n >= 100000) return n / 10000;
+    return n;
   }
 
   // ㎡表記を優先し、坪のみなら㎡へ換算
@@ -437,9 +479,9 @@
 
   var LABELS = [
     { key:"name",         re:/^(物件名|物件名称|名称|マンション名|建物名|タイトル)/ },
-    { key:"address",      re:/^(所在地|住所|所在|地番|物件所在地)/ },
+    { key:"address",      re:/^(所在地(?!番)|住所|所在$|物件所在地)/ },
     { key:"price",        re:/^(価格|販売価格|売買価格|売出価格|売出し価格|希望価格|金額)/ },
-    { key:"landArea",     re:/^(土地面積|敷地面積|地積|土地$)/ },
+    { key:"landArea",     re:/^(土地面積|敷地面積|地積|地籍|土地$)/ },
     { key:"buildingArea", re:/^(建物面積|延床面積|延べ床面積|延面積|専有面積|床面積)/ },
     { key:"layout",       re:/^(間取り|間取)/ },
     { key:"built",        re:/^(築年月|建築年月|築年|竣工|完成|新築年月|建築時期)/ },
@@ -448,8 +490,13 @@
     { key:"far",          re:/^(容積率)/ },
     { key:"access",       re:/^(交通|最寄駅|最寄り駅|アクセス|沿線)/ },
     { key:"deal",         re:/^(取引態様|取引形態|態様)/ },
-    { key:"type",         re:/^(物件種別|種別|種目|物件種目)/ }
+    { key:"handover",     re:/^(引渡時期|引渡し時期|引渡|引渡し|引き渡し)/ },
+    { key:"road",         re:/^(前面道路|接道|接道状況|道路)/ },
+    { key:"type",         re:/^(物件種別|物件種類|種別|種目|物件種目)/ }
   ];
+
+  // 物件概要書の様式に並ぶ見出し（次の行を値として拾わないためのもの）
+  var TEMPLATE_WORDS = /^(防火地域|準防火地域|高度制限|その他制限|設備|公法上の制限等|都市計画区域|コメント|構造|種類|家屋番号|建物権利|施工日|床面積|路線価|現況|地目|土地権利|地番|所在地番|収入|費用|合計|表面利回り|ネット|引渡時期|物件概要書|土地|建物|現況写真|単位)/;
 
   function guessType(text){
     if(/マンション|専有面積|区分/.test(text)) return "マンション";
@@ -467,28 +514,62 @@
 
   function parseText(text){
     var out = {};
-    var lines = String(text).split(/\r?\n/);
-    lines.forEach(function(line){
-      // 行頭の記号（■●◆・【 など）を除去
-      var l = line.replace(/^[\s　■□●○◆◇▼▽★☆・\-*＊※◎〇]+/, "").trim();
-      if(!l) return;
-      // 【ラベル】値 / ラベル：値 / ラベル 値
-      var m = l.match(/^[【\[［(（]?([^】\]］)）:：\s　]{1,12})[】\]］)）]?\s*[:：]?\s*(.*)$/);
-      if(!m) return;
-      var label = toHalf(m[1]).trim();
-      var value = m[2].trim();
-      // 建ぺい率/容積率 のような複合ラベル
-      var combo = l.match(/^[【\[［]?(建ぺい率|建蔽率|建ペイ率)\s*[\/／・]\s*容積率[】\]］]?\s*[:：]?\s*(.*)$/);
-      if(combo){ out.coverage = combo[2].trim(); return; }
-      if(!value) return;
-      for(var i=0;i<LABELS.length;i++){
-        if(LABELS[i].re.test(label)){
-          var k = LABELS[i].key;
-          if(out[k] == null) out[k] = value;
-          break;
-        }
-      }
+    var lines = String(text).split(/\r?\n/).map(function(row){
+      return row.split("\t").map(cleanCell).filter(Boolean).join("\t");
     });
+
+    function cleanCell(line){
+      // 行頭の記号（■●◆・【 など）を除去
+      var l = line.replace(/^[\s\u3000■□●○◆◇▼▽★☆・\-*＊※◎〇]+/, "").trim();
+      // 「所  在」「価  格」のように1文字ずつ空けたラベルを詰める
+      var tk = l.split(/[ \u3000]+/), k = 0;
+      while(k < tk.length && tk[k].length === 1) k++;
+      if(k >= 2 && k <= 6) l = [tk.slice(0, k).join("")].concat(tk.slice(k)).join(" ");
+      return l;
+    }
+
+    function matchLabel(l){
+      // 【ラベル】値 / ラベル：値 / ラベル 値
+      var m = l.match(/^[【\[［(（]?([^】\]］)）:：\s\u3000]{1,12})[】\]］)）]?\s*[:：]?\s*(.*)$/);
+      if(!m) return null;
+      var label = toHalf(m[1]).trim();
+      for(var i=0;i<LABELS.length;i++){
+        if(LABELS[i].re.test(label)) return { key:LABELS[i].key, value:m[2].trim() };
+      }
+      return null;
+    }
+
+    // 数値項目は数字を含む値だけ採用
+    function acceptable(k, v){
+      if(!v) return false;
+      if(/^(price|landArea|buildingArea|coverage|far)$/.test(k)) return /[0-9０-９]/.test(v);
+      return true;
+    }
+
+    for(var li=0; li<lines.length; li++){
+      var l = lines[li];
+      if(!l) continue;
+      // 建ぺい率/容積率 のような複合ラベル
+      var combo = l.split("\t")[0].match(/^[【\[［]?(建ぺい率|建蔽率|建ペイ率)\s*[\/／・]\s*容積率[】\]］]?\s*[:：]?\s*(.*)$/);
+      if(combo && combo[2].trim()){ out.coverage = combo[2].trim(); continue; }
+      // タブ区切り（PDFの表）は「ラベル欄」「値欄」の順に並ぶ
+      var cells = l.split("\t");
+      var hit = matchLabel(cells[0]);
+      if(!hit) continue;
+      var value = hit.value || (cells[1] || "");
+      // 値が次の行にある表形式（PDFなど）
+      if(!value){
+        for(var nj=li+1; nj<lines.length && !lines[nj]; nj++){}
+        var next = lines[nj] && lines[nj].split("\t")[0];
+        if(next && !matchLabel(next) && (hit.key === "type" || !TEMPLATE_WORDS.test(next))) value = next;
+      }
+      // 隣の欄の見出し（「用 ④保険料」など丸数字付き）が続いていれば切り落とす
+      value = value.replace(/\s+(?:\S\s+)?[①-⑳].*$/, "").trim();
+      if(!acceptable(hit.key, value)) continue;
+      // 所在地は番地まで含むより詳しい方を採用
+      if(hit.key === "address" && out.address && value.length > out.address.length) out.address = value;
+      else if(out[hit.key] == null) out[hit.key] = value;
+    }
 
     var res = {};
     if(out.name) res.name = out.name;
@@ -504,6 +585,8 @@
     }
     if(out.access) res.access = out.access;
     if(out.deal) res.deal = out.deal;
+    if(out.handover) res.handover = out.handover;
+    if(out.road) res.road = out.road;
 
     var type = out.type ? normalizeType(out.type) : "";
     if(!type) type = guessType(text);
@@ -534,6 +617,188 @@
     return res;
   }
 
+  // ---------- attachments (IndexedDB) ----------
+  // 添付ファイルは容量が大きいため localStorage ではなく IndexedDB に物件IDをキーに保存
+  var DB_NAME = "property_stock_files", DB_STORE = "files", dbp = null;
+  function db(){
+    if(!dbp) dbp = new Promise(function(resolve, reject){
+      var req = indexedDB.open(DB_NAME, 1);
+      req.onupgradeneeded = function(){ req.result.createObjectStore(DB_STORE); };
+      req.onsuccess = function(){ resolve(req.result); };
+      req.onerror = function(){ reject(req.error); };
+    });
+    return dbp;
+  }
+  function idb(mode, fn){
+    return db().then(function(d){
+      return new Promise(function(resolve, reject){
+        var tx = d.transaction(DB_STORE, mode), st = tx.objectStore(DB_STORE), r = fn(st);
+        tx.oncomplete = function(){ resolve(r && r.result); };
+        tx.onerror = tx.onabort = function(){ reject(tx.error); };
+      });
+    });
+  }
+  function fileGet(id){ return idb("readonly", function(st){ return st.get(id); }); }
+  function filePut(id, rec){ return idb("readwrite", function(st){ return st.put(rec, id); }); }
+  function fileDel(id){ return idb("readwrite", function(st){ return st.delete(id); }); }
+
+  var PDFJS = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/";
+  var pdfjsp = null;
+  function pdfjs(){
+    if(!pdfjsp) pdfjsp = new Promise(function(resolve, reject){
+      var sc = document.createElement("script");
+      sc.src = PDFJS + "pdf.min.js";
+      sc.onload = function(){
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS + "pdf.worker.min.js";
+        resolve(window.pdfjsLib);
+      };
+      sc.onerror = function(){ pdfjsp = null; reject(new Error("pdf.js load failed")); };
+      document.head.appendChild(sc);
+    });
+    return pdfjsp;
+  }
+  function openPdf(blob){
+    return Promise.all([pdfjs(), blob.arrayBuffer()]).then(function(r){
+      return r[0].getDocument({ data:r[1] }).promise;
+    });
+  }
+  function isPdf(rec){ return /pdf/i.test(rec.type) || /\.pdf$/i.test(rec.name); }
+
+  // PDFの文字情報を行単位で取り出す（スキャンPDFは空になる）
+  // 表形式の概要書でも「ラベル 値」が1行になるよう、同じ高さの文字を左から順につなげる
+  function pdfText(pdf){
+    var jobs = [];
+    for(var i=1;i<=pdf.numPages;i++) jobs.push(pdf.getPage(i).then(function(pg){ return pg.getTextContent(); }));
+    return Promise.all(jobs).then(function(pages){
+      return pages.map(function(tc){
+        var rows = [];
+        tc.items.forEach(function(it){
+          if(!it.str || !it.str.trim()) return;
+          var x = it.transform[4], y = it.transform[5];
+          var h = Math.abs(it.transform[3]) || it.height || 10;
+          var row = rows.filter(function(r){ return Math.abs(r.y - y) < h * 0.5; })[0];
+          if(!row){ row = { y:y, items:[] }; rows.push(row); }
+          row.items.push({ x:x, w:it.width || 0, h:h, s:it.str.trim() });
+        });
+        rows.sort(function(a,b){ return b.y - a.y; });
+        return rows.map(function(r){
+          r.items.sort(function(a,b){ return a.x - b.x; });
+          // 大きく離れた文字は別の欄とみなしタブで区切る
+          return r.items.map(function(t, i){
+            if(!i) return t.s;
+            var prev = r.items[i-1], gap = t.x - (prev.x + prev.w);
+            return (gap > Math.max(prev.h, t.h) * 3 ? "\t" : " ") + t.s;
+          }).join("");
+        }).join("\n");
+      }).join("\n").trim();
+    });
+  }
+
+  function renderPage(pdf, n, width, rotation){
+    return pdf.getPage(n).then(function(pg){
+      var rot = (pg.rotate + rotation) % 360;
+      var base = pg.getViewport({ scale:1, rotation:rot });
+      var scale = width / base.width * (window.devicePixelRatio || 1);
+      var vp = pg.getViewport({ scale:scale, rotation:rot });
+      var c = document.createElement("canvas");
+      c.width = vp.width; c.height = vp.height;
+      c.style.width = width + "px";
+      return pg.render({ canvasContext:c.getContext("2d"), viewport:vp }).promise.then(function(){ return c; });
+    });
+  }
+
+  function renderImage(blob, width, rotation){
+    return new Promise(function(resolve, reject){
+      var img = new Image(), url = URL.createObjectURL(blob);
+      img.onload = function(){
+        var side = rotation % 180 !== 0;
+        var w = side ? img.height : img.width, h = side ? img.width : img.height;
+        var c = document.createElement("canvas");
+        c.width = w; c.height = h; c.style.width = Math.min(width, w) + "px";
+        var ctx = c.getContext("2d");
+        ctx.translate(w/2, h/2); ctx.rotate(rotation * Math.PI / 180);
+        ctx.drawImage(img, -img.width/2, -img.height/2);
+        URL.revokeObjectURL(url); resolve(c);
+      };
+      img.onerror = function(){ URL.revokeObjectURL(url); reject(new Error("image")); };
+      img.src = url;
+    });
+  }
+
+  // 1ページ目（画像）のサムネイル
+  function renderThumb(rec, width, rotation){
+    if(isPdf(rec)) return openPdf(rec.blob).then(function(pdf){ return renderPage(pdf, 1, width, rotation || 0); });
+    return renderImage(rec.blob, width, rotation || 0);
+  }
+
+  function openBlob(rec){
+    var url = URL.createObjectURL(rec.blob);
+    var w = window.open(url, "_blank");
+    if(!w){
+      var a = document.createElement("a");
+      a.href = url; a.download = rec.name || "資料";
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    }
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 60000);
+  }
+
+  function renderPreview(){
+    var box = $("preview"), att = state.att;
+    $("att-bar").style.display = att ? "flex" : "none";
+    if(!att){ box.style.display = "none"; box.innerHTML = ""; return; }
+    $("att-name").textContent = att.name;
+    box.style.display = "flex";
+    box.innerHTML = '<span class="muted">プレビューを作成中…</span>';
+    var width = Math.max(240, Math.min(900, box.clientWidth - 24));
+    var token = state.previewToken = {};
+    var job = isPdf(att)
+      ? openPdf(att.blob).then(function(pdf){
+          var n = Math.min(pdf.numPages, 6), jobs = [];
+          for(var i=1;i<=n;i++) jobs.push(renderPage(pdf, i, width, state.rotation));
+          return Promise.all(jobs).then(function(cs){
+            if(pdf.numPages > n){
+              var more = document.createElement("span");
+              more.className = "muted";
+              more.textContent = "ほか " + (pdf.numPages - n) + " ページ（「別タブで開く」で全ページ表示）";
+              cs.push(more);
+            }
+            return cs;
+          });
+        })
+      : renderImage(att.blob, width, state.rotation).then(function(c){ return [c]; });
+    job.then(function(nodes){
+      if(token !== state.previewToken) return;
+      box.innerHTML = "";
+      nodes.forEach(function(n){ box.appendChild(n); });
+    }, function(){
+      if(token !== state.previewToken) return;
+      box.innerHTML = '<span class="muted">プレビューを表示できませんでした（「別タブで開く」で確認できます）</span>';
+    });
+  }
+
+  function setAttachment(file){
+    if(!file) return;
+    if(!/pdf|image/i.test(file.type) && !/\.pdf$/i.test(file.name)){ toast("PDFまたは画像ファイルを選択してください"); return; }
+    state.att = { name:file.name, type:file.type || "application/pdf", blob:file };
+    state.attChanged = true;
+    state.rotation = 0;
+    renderPreview();
+    if(!isPdf(state.att)){
+      $("parse-hint").textContent = "画像を添付しました。プレビューを見ながら入力してください。";
+      return;
+    }
+    openPdf(file).then(pdfText).then(function(text){
+      if(text.replace(/\s/g, "").length < 20){
+        $("parse-hint").textContent = "スキャンしたPDFのため文字を読み取れません。プレビューを見ながら入力してください。";
+        return;
+      }
+      $("raw").value = text;
+      applyParse(text);
+    }, function(){
+      $("parse-hint").textContent = "PDFを読み込めませんでした。";
+    });
+  }
+
   // ---------- form ----------
   function readForm(){
     var o = {};
@@ -561,6 +826,8 @@
     $("btn-save").textContent = "一覧に保存";
     $("parse-hint").textContent = "";
     $("dup-warn").style.display = "none";
+    state.att = null; state.attChanged = false; state.rotation = 0;
+    renderPreview();
   }
 
   function findDuplicates(o){
@@ -685,17 +952,21 @@
       ["建物・専有面積", it.buildingArea != null ? fmtArea(it.buildingArea) + "（" + tsubo(it.buildingArea) + "）" : ""],
       ["坪単価", it.price != null && it.landArea ? (Math.round(it.price / (it.landArea / 3.30579) * 10) / 10).toLocaleString() + "万円/坪" : ""],
       ["間取り", it.layout], ["築年月", it.built], ["用途地域", it.zoning], ["建ぺい率／容積率", it.coverage],
-      ["交通", it.access], ["取引態様", it.deal], ["送信元", it.source], ["受信日", it.receivedAt], ["メモ", it.memo]
+      ["交通", it.access], ["前面道路", it.road], ["引渡時期", it.handover], ["取引態様", it.deal], ["送信元", it.source], ["受信日", it.receivedAt], ["メモ", it.memo]
     ].filter(function(r){ return r[1]; });
     var statusSel = '<select data-act="status" data-id="' + esc(it.id) + '" style="width:auto;padding:5px 8px;font-size:0.75rem;">' +
       STATUSES.map(function(s){ return '<option' + (s === it.status ? " selected" : "") + '>' + s + '</option>'; }).join("") + '</select>';
-    return '<dl class="detail-grid">' + rows.map(function(r){
+    var file = it.fileName
+      ? '<div class="thumb-slot" data-thumb="' + esc(it.id) + '" data-rot="' + (it.fileRotation || 0) + '"></div>'
+      : '';
+    return file + '<dl class="detail-grid">' + rows.map(function(r){
       return '<div><dt>' + esc(r[0]) + '</dt><dd>' + esc(r[1]) + '</dd></div>';
     }).join("") + '</dl>' +
     (it.raw ? '<details><summary>届いた元の文面</summary><pre class="raw">' + esc(it.raw) + '</pre></details>' : '') +
     '<div class="btn-row">' + statusSel +
       '<button class="small" data-act="edit" data-id="' + esc(it.id) + '">編集</button>' +
       '<button class="small" data-act="copy" data-id="' + esc(it.id) + '">概要をコピー</button>' +
+      (it.fileName ? '<button class="small" data-act="open-file" data-id="' + esc(it.id) + '">添付資料を開く</button>' : '') +
       '<button class="small danger" data-act="delete" data-id="' + esc(it.id) + '">削除</button>' +
     '</div>';
   }
@@ -726,7 +997,7 @@
       var row = '<tr class="row" data-id="' + esc(it.id) + '">' +
         '<td class="nowrap">' + esc(it.receivedAt || "") + '</td>' +
         '<td><span class="tag">' + esc(it.type || "—") + '</span></td>' +
-        '<td><b>' + esc(it.name || "（名称なし）") + '</b><div class="muted">' + esc(it.address || "") + '</div></td>' +
+        '<td><b>' + esc(it.name || "（名称なし）") + '</b>' + (it.fileName ? '<span class="clip" title="' + esc(it.fileName) + '">📎資料</span>' : '') + '<div class="muted">' + esc(it.address || "") + '</div></td>' +
         '<td class="num">' + esc(fmtPrice(it.price)) + '</td>' +
         '<td class="num">' + esc(fmtArea(it.landArea)) + '</td>' +
         '<td class="num">' + esc(fmtArea(it.buildingArea)) + '</td>' +
@@ -737,6 +1008,18 @@
       if(it.id === state.openId) row += '<tr class="detail"><td colspan="9">' + detailHtml(it) + '</td></tr>';
       return row;
     }).join("");
+    tb.querySelectorAll("[data-thumb]").forEach(function(slot){
+      var id = slot.getAttribute("data-thumb");
+      fileGet(id).then(function(rec){
+        if(!rec) return;
+        return renderThumb(rec, 260, parseInt(slot.getAttribute("data-rot"), 10) || 0).then(function(c){
+          c.className = "thumb"; c.style.width = ""; c.title = "クリックで拡大";
+          c.style.cursor = "zoom-in";
+          c.addEventListener("click", function(ev){ ev.stopPropagation(); openBlob(rec); });
+          slot.innerHTML = ""; slot.appendChild(c);
+        });
+      }).catch(function(){});
+    });
   }
 
   function summaryText(it){
@@ -752,6 +1035,8 @@
       it.zoning ? "【用途地域】" + it.zoning : "",
       it.coverage ? "【建ぺい率／容積率】" + it.coverage : "",
       it.access ? "【交通】" + it.access : "",
+      it.road ? "【前面道路】" + it.road : "",
+      it.handover ? "【引渡時期】" + it.handover : "",
       it.deal ? "【取引態様】" + it.deal : ""
     ].filter(Boolean).join("\n");
   }
@@ -778,9 +1063,7 @@
   }
 
   // ---------- events ----------
-  $("btn-parse").addEventListener("click", function(){
-    var text = $("raw").value;
-    if(!text.trim()){ toast("物件概要の文面を貼り付けてください"); return; }
+  function applyParse(text){
     var r = parseText(text);
     var cur = readForm();
     var n = 0;
@@ -791,6 +1074,28 @@
     fillForm(cur);
     $("parse-hint").textContent = n ? n + " 項目を読み取りました。内容を確認してください。" : "項目を読み取れませんでした。手入力してください。";
     showDupWarn();
+  }
+
+  $("btn-parse").addEventListener("click", function(){
+    var text = $("raw").value;
+    if(!text.trim()){ toast("物件概要の文面を貼り付けるか、PDFを添付してください"); return; }
+    applyParse(text);
+  });
+
+  var dz = $("dropzone");
+  dz.addEventListener("click", function(){ $("att-file").click(); });
+  dz.addEventListener("keydown", function(e){ if(e.key === "Enter" || e.key === " "){ e.preventDefault(); $("att-file").click(); } });
+  dz.addEventListener("dragover", function(e){ e.preventDefault(); dz.classList.add("over"); });
+  dz.addEventListener("dragleave", function(){ dz.classList.remove("over"); });
+  dz.addEventListener("drop", function(e){
+    e.preventDefault(); dz.classList.remove("over");
+    setAttachment(e.dataTransfer.files[0]);
+  });
+  $("att-file").addEventListener("change", function(e){ setAttachment(e.target.files[0]); e.target.value = ""; });
+  $("btn-rotate").addEventListener("click", function(){ state.rotation = (state.rotation + 90) % 360; renderPreview(); });
+  $("btn-att-open").addEventListener("click", function(){ if(state.att) openBlob(state.att); });
+  $("btn-att-remove").addEventListener("click", function(){
+    state.att = null; state.attChanged = true; renderPreview();
   });
 
   $("btn-clear").addEventListener("click", function(){
@@ -808,19 +1113,33 @@
       return;
     }
     if(!o.name) o.name = o.address;
+    var att = state.att, attChanged = state.attChanged, targetId;
+    if(attChanged){
+      o.fileName = att ? att.name : "";
+      o.fileType = att ? att.type : "";
+      o.fileRotation = att ? state.rotation : 0;
+    }else if(att){
+      o.fileRotation = state.rotation;
+    }
     if(state.editingId){
       var it = state.items.filter(function(x){ return x.id === state.editingId; })[0];
       if(it){
         Object.keys(o).forEach(function(k){ it[k] = o[k]; });
         it.updatedAt = Date.now();
         state.openId = it.id;
+        targetId = it.id;
       }
       if(save()) toast("更新しました");
     }else{
       o.id = uid();
       o.createdAt = Date.now();
       state.items.push(o);
+      targetId = o.id;
       if(save()) toast("保存しました");
+    }
+    if(targetId && attChanged){
+      (att ? filePut(targetId, { name:att.name, type:att.type, blob:att.blob }) : fileDel(targetId))
+        .then(render, function(){ toast("添付ファイルを保存できませんでした"); });
     }
     resetForm();
     render();
@@ -840,14 +1159,24 @@
         $("edit-banner").style.display = "block";
         $("btn-save").textContent = "変更を保存";
         $("dup-warn").style.display = "none";
+        state.att = null; state.attChanged = false; state.rotation = it.fileRotation || 0;
+        renderPreview();
+        if(it.fileName) fileGet(id).then(function(rec){
+          if(rec && state.editingId === id){ state.att = rec; renderPreview(); }
+        });
         $("input-panel").scrollIntoView({ behavior:"smooth" });
       }else if(act === "delete"){
         if(!confirm("「" + (it.name || it.address || "この物件") + "」を削除しますか？")) return;
         state.items = state.items.filter(function(x){ return x.id !== id; });
+        fileDel(id).catch(function(){});
         if(state.editingId === id) resetForm();
         save(); render(); toast("削除しました");
       }else if(act === "copy"){
         copyText(summaryText(it));
+      }else if(act === "open-file"){
+        fileGet(id).then(function(rec){
+          if(rec) openBlob(rec); else toast("添付ファイルが見つかりません");
+        });
       }
       return;
     }
@@ -892,7 +1221,7 @@
     var cols = [
       ["受信日","receivedAt"],["送信元","source"],["種別","type"],["ステータス","status"],["物件名","name"],["所在地","address"],
       ["価格(万円)","price"],["土地面積(㎡)","landArea"],["建物面積(㎡)","buildingArea"],["間取り","layout"],["築年月","built"],
-      ["用途地域","zoning"],["建ぺい率/容積率","coverage"],["交通","access"],["取引態様","deal"],["メモ","memo"],["元の文面","raw"]
+      ["用途地域","zoning"],["建ぺい率/容積率","coverage"],["交通","access"],["前面道路","road"],["引渡時期","handover"],["取引態様","deal"],["メモ","memo"],["添付資料","fileName"],["元の文面","raw"]
     ];
     var q = function(v){ return '"' + String(v == null ? "" : v).replace(/"/g, '""') + '"'; };
     var csv = [cols.map(function(c){ return q(c[0]); }).join(",")].concat(list.map(function(it){
@@ -901,8 +1230,27 @@
     download("物件一覧_" + today() + ".csv", "﻿" + csv, "text/csv;charset=utf-8");
   });
 
+  function blobToDataUrl(blob){
+    return new Promise(function(resolve, reject){
+      var r = new FileReader();
+      r.onload = function(){ resolve(r.result); };
+      r.onerror = function(){ reject(r.error); };
+      r.readAsDataURL(blob);
+    });
+  }
+
+  // 添付資料もデータURLとしてバックアップに含める
   $("btn-backup").addEventListener("click", function(){
-    download("物件データ_バックアップ_" + today() + ".json", JSON.stringify({ version:1, exportedAt:new Date().toISOString(), items:state.items }, null, 2), "application/json");
+    toast("バックアップを作成中…");
+    var files = {};
+    Promise.all(state.items.filter(function(it){ return it.fileName; }).map(function(it){
+      return fileGet(it.id).then(function(rec){
+        if(!rec) return;
+        return blobToDataUrl(rec.blob).then(function(url){ files[it.id] = { name:rec.name, type:rec.type, data:url }; });
+      });
+    })).then(function(){
+      download("物件データ_バックアップ_" + today() + ".json", JSON.stringify({ version:2, exportedAt:new Date().toISOString(), items:state.items, files:files }), "application/json");
+    }, function(){ toast("バックアップの作成に失敗しました"); });
   });
 
   $("btn-restore").addEventListener("click", function(){ $("restore-file").click(); });
@@ -917,16 +1265,28 @@
         if(!Array.isArray(items)) throw new Error("bad");
         var ids = {};
         state.items.forEach(function(it){ ids[it.id] = 1; });
-        var added = 0;
+        var added = 0, files = (data && data.files) || {}, jobs = [];
         items.forEach(function(it){
           if(!it || typeof it !== "object") return;
           if(!it.id) it.id = uid();
           if(ids[it.id]) return;
           ids[it.id] = 1;
+          var f = files[it.id];
+          if(f && f.data){
+            jobs.push(fetch(f.data).then(function(r){ return r.blob(); }).then(function(blob){
+              return filePut(it.id, { name:f.name, type:f.type, blob:blob });
+            }));
+          }
           state.items.push(it); added++;
         });
-        save(); render();
-        toast(added + " 件を復元しました（重複はスキップ）");
+        save();
+        Promise.all(jobs).then(function(){
+          render();
+          toast(added + " 件を復元しました（重複はスキップ）");
+        }, function(){
+          render();
+          toast("一部の添付資料を復元できませんでした");
+        });
       }catch(err){
         toast("バックアップファイルを読み込めませんでした");
       }
