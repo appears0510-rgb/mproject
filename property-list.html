@@ -1,0 +1,945 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>物件情報ストック</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;600;700;800&family=Zen+Kaku+Gothic+New:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#ece7de;
+    --bg-elevated:#f7f4ee;
+    --bg-sunk:#e2ddd2;
+    --ink:#1b2023;
+    --ink-soft:#4b5459;
+    --ink-faint:#7c8388;
+    --accent:#1f6f6b;
+    --accent-ink:#f7f4ee;
+    --accent-soft:#e3ede9;
+    --accent-2:#b5573c;
+    --line:rgba(27,32,35,0.14);
+    --line-strong:rgba(27,32,35,0.28);
+    --font-display:"Shippori Mincho","Hiragino Mincho ProN","Yu Mincho",serif;
+    --font-body:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",sans-serif;
+    --danger:#b5573c;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#12171a; --bg-elevated:#1a2124; --bg-sunk:#0d1113;
+      --ink:#ece7de; --ink-soft:#a9b2b4; --ink-faint:#727c7e;
+      --accent:#4fbdb6; --accent-ink:#0e1516; --accent-soft:#1c2d2c; --accent-2:#d97c5d;
+      --line:rgba(236,231,222,0.14); --line-strong:rgba(236,231,222,0.28);
+    }
+  }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:var(--font-body); line-height:1.7; padding-bottom:80px;
+  }
+  a{ color:inherit; }
+  .wrap{ max-width:1180px; margin:0 auto; padding:0 16px; }
+  header.top{
+    border-bottom:1px solid var(--line); background:var(--bg-elevated);
+    padding:20px 0; margin-bottom:32px;
+  }
+  header.top .wrap{ display:flex; align-items:baseline; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+  header.top h1{
+    font-family:var(--font-display); font-weight:700; font-size:1.3rem; margin:0;
+  }
+  .badge{
+    display:inline-block; font-size:0.68rem; letter-spacing:0.08em; color:var(--ink-faint);
+    background:var(--bg-sunk); border:1px solid var(--line); border-radius:99px; padding:2px 10px; margin-top:4px;
+  }
+  section.panel{
+    background:var(--bg-elevated); border:1px solid var(--line); border-radius:14px;
+    padding:24px clamp(16px,3vw,32px); margin-bottom:28px;
+  }
+  section.panel > h2{
+    font-family:var(--font-display); font-size:1.08rem; font-weight:700; margin:0 0 4px;
+    display:flex; align-items:center; gap:8px;
+  }
+  section.panel > h2 .num{ color:var(--accent); font-size:0.85em; }
+  section.panel > p.desc{ margin:0 0 18px; font-size:0.83rem; color:var(--ink-soft); }
+
+  label{ display:block; font-size:0.75rem; color:var(--ink-soft); margin-bottom:4px; }
+  input[type=text], input[type=date], input[type=number], select, textarea{
+    width:100%; font:inherit; font-size:0.88rem; color:var(--ink);
+    background:var(--bg); border:1px solid var(--line-strong); border-radius:8px;
+    padding:9px 10px; font-family:var(--font-body);
+  }
+  textarea{ resize:vertical; }
+  input:focus, select:focus, textarea:focus{ outline:2px solid var(--accent); outline-offset:1px; }
+
+  .grid{ display:grid; gap:14px; }
+  .g2{ grid-template-columns:repeat(2,1fr); }
+  .g3{ grid-template-columns:repeat(3,1fr); }
+  .g4{ grid-template-columns:repeat(4,1fr); }
+  .span2{ grid-column:span 2; }
+  .span-all{ grid-column:1 / -1; }
+  @media (max-width:720px){ .g2,.g3,.g4{ grid-template-columns:1fr; } .span2{ grid-column:auto; } }
+  .field{ display:flex; flex-direction:column; min-width:0; }
+
+  button{
+    font-family:var(--font-body); font-weight:700; font-size:0.82rem; letter-spacing:0.02em;
+    border-radius:8px; border:1px solid var(--line-strong); background:var(--bg);
+    color:var(--ink); padding:9px 16px; cursor:pointer;
+  }
+  button:hover{ border-color:var(--accent); color:var(--accent); }
+  button.primary{ background:var(--accent); color:var(--accent-ink); border-color:var(--accent); }
+  button.primary:hover{ opacity:0.9; color:var(--accent-ink); }
+  button.danger{ color:var(--danger); border-color:var(--danger); background:transparent; }
+  button.danger:hover{ background:var(--danger); color:#fff; }
+  button.small{ padding:5px 10px; font-size:0.72rem; }
+  .btn-row{ display:flex; gap:10px; flex-wrap:wrap; margin-top:14px; align-items:center; }
+
+  table{ width:100%; border-collapse:collapse; font-size:0.83rem; }
+  thead th{
+    text-align:left; font-weight:700; color:var(--ink-soft); font-size:0.72rem;
+    letter-spacing:0.04em; border-bottom:1px solid var(--line-strong); padding:6px 8px; white-space:nowrap;
+  }
+  thead th.sortable{ cursor:pointer; user-select:none; }
+  thead th.sortable:hover{ color:var(--accent); }
+  thead th .arrow{ font-size:0.9em; color:var(--accent); }
+  tbody td{ border-bottom:1px solid var(--line); padding:8px; vertical-align:top; }
+  tbody tr.row{ cursor:pointer; }
+  tbody tr.row:hover{ background:var(--bg-sunk); }
+  tbody tr.detail > td{ background:var(--bg); padding:16px; }
+  td.num{ text-align:right; white-space:nowrap; font-variant-numeric:tabular-nums; }
+  td.nowrap{ white-space:nowrap; }
+  .tablewrap{ overflow-x:auto; }
+  .tag{
+    display:inline-block; font-size:0.68rem; padding:2px 8px; border-radius:99px;
+    background:var(--accent-soft); color:var(--accent); white-space:nowrap;
+  }
+  .st{ display:inline-block; font-size:0.68rem; padding:2px 8px; border-radius:99px; white-space:nowrap; border:1px solid var(--line-strong); color:var(--ink-soft); }
+  .st-新着{ background:rgba(181,87,60,0.14); color:var(--accent-2); border-color:transparent; }
+  .st-検討中{ background:var(--accent-soft); color:var(--accent); border-color:transparent; }
+  .st-紹介済{ background:var(--bg-sunk); color:var(--ink); }
+  .st-見送り, .st-成約済{ color:var(--ink-faint); }
+  .muted{ color:var(--ink-faint); font-size:0.78rem; }
+  .filters{ display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; margin-bottom:14px; }
+  .filters .field{ min-width:140px; flex:1 1 140px; }
+  .filters .field.grow{ flex:3 1 220px; }
+  .count-pill{
+    font-size:0.78rem; color:var(--ink-soft); background:var(--bg-sunk);
+    border:1px solid var(--line); border-radius:99px; padding:4px 12px; display:inline-block;
+  }
+  .warn{
+    font-size:0.78rem; color:var(--accent-2); background:rgba(181,87,60,0.1);
+    border:1px solid rgba(181,87,60,0.3); border-radius:8px; padding:10px 12px; margin-top:12px;
+  }
+  .hint{ font-size:0.75rem; color:var(--ink-faint); margin-top:6px; }
+  details{ border:1px solid var(--line); border-radius:8px; padding:10px 14px; background:var(--bg); }
+  details summary{ cursor:pointer; font-size:0.8rem; font-weight:700; color:var(--ink-soft); }
+  .toast{
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+    background:var(--ink); color:var(--bg-elevated); padding:10px 20px; border-radius:99px;
+    font-size:0.82rem; opacity:0; pointer-events:none; transition:opacity .25s;
+  }
+  .toast.show{ opacity:1; }
+  .detail-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:6px 18px; font-size:0.82rem; margin-bottom:12px; }
+  .detail-grid dt{ font-size:0.7rem; color:var(--ink-faint); }
+  .detail-grid dd{ margin:0 0 4px; word-break:break-all; }
+  pre.raw{
+    white-space:pre-wrap; word-break:break-all; font-family:var(--font-body); font-size:0.78rem;
+    background:var(--bg-sunk); border:1px solid var(--line); border-radius:8px; padding:12px; margin:0; max-height:320px; overflow:auto;
+  }
+  .stats{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px; }
+  .stat{ background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:8px 14px; min-width:110px; }
+  .stat b{ display:block; font-family:var(--font-display); font-size:1.3rem; line-height:1.2; }
+  .stat span{ font-size:0.7rem; color:var(--ink-faint); }
+  .empty{ text-align:center; padding:32px 12px; color:var(--ink-faint); font-size:0.85rem; }
+  #edit-banner{ display:none; }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <div>
+      <h1>物件情報ストック</h1>
+      <span class="badge">届いた物件概要を保存して一覧管理</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- ================= STEP 1: INPUT ================= -->
+  <section class="panel" id="input-panel">
+    <h2><span class="num">01</span>物件概要を登録</h2>
+    <p class="desc">メール・FAX・チャットなどで届いた物件概要の文面をそのまま貼り付けて「自動読み取り」を押すと、各項目に振り分けます。内容を確認・修正してから保存してください。</p>
+
+    <div class="warn" id="edit-banner">編集中：<span id="edit-name"></span>　<button class="small" id="btn-cancel-edit">編集をやめる</button></div>
+
+    <div class="field" style="margin-top:12px;">
+      <label for="raw">届いた物件概要（貼り付け）</label>
+      <textarea id="raw" rows="9" placeholder="例：&#10;■物件名　小倉北区○○町 売地&#10;■所在地　福岡県北九州市小倉北区○○町2丁目&#10;■価格　1,980万円&#10;■土地面積　165.30㎡（50.00坪）&#10;■用途地域　第一種住居地域&#10;■建ぺい率/容積率　60%/200%&#10;■交通　JR小倉駅 徒歩12分&#10;■取引態様　専任媒介"></textarea>
+    </div>
+    <div class="btn-row">
+      <button class="primary" id="btn-parse">自動読み取り</button>
+      <button id="btn-clear">入力をクリア</button>
+      <span class="muted" id="parse-hint"></span>
+    </div>
+
+    <div class="grid g4" style="margin-top:20px;">
+      <div class="field">
+        <label for="f-receivedAt">受信日</label>
+        <input type="date" id="f-receivedAt">
+      </div>
+      <div class="field">
+        <label for="f-source">送信元（業者名など）</label>
+        <input type="text" id="f-source" placeholder="例：○○不動産 山田様" list="source-list">
+        <datalist id="source-list"></datalist>
+      </div>
+      <div class="field">
+        <label for="f-type">物件種別</label>
+        <select id="f-type">
+          <option>土地</option>
+          <option>一戸建て</option>
+          <option>マンション</option>
+          <option>収益物件</option>
+          <option>事業用</option>
+          <option>その他</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="f-status">ステータス</label>
+        <select id="f-status">
+          <option>新着</option>
+          <option>検討中</option>
+          <option>紹介済</option>
+          <option>見送り</option>
+          <option>成約済</option>
+        </select>
+      </div>
+      <div class="field span2">
+        <label for="f-name">物件名</label>
+        <input type="text" id="f-name" placeholder="例：小倉北区○○町 売地">
+      </div>
+      <div class="field span2">
+        <label for="f-address">所在地</label>
+        <input type="text" id="f-address" placeholder="例：福岡県北九州市小倉北区○○町2丁目">
+      </div>
+      <div class="field">
+        <label for="f-price">価格（万円）</label>
+        <input type="number" id="f-price" step="any" min="0" placeholder="例：1980">
+      </div>
+      <div class="field">
+        <label for="f-landArea">土地面積（㎡）</label>
+        <input type="number" id="f-landArea" step="any" min="0">
+      </div>
+      <div class="field">
+        <label for="f-buildingArea">建物・専有面積（㎡）</label>
+        <input type="number" id="f-buildingArea" step="any" min="0">
+      </div>
+      <div class="field">
+        <label for="f-layout">間取り</label>
+        <input type="text" id="f-layout" placeholder="例：3LDK">
+      </div>
+      <div class="field">
+        <label for="f-built">築年月</label>
+        <input type="text" id="f-built" placeholder="例：2008年3月">
+      </div>
+      <div class="field">
+        <label for="f-zoning">用途地域</label>
+        <input type="text" id="f-zoning">
+      </div>
+      <div class="field">
+        <label for="f-coverage">建ぺい率／容積率</label>
+        <input type="text" id="f-coverage" placeholder="例：60%／200%">
+      </div>
+      <div class="field">
+        <label for="f-deal">取引態様</label>
+        <input type="text" id="f-deal" placeholder="例：専任媒介">
+      </div>
+      <div class="field span2">
+        <label for="f-access">交通</label>
+        <input type="text" id="f-access" placeholder="例：JR小倉駅 徒歩12分">
+      </div>
+      <div class="field span2">
+        <label for="f-memo">メモ</label>
+        <input type="text" id="f-memo" placeholder="例：南向き・角地、○○様に紹介予定">
+      </div>
+    </div>
+    <div class="warn" id="dup-warn" style="display:none;"></div>
+    <div class="btn-row">
+      <button class="primary" id="btn-save">一覧に保存</button>
+      <span class="muted">保存データはこの端末のブラウザ内にのみ保存されます。定期的に「バックアップ」してください。</span>
+    </div>
+  </section>
+
+  <!-- ================= STEP 2: LIST ================= -->
+  <section class="panel">
+    <h2><span class="num">02</span>物件一覧</h2>
+    <p class="desc">行をクリックすると詳細と元の文面を表示します。見出しをクリックすると並べ替えできます。</p>
+
+    <div class="stats" id="stats"></div>
+
+    <div class="filters">
+      <div class="field grow">
+        <label for="q">キーワード検索</label>
+        <input type="text" id="q" placeholder="物件名・所在地・送信元・メモ・元の文面から検索">
+      </div>
+      <div class="field">
+        <label for="fl-type">種別</label>
+        <select id="fl-type"><option value="">すべて</option></select>
+      </div>
+      <div class="field">
+        <label for="fl-status">ステータス</label>
+        <select id="fl-status"><option value="">すべて</option></select>
+      </div>
+      <div class="field">
+        <label for="fl-month">受信月</label>
+        <select id="fl-month"><option value="">すべて</option></select>
+      </div>
+      <div class="field">
+        <label for="fl-pmin">価格 下限（万円）</label>
+        <input type="number" id="fl-pmin" min="0">
+      </div>
+      <div class="field">
+        <label for="fl-pmax">価格 上限（万円）</label>
+        <input type="number" id="fl-pmax" min="0">
+      </div>
+    </div>
+    <div class="btn-row" style="margin:0 0 12px;">
+      <span class="count-pill" id="count"></span>
+      <button class="small" id="btn-reset-filter">絞り込みを解除</button>
+    </div>
+
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="sortable" data-sort="receivedAt">受信日</th>
+            <th class="sortable" data-sort="type">種別</th>
+            <th class="sortable" data-sort="name">物件名／所在地</th>
+            <th class="sortable" data-sort="price" style="text-align:right;">価格</th>
+            <th class="sortable" data-sort="landArea" style="text-align:right;">土地</th>
+            <th class="sortable" data-sort="buildingArea" style="text-align:right;">建物</th>
+            <th>間取り・築年</th>
+            <th class="sortable" data-sort="source">送信元</th>
+            <th class="sortable" data-sort="status">状況</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+
+    <div class="btn-row" style="margin-top:20px;">
+      <button id="btn-csv">CSVで出力（Excel用）</button>
+      <button id="btn-backup">バックアップ（JSON）</button>
+      <button id="btn-restore">バックアップから復元</button>
+      <input type="file" id="restore-file" accept=".json,application/json" style="display:none;">
+    </div>
+  </section>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  var STORE_KEY = "property_stock_v1";
+  var TYPES = ["土地","一戸建て","マンション","収益物件","事業用","その他"];
+  var STATUSES = ["新着","検討中","紹介済","見送り","成約済"];
+  var FIELDS = ["receivedAt","source","type","status","name","address","price","landArea","buildingArea","layout","built","zoning","coverage","deal","access","memo"];
+  var NUM_FIELDS = { price:1, landArea:1, buildingArea:1 };
+
+  var state = { items:[], editingId:null, openId:null, sortKey:"receivedAt", sortDir:-1 };
+
+  function load(){
+    try{
+      var raw = localStorage.getItem(STORE_KEY);
+      if(raw){
+        var data = JSON.parse(raw);
+        state.items = Array.isArray(data.items) ? data.items : [];
+      }
+    }catch(e){}
+  }
+
+  function save(){
+    try{
+      localStorage.setItem(STORE_KEY, JSON.stringify({ items:state.items }));
+      return true;
+    }catch(e){
+      toast("保存に失敗しました（ブラウザの保存領域をご確認ください）");
+      return false;
+    }
+  }
+
+  function uid(){ return "p" + Date.now() + Math.floor(Math.random()*10000); }
+
+  function toast(msg){
+    var t = document.getElementById("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(toast._h);
+    toast._h = setTimeout(function(){ t.classList.remove("show"); }, 2200);
+  }
+
+  function esc(s){
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c];
+    });
+  }
+
+  function $(id){ return document.getElementById(id); }
+
+  function today(){
+    var d = new Date();
+    return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+  }
+
+  // ---------- parsing ----------
+  // 全角英数・記号を半角に
+  function toHalf(s){
+    return String(s).replace(/[！-～]/g, function(c){
+      return String.fromCharCode(c.charCodeAt(0) - 0xFEE0);
+    }).replace(/　/g, " ");
+  }
+
+  function num(s){
+    var m = toHalf(s).replace(/,/g, "").match(/\d+(?:\.\d+)?/);
+    return m ? parseFloat(m[0]) : null;
+  }
+
+  // 「1億2,000万円」「1,980万円」「19,800,000円」→ 万円単位の数値
+  function parsePrice(s){
+    var t = toHalf(s).replace(/[,\s]/g, "");
+    var oku = t.match(/(\d+(?:\.\d+)?)億/);
+    var man = t.match(/(?:億)?(\d+(?:\.\d+)?)万/);
+    if(oku || man){
+      var v = 0;
+      if(oku) v += parseFloat(oku[1]) * 10000;
+      if(man) v += parseFloat(man[1]);
+      return v;
+    }
+    var yen = t.match(/(\d{5,})円/);
+    if(yen) return parseFloat(yen[1]) / 10000;
+    return num(t);
+  }
+
+  // ㎡表記を優先し、坪のみなら㎡へ換算
+  function parseArea(s){
+    var t = toHalf(s).replace(/,/g, "");
+    var m2 = t.match(/(\d+(?:\.\d+)?)\s*(?:㎡|m2|m²|平米|平方メートル)/i);
+    if(m2) return parseFloat(m2[1]);
+    var tsubo = t.match(/(\d+(?:\.\d+)?)\s*坪/);
+    if(tsubo) return Math.round(parseFloat(tsubo[1]) * 3.30579 * 100) / 100;
+    return num(t);
+  }
+
+  var LABELS = [
+    { key:"name",         re:/^(物件名|物件名称|名称|マンション名|建物名|タイトル)/ },
+    { key:"address",      re:/^(所在地|住所|所在|地番|物件所在地)/ },
+    { key:"price",        re:/^(価格|販売価格|売買価格|売出価格|売出し価格|希望価格|金額)/ },
+    { key:"landArea",     re:/^(土地面積|敷地面積|地積|土地$)/ },
+    { key:"buildingArea", re:/^(建物面積|延床面積|延べ床面積|延面積|専有面積|床面積)/ },
+    { key:"layout",       re:/^(間取り|間取)/ },
+    { key:"built",        re:/^(築年月|建築年月|築年|竣工|完成|新築年月|建築時期)/ },
+    { key:"zoning",       re:/^(用途地域|用途)/ },
+    { key:"coverage",     re:/^(建ぺい率|建蔽率|建ペイ率)/ },
+    { key:"far",          re:/^(容積率)/ },
+    { key:"access",       re:/^(交通|最寄駅|最寄り駅|アクセス|沿線)/ },
+    { key:"deal",         re:/^(取引態様|取引形態|態様)/ },
+    { key:"type",         re:/^(物件種別|種別|種目|物件種目)/ }
+  ];
+
+  function guessType(text){
+    if(/マンション|専有面積|区分/.test(text)) return "マンション";
+    if(/一棟|アパート|収益|利回り/.test(text)) return "収益物件";
+    if(/戸建|一戸建|中古住宅|新築住宅|建売/.test(text)) return "一戸建て";
+    if(/店舗|事務所|倉庫|工場|テナント/.test(text)) return "事業用";
+    if(/売地|土地|更地|宅地|分譲地/.test(text)) return "土地";
+    return "";
+  }
+
+  function normalizeType(v){
+    var g = guessType(v);
+    return g || (TYPES.indexOf(v) >= 0 ? v : "");
+  }
+
+  function parseText(text){
+    var out = {};
+    var lines = String(text).split(/\r?\n/);
+    lines.forEach(function(line){
+      // 行頭の記号（■●◆・【 など）を除去
+      var l = line.replace(/^[\s　■□●○◆◇▼▽★☆・\-*＊※◎〇]+/, "").trim();
+      if(!l) return;
+      // 【ラベル】値 / ラベル：値 / ラベル 値
+      var m = l.match(/^[【\[［(（]?([^】\]］)）:：\s　]{1,12})[】\]］)）]?\s*[:：]?\s*(.*)$/);
+      if(!m) return;
+      var label = toHalf(m[1]).trim();
+      var value = m[2].trim();
+      // 建ぺい率/容積率 のような複合ラベル
+      var combo = l.match(/^[【\[［]?(建ぺい率|建蔽率|建ペイ率)\s*[\/／・]\s*容積率[】\]］]?\s*[:：]?\s*(.*)$/);
+      if(combo){ out.coverage = combo[2].trim(); return; }
+      if(!value) return;
+      for(var i=0;i<LABELS.length;i++){
+        if(LABELS[i].re.test(label)){
+          var k = LABELS[i].key;
+          if(out[k] == null) out[k] = value;
+          break;
+        }
+      }
+    });
+
+    var res = {};
+    if(out.name) res.name = out.name;
+    if(out.address) res.address = out.address;
+    if(out.price != null){ var p = parsePrice(out.price); if(p != null) res.price = p; }
+    if(out.landArea){ var la = parseArea(out.landArea); if(la != null) res.landArea = la; }
+    if(out.buildingArea){ var ba = parseArea(out.buildingArea); if(ba != null) res.buildingArea = ba; }
+    if(out.layout) res.layout = toHalf(out.layout).trim();
+    if(out.built) res.built = out.built;
+    if(out.zoning) res.zoning = out.zoning;
+    if(out.coverage || out.far){
+      res.coverage = [out.coverage, out.far].filter(Boolean).join("／");
+    }
+    if(out.access) res.access = out.access;
+    if(out.deal) res.deal = out.deal;
+
+    var type = out.type ? normalizeType(out.type) : "";
+    if(!type) type = guessType(text);
+    if(type) res.type = type;
+
+    // ラベルが無い場合の補完
+    if(res.price == null){
+      var pm = toHalf(text).replace(/,/g, "").match(/(\d+(?:\.\d+)?億)?\d+(?:\.\d+)?万円/);
+      if(pm) res.price = parsePrice(pm[0]);
+    }
+    if(!res.layout){
+      var lm = toHalf(text).match(/\b\d\s*S?(?:LDK|DK|K|R)\b/i);
+      if(lm) res.layout = lm[0].replace(/\s/g, "").toUpperCase();
+    }
+    if(!res.access){
+      var am = text.match(/[^\s　、。]*駅[^\n。]{0,12}?(?:徒歩|バス)[^\n。]{0,12}?分/);
+      if(am) res.access = am[0];
+    }
+    if(!res.address){
+      var ad = text.match(/(福岡県|北九州市|福岡市)[^\s　\n、。]{2,40}/);
+      if(ad) res.address = ad[0];
+    }
+    if(!res.name){
+      var first = lines.map(function(s){ return s.trim(); }).filter(Boolean)[0] || "";
+      if(first && first.length <= 40 && !/[:：]/.test(first)) res.name = first.replace(/^[■●◆【\[]+|[】\]]+$/g, "");
+      else if(res.address) res.name = res.address.replace(/^福岡県/, "") + (res.type ? " " + res.type : "");
+    }
+    return res;
+  }
+
+  // ---------- form ----------
+  function readForm(){
+    var o = {};
+    FIELDS.forEach(function(f){
+      var v = $("f-" + f).value.trim();
+      if(NUM_FIELDS[f]) o[f] = v === "" ? null : parseFloat(v);
+      else o[f] = v;
+    });
+    o.raw = $("raw").value;
+    return o;
+  }
+
+  function fillForm(o){
+    FIELDS.forEach(function(f){
+      var v = o[f];
+      $("f-" + f).value = v == null ? "" : v;
+    });
+    $("raw").value = o.raw || "";
+  }
+
+  function resetForm(){
+    fillForm({ receivedAt:today(), type:"土地", status:"新着" });
+    state.editingId = null;
+    $("edit-banner").style.display = "none";
+    $("btn-save").textContent = "一覧に保存";
+    $("parse-hint").textContent = "";
+    $("dup-warn").style.display = "none";
+  }
+
+  function findDuplicates(o){
+    var norm = function(s){ return toHalf(s || "").replace(/[\s\-－ー―‐丁目番地号の]/g, ""); };
+    var a = norm(o.address), n = norm(o.name);
+    return state.items.filter(function(it){
+      if(it.id === state.editingId) return false;
+      if(a && a.length >= 6 && norm(it.address) === a) return true;
+      if(n && n.length >= 4 && norm(it.name) === n) return true;
+      return false;
+    });
+  }
+
+  function showDupWarn(){
+    var d = findDuplicates(readForm());
+    var box = $("dup-warn");
+    if(d.length){
+      box.innerHTML = "同じ物件が既に登録されている可能性があります：" + d.map(function(it){
+        return esc((it.receivedAt || "") + " " + (it.name || it.address) + "（" + (it.source || "送信元未入力") + "）");
+      }).join("、");
+      box.style.display = "block";
+    }else{
+      box.style.display = "none";
+    }
+  }
+
+  // ---------- list ----------
+  function fmtPrice(v){
+    if(v == null || isNaN(v)) return "";
+    if(v >= 10000){
+      var oku = Math.floor(v / 10000), man = Math.round((v - oku*10000) * 100) / 100;
+      return oku + "億" + (man ? man.toLocaleString() + "万" : "") + "円";
+    }
+    return (Math.round(v*100)/100).toLocaleString() + "万円";
+  }
+  function fmtArea(v){
+    if(v == null || isNaN(v)) return "";
+    return (Math.round(v*100)/100).toLocaleString() + "㎡";
+  }
+  function tsubo(v){
+    if(v == null || isNaN(v)) return "";
+    return (Math.round(v / 3.30579 * 100) / 100).toLocaleString() + "坪";
+  }
+
+  function filtered(){
+    var q = toHalf($("q").value).trim().toLowerCase();
+    var ft = $("fl-type").value, fs = $("fl-status").value, fm = $("fl-month").value;
+    var pmin = $("fl-pmin").value === "" ? null : parseFloat($("fl-pmin").value);
+    var pmax = $("fl-pmax").value === "" ? null : parseFloat($("fl-pmax").value);
+    var words = q ? q.split(/\s+/) : [];
+    return state.items.filter(function(it){
+      if(ft && it.type !== ft) return false;
+      if(fs && it.status !== fs) return false;
+      if(fm && (it.receivedAt || "").slice(0,7) !== fm) return false;
+      if(pmin != null && (it.price == null || it.price < pmin)) return false;
+      if(pmax != null && (it.price == null || it.price > pmax)) return false;
+      if(words.length){
+        var hay = toHalf([it.name,it.address,it.source,it.memo,it.access,it.zoning,it.layout,it.deal,it.raw].join(" ")).toLowerCase();
+        for(var i=0;i<words.length;i++) if(hay.indexOf(words[i]) < 0) return false;
+      }
+      return true;
+    });
+  }
+
+  function sorted(list){
+    var k = state.sortKey, dir = state.sortDir;
+    return list.slice().sort(function(a,b){
+      var x = a[k], y = b[k];
+      var xe = x == null || x === "", ye = y == null || y === "";
+      if(xe && ye) return (b.createdAt || 0) - (a.createdAt || 0);
+      if(xe) return 1;
+      if(ye) return -1;
+      var c = NUM_FIELDS[k] ? x - y : String(x).localeCompare(String(y), "ja");
+      if(c === 0) c = (a.createdAt || 0) - (b.createdAt || 0);
+      return c * dir;
+    });
+  }
+
+  function renderFilterOptions(){
+    function fill(sel, values){
+      var cur = sel.value;
+      sel.innerHTML = '<option value="">すべて</option>' + values.map(function(v){
+        return '<option value="' + esc(v) + '">' + esc(v) + '</option>';
+      }).join("");
+      if(values.indexOf(cur) >= 0) sel.value = cur;
+    }
+    fill($("fl-type"), TYPES);
+    fill($("fl-status"), STATUSES);
+    var months = {};
+    state.items.forEach(function(it){ if(it.receivedAt) months[it.receivedAt.slice(0,7)] = 1; });
+    fill($("fl-month"), Object.keys(months).sort().reverse());
+
+    var sources = {};
+    state.items.forEach(function(it){ if(it.source) sources[it.source] = 1; });
+    $("source-list").innerHTML = Object.keys(sources).sort().map(function(s){
+      return '<option value="' + esc(s) + '">';
+    }).join("");
+  }
+
+  function renderStats(){
+    var t = today(), m = t.slice(0,7);
+    var todayN = 0, monthN = 0, newN = 0, reviewN = 0;
+    state.items.forEach(function(it){
+      if(it.receivedAt === t) todayN++;
+      if((it.receivedAt || "").slice(0,7) === m) monthN++;
+      if(it.status === "新着") newN++;
+      if(it.status === "検討中") reviewN++;
+    });
+    $("stats").innerHTML = [
+      ["登録件数", state.items.length],
+      ["本日受信", todayN],
+      ["今月受信", monthN],
+      ["新着（未確認）", newN],
+      ["検討中", reviewN]
+    ].map(function(s){ return '<div class="stat"><b>' + s[1] + '</b><span>' + s[0] + '</span></div>'; }).join("");
+  }
+
+  function detailHtml(it){
+    var rows = [
+      ["所在地", it.address], ["価格", fmtPrice(it.price)],
+      ["土地面積", it.landArea != null ? fmtArea(it.landArea) + "（" + tsubo(it.landArea) + "）" : ""],
+      ["建物・専有面積", it.buildingArea != null ? fmtArea(it.buildingArea) + "（" + tsubo(it.buildingArea) + "）" : ""],
+      ["坪単価", it.price != null && it.landArea ? (Math.round(it.price / (it.landArea / 3.30579) * 10) / 10).toLocaleString() + "万円/坪" : ""],
+      ["間取り", it.layout], ["築年月", it.built], ["用途地域", it.zoning], ["建ぺい率／容積率", it.coverage],
+      ["交通", it.access], ["取引態様", it.deal], ["送信元", it.source], ["受信日", it.receivedAt], ["メモ", it.memo]
+    ].filter(function(r){ return r[1]; });
+    var statusSel = '<select data-act="status" data-id="' + esc(it.id) + '" style="width:auto;padding:5px 8px;font-size:0.75rem;">' +
+      STATUSES.map(function(s){ return '<option' + (s === it.status ? " selected" : "") + '>' + s + '</option>'; }).join("") + '</select>';
+    return '<dl class="detail-grid">' + rows.map(function(r){
+      return '<div><dt>' + esc(r[0]) + '</dt><dd>' + esc(r[1]) + '</dd></div>';
+    }).join("") + '</dl>' +
+    (it.raw ? '<details><summary>届いた元の文面</summary><pre class="raw">' + esc(it.raw) + '</pre></details>' : '') +
+    '<div class="btn-row">' + statusSel +
+      '<button class="small" data-act="edit" data-id="' + esc(it.id) + '">編集</button>' +
+      '<button class="small" data-act="copy" data-id="' + esc(it.id) + '">概要をコピー</button>' +
+      '<button class="small danger" data-act="delete" data-id="' + esc(it.id) + '">削除</button>' +
+    '</div>';
+  }
+
+  function render(){
+    renderFilterOptions();
+    renderStats();
+    var list = sorted(filtered());
+    $("count").textContent = list.length + " 件表示 ／ 全 " + state.items.length + " 件";
+
+    document.querySelectorAll("thead th.sortable").forEach(function(th){
+      var k = th.getAttribute("data-sort");
+      var label = th.textContent.replace(/[▲▼]$/, "");
+      th.innerHTML = esc(label) + (k === state.sortKey ? '<span class="arrow">' + (state.sortDir > 0 ? "▲" : "▼") + '</span>' : "");
+    });
+
+    var tb = $("tbody");
+    if(!state.items.length){
+      tb.innerHTML = '<tr><td colspan="9" class="empty">まだ物件が登録されていません。上のフォームに物件概要を貼り付けて保存してください。</td></tr>';
+      return;
+    }
+    if(!list.length){
+      tb.innerHTML = '<tr><td colspan="9" class="empty">条件に一致する物件がありません。</td></tr>';
+      return;
+    }
+    tb.innerHTML = list.map(function(it){
+      var extra = [it.layout, it.built].filter(Boolean).join("・");
+      var row = '<tr class="row" data-id="' + esc(it.id) + '">' +
+        '<td class="nowrap">' + esc(it.receivedAt || "") + '</td>' +
+        '<td><span class="tag">' + esc(it.type || "—") + '</span></td>' +
+        '<td><b>' + esc(it.name || "（名称なし）") + '</b><div class="muted">' + esc(it.address || "") + '</div></td>' +
+        '<td class="num">' + esc(fmtPrice(it.price)) + '</td>' +
+        '<td class="num">' + esc(fmtArea(it.landArea)) + '</td>' +
+        '<td class="num">' + esc(fmtArea(it.buildingArea)) + '</td>' +
+        '<td>' + esc(extra) + '</td>' +
+        '<td>' + esc(it.source || "") + '</td>' +
+        '<td><span class="st st-' + esc(it.status) + '">' + esc(it.status || "") + '</span></td>' +
+      '</tr>';
+      if(it.id === state.openId) row += '<tr class="detail"><td colspan="9">' + detailHtml(it) + '</td></tr>';
+      return row;
+    }).join("");
+  }
+
+  function summaryText(it){
+    return [
+      "【物件名】" + (it.name || ""),
+      "【種別】" + (it.type || ""),
+      "【所在地】" + (it.address || ""),
+      "【価格】" + fmtPrice(it.price),
+      it.landArea != null ? "【土地面積】" + fmtArea(it.landArea) + "（" + tsubo(it.landArea) + "）" : "",
+      it.buildingArea != null ? "【建物面積】" + fmtArea(it.buildingArea) : "",
+      it.layout ? "【間取り】" + it.layout : "",
+      it.built ? "【築年月】" + it.built : "",
+      it.zoning ? "【用途地域】" + it.zoning : "",
+      it.coverage ? "【建ぺい率／容積率】" + it.coverage : "",
+      it.access ? "【交通】" + it.access : "",
+      it.deal ? "【取引態様】" + it.deal : ""
+    ].filter(Boolean).join("\n");
+  }
+
+  function copyText(text){
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ toast("コピーしました"); }, fallback);
+    }else fallback();
+    function fallback(){
+      var ta = document.createElement("textarea");
+      ta.value = text; document.body.appendChild(ta); ta.select();
+      try{ document.execCommand("copy"); toast("コピーしました"); }catch(e){ toast("コピーできませんでした"); }
+      document.body.removeChild(ta);
+    }
+  }
+
+  function download(name, content, type){
+    var blob = new Blob([content], { type:type });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = name;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
+  }
+
+  // ---------- events ----------
+  $("btn-parse").addEventListener("click", function(){
+    var text = $("raw").value;
+    if(!text.trim()){ toast("物件概要の文面を貼り付けてください"); return; }
+    var r = parseText(text);
+    var cur = readForm();
+    var n = 0;
+    Object.keys(r).forEach(function(k){
+      if(r[k] == null || r[k] === "") return;
+      cur[k] = r[k]; n++;
+    });
+    fillForm(cur);
+    $("parse-hint").textContent = n ? n + " 項目を読み取りました。内容を確認してください。" : "項目を読み取れませんでした。手入力してください。";
+    showDupWarn();
+  });
+
+  $("btn-clear").addEventListener("click", function(){
+    if(state.editingId){ resetForm(); return; }
+    resetForm();
+  });
+  $("btn-cancel-edit").addEventListener("click", resetForm);
+
+  ["f-name","f-address"].forEach(function(id){ $(id).addEventListener("change", showDupWarn); });
+
+  $("btn-save").addEventListener("click", function(){
+    var o = readForm();
+    if(!o.name && !o.address && !o.raw.trim()){
+      toast("物件名・所在地・文面のいずれかを入力してください");
+      return;
+    }
+    if(!o.name) o.name = o.address;
+    if(state.editingId){
+      var it = state.items.filter(function(x){ return x.id === state.editingId; })[0];
+      if(it){
+        Object.keys(o).forEach(function(k){ it[k] = o[k]; });
+        it.updatedAt = Date.now();
+        state.openId = it.id;
+      }
+      if(save()) toast("更新しました");
+    }else{
+      o.id = uid();
+      o.createdAt = Date.now();
+      state.items.push(o);
+      if(save()) toast("保存しました");
+    }
+    resetForm();
+    render();
+  });
+
+  $("tbody").addEventListener("click", function(e){
+    var btn = e.target.closest("[data-act]");
+    if(btn){
+      var id = btn.getAttribute("data-id");
+      var it = state.items.filter(function(x){ return x.id === id; })[0];
+      if(!it) return;
+      var act = btn.getAttribute("data-act");
+      if(act === "edit"){
+        fillForm(it);
+        state.editingId = id;
+        $("edit-name").textContent = it.name || it.address || "";
+        $("edit-banner").style.display = "block";
+        $("btn-save").textContent = "変更を保存";
+        $("dup-warn").style.display = "none";
+        $("input-panel").scrollIntoView({ behavior:"smooth" });
+      }else if(act === "delete"){
+        if(!confirm("「" + (it.name || it.address || "この物件") + "」を削除しますか？")) return;
+        state.items = state.items.filter(function(x){ return x.id !== id; });
+        if(state.editingId === id) resetForm();
+        save(); render(); toast("削除しました");
+      }else if(act === "copy"){
+        copyText(summaryText(it));
+      }
+      return;
+    }
+    if(e.target.closest("select, details, tr.detail")) return;
+    var tr = e.target.closest("tr.row");
+    if(!tr) return;
+    var rid = tr.getAttribute("data-id");
+    state.openId = state.openId === rid ? null : rid;
+    render();
+  });
+
+  $("tbody").addEventListener("change", function(e){
+    var sel = e.target.closest('select[data-act="status"]');
+    if(!sel) return;
+    var it = state.items.filter(function(x){ return x.id === sel.getAttribute("data-id"); })[0];
+    if(!it) return;
+    it.status = sel.value;
+    it.updatedAt = Date.now();
+    save(); render(); toast("ステータスを「" + sel.value + "」に変更しました");
+  });
+
+  document.querySelectorAll("thead th.sortable").forEach(function(th){
+    th.addEventListener("click", function(){
+      var k = th.getAttribute("data-sort");
+      if(state.sortKey === k) state.sortDir = -state.sortDir;
+      else { state.sortKey = k; state.sortDir = (k === "receivedAt") ? -1 : 1; }
+      render();
+    });
+  });
+
+  ["q","fl-type","fl-status","fl-month","fl-pmin","fl-pmax"].forEach(function(id){
+    $(id).addEventListener("input", render);
+  });
+  $("btn-reset-filter").addEventListener("click", function(){
+    ["q","fl-type","fl-status","fl-month","fl-pmin","fl-pmax"].forEach(function(id){ $(id).value = ""; });
+    render();
+  });
+
+  $("btn-csv").addEventListener("click", function(){
+    var list = sorted(filtered());
+    if(!list.length){ toast("出力する物件がありません"); return; }
+    var cols = [
+      ["受信日","receivedAt"],["送信元","source"],["種別","type"],["ステータス","status"],["物件名","name"],["所在地","address"],
+      ["価格(万円)","price"],["土地面積(㎡)","landArea"],["建物面積(㎡)","buildingArea"],["間取り","layout"],["築年月","built"],
+      ["用途地域","zoning"],["建ぺい率/容積率","coverage"],["交通","access"],["取引態様","deal"],["メモ","memo"],["元の文面","raw"]
+    ];
+    var q = function(v){ return '"' + String(v == null ? "" : v).replace(/"/g, '""') + '"'; };
+    var csv = [cols.map(function(c){ return q(c[0]); }).join(",")].concat(list.map(function(it){
+      return cols.map(function(c){ return q(it[c[1]]); }).join(",");
+    })).join("\r\n");
+    download("物件一覧_" + today() + ".csv", "﻿" + csv, "text/csv;charset=utf-8");
+  });
+
+  $("btn-backup").addEventListener("click", function(){
+    download("物件データ_バックアップ_" + today() + ".json", JSON.stringify({ version:1, exportedAt:new Date().toISOString(), items:state.items }, null, 2), "application/json");
+  });
+
+  $("btn-restore").addEventListener("click", function(){ $("restore-file").click(); });
+  $("restore-file").addEventListener("change", function(e){
+    var file = e.target.files[0];
+    if(!file) return;
+    var reader = new FileReader();
+    reader.onload = function(){
+      try{
+        var data = JSON.parse(reader.result);
+        var items = Array.isArray(data) ? data : data.items;
+        if(!Array.isArray(items)) throw new Error("bad");
+        var ids = {};
+        state.items.forEach(function(it){ ids[it.id] = 1; });
+        var added = 0;
+        items.forEach(function(it){
+          if(!it || typeof it !== "object") return;
+          if(!it.id) it.id = uid();
+          if(ids[it.id]) return;
+          ids[it.id] = 1;
+          state.items.push(it); added++;
+        });
+        save(); render();
+        toast(added + " 件を復元しました（重複はスキップ）");
+      }catch(err){
+        toast("バックアップファイルを読み込めませんでした");
+      }
+      e.target.value = "";
+    };
+    reader.readAsText(file);
+  });
+
+  // ---------- init ----------
+  load();
+  resetForm();
+  render();
+})();
+</script>
+</body>
+</html>
