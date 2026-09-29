@@ -1,0 +1,927 @@
+<title>物件情報台帳</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  /* Layout: 受付→進捗ボード（横スクロール列）→詳細ダイアログ（資料｜自社フォーマット）。社内ツール群と同じトークン。 */
+  :root{
+    --bg:#ece7de; --bg-elevated:#f7f4ee; --bg-sunk:#e2ddd2;
+    --ink:#1b2023; --ink-soft:#4b5459; --ink-faint:#7c8388;
+    --accent:#1f6f6b; --accent-ink:#f7f4ee; --accent-soft:#e3ede9; --accent-2:#b5573c;
+    --line:rgba(27,32,35,0.14); --line-strong:rgba(27,32,35,0.28);
+    --paper:#ffffff; --paper-ink:#1b2023;
+    --danger:#b5573c; --ai:#6a4c9c;
+    --s-new:#2f6fb0; --s-review:#8a6a12; --s-intro:#1f6f6b; --s-nego:#b5573c;
+    --s-contract:#6a4c9c; --s-closed:#3d7a3a; --s-drop:#7c8388;
+    --font-display:"Shippori Mincho","Hiragino Mincho ProN","Yu Mincho",serif;
+    --font-body:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#12171a; --bg-elevated:#1a2124; --bg-sunk:#0d1113;
+      --ink:#ece7de; --ink-soft:#a9b2b4; --ink-faint:#727c7e;
+      --accent:#4fbdb6; --accent-ink:#0e1516; --accent-soft:#1c2d2c; --accent-2:#d97c5d;
+      --line:rgba(236,231,222,0.14); --line-strong:rgba(236,231,222,0.28);
+      --paper:#f4f1ea; --paper-ink:#1b2023;
+      --danger:#e08a6e; --ai:#b39ae0;
+      --s-new:#7fb2e8; --s-review:#d9b55a; --s-intro:#4fbdb6; --s-nego:#e08a6e;
+      --s-contract:#b39ae0; --s-closed:#8cc587; --s-drop:#8f989a;
+      color-scheme:dark;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#12171a; --bg-elevated:#1a2124; --bg-sunk:#0d1113;
+    --ink:#ece7de; --ink-soft:#a9b2b4; --ink-faint:#727c7e;
+    --accent:#4fbdb6; --accent-ink:#0e1516; --accent-soft:#1c2d2c; --accent-2:#d97c5d;
+    --line:rgba(236,231,222,0.14); --line-strong:rgba(236,231,222,0.28);
+    --paper:#f4f1ea; --paper-ink:#1b2023;
+    --danger:#e08a6e; --ai:#b39ae0;
+    --s-new:#7fb2e8; --s-review:#d9b55a; --s-intro:#4fbdb6; --s-nego:#e08a6e;
+    --s-contract:#b39ae0; --s-closed:#8cc587; --s-drop:#8f989a;
+    color-scheme:dark;
+  }
+  *{ box-sizing:border-box; }
+  [hidden]{ display:none !important; }
+  body{ margin:0; background:var(--bg); color:var(--ink); font-family:var(--font-body); font-size:15px; line-height:1.65; padding-bottom:64px; }
+  .wrap{ max-width:1320px; margin:0 auto; padding-inline:16px; }
+  @media (min-width:720px){ .wrap{ padding-inline:28px; } }
+  h1,h2,h3{ font-family:var(--font-display); font-weight:700; margin:0; text-wrap:balance; }
+  .tnum{ font-variant-numeric:tabular-nums; }
+
+  header.top{ background:var(--bg-elevated); border-bottom:1px solid var(--line); padding-block:14px; margin-bottom:20px; }
+  header.top .wrap{ display:flex; align-items:center; gap:12px 16px; flex-wrap:wrap; }
+  header.top h1{ font-size:1.35rem; letter-spacing:0.04em; }
+  .mode{ font-size:0.7rem; color:var(--ink-faint); border:1px solid var(--line); background:var(--bg-sunk); border-radius:99px; padding:2px 10px; }
+  .spacer{ flex:1; }
+
+  label{ display:block; font-size:0.72rem; color:var(--ink-soft); margin-bottom:3px; letter-spacing:0.03em; }
+  input[type=text], input[type=date], input[type=search], select, textarea{
+    width:100%; font:inherit; font-size:0.88rem; color:var(--ink); background:var(--bg);
+    border:1px solid var(--line-strong); border-radius:8px; padding:8px 10px;
+  }
+  textarea{ resize:vertical; line-height:1.55; }
+  input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible, .card:focus-visible{ outline:2px solid var(--accent); outline-offset:1px; }
+  button{ font:inherit; font-weight:700; font-size:0.82rem; border-radius:8px; border:1px solid var(--line-strong); background:var(--bg); color:var(--ink); padding:8px 14px; cursor:pointer; white-space:nowrap; }
+  button:hover{ border-color:var(--accent); color:var(--accent); }
+  button.primary{ background:var(--accent); color:var(--accent-ink); border-color:var(--accent); }
+  button.primary:hover{ opacity:0.9; color:var(--accent-ink); }
+  button.ai{ background:transparent; color:var(--ai); border-color:var(--ai); }
+  button.ai:hover{ background:var(--ai); color:var(--bg-elevated); }
+  button.danger{ color:var(--danger); border-color:var(--danger); background:transparent; }
+  button.small{ padding:4px 10px; font-size:0.74rem; }
+  button:disabled{ opacity:0.45; cursor:not-allowed; }
+
+  /* summary strip */
+  .summary{ display:grid; grid-template-columns:repeat(auto-fit,minmax(110px,1fr)); gap:8px; margin-bottom:16px; }
+  .tile{ text-align:left; display:flex; flex-direction:column; gap:2px; padding:10px 12px; border-radius:10px; background:var(--bg-elevated); border:1px solid var(--line); border-top:3px solid var(--s); }
+  .tile .lab{ font-size:0.72rem; color:var(--ink-soft); font-weight:500; }
+  .tile .num{ font-family:var(--font-display); font-size:1.5rem; line-height:1.1; color:var(--ink); }
+  .tile[aria-pressed="true"]{ background:color-mix(in srgb, var(--s) 12%, var(--bg-elevated)); border-color:var(--s); }
+  .tile.alert .num{ color:var(--danger); }
+
+  .toolbar{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:14px; }
+  .toolbar input[type=search]{ flex:1 1 220px; min-width:0; }
+  .toolbar select{ width:auto; flex:0 0 auto; }
+  .seg{ display:inline-flex; border:1px solid var(--line-strong); border-radius:8px; overflow:hidden; }
+  .seg button{ border:0; border-radius:0; background:transparent; }
+  .seg button[aria-pressed="true"]{ background:var(--ink); color:var(--bg); }
+
+  /* board */
+  .board{ display:grid; grid-auto-flow:column; grid-auto-columns:minmax(230px,1fr); gap:10px; overflow-x:auto; padding-bottom:8px; align-items:start; }
+  .col{ background:var(--bg-sunk); border-radius:12px; padding:8px; min-height:120px; display:flex; flex-direction:column; gap:8px; }
+  .col.drop-on{ outline:2px dashed var(--s); outline-offset:-2px; }
+  .col-head{ display:flex; align-items:center; gap:8px; padding:4px 4px 2px; font-weight:700; font-size:0.84rem; }
+  .col-head::before{ content:""; width:9px; height:9px; border-radius:50%; background:var(--s); }
+  .col-head .c{ margin-left:auto; color:var(--ink-faint); font-weight:500; font-size:0.78rem; }
+  .col-empty{ font-size:0.75rem; color:var(--ink-faint); padding:10px 6px; text-align:center; border:1px dashed var(--line-strong); border-radius:8px; }
+  .card{ background:var(--bg-elevated); border:1px solid var(--line); border-radius:9px; padding:10px 11px; cursor:pointer; display:flex; flex-direction:column; gap:4px; }
+  .card:hover{ border-color:var(--line-strong); }
+  .card.dragging{ opacity:0.4; }
+  .card-top{ display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+  .card h3{ font-family:var(--font-body); font-size:0.9rem; font-weight:700; line-height:1.4; overflow-wrap:anywhere; }
+  .card .addr{ font-size:0.75rem; color:var(--ink-soft); margin:0; overflow-wrap:anywhere; }
+  .card-foot{ display:flex; justify-content:space-between; align-items:baseline; gap:8px; flex-wrap:wrap; margin-top:2px; }
+  .price{ font-family:var(--font-display); font-weight:700; font-size:1rem; }
+  .due{ font-size:0.72rem; color:var(--ink-soft); }
+  .due.over{ color:var(--danger); font-weight:700; }
+  .due.today{ color:var(--s-review); font-weight:700; }
+  .chip{ display:inline-block; font-size:0.66rem; font-weight:700; letter-spacing:0.04em; padding:1px 8px; border-radius:99px; background:var(--bg-sunk); color:var(--ink-soft); white-space:nowrap; }
+  .chip.st{ background:color-mix(in srgb, var(--s) 15%, transparent); color:var(--s); }
+  .chip.outline{ background:transparent; border:1px solid var(--line); }
+
+  .list-wrap{ overflow-x:auto; background:var(--bg-elevated); border:1px solid var(--line); border-radius:12px; }
+  table{ width:100%; border-collapse:collapse; font-size:0.82rem; }
+  th{ text-align:left; font-size:0.7rem; color:var(--ink-soft); font-weight:700; letter-spacing:0.04em; padding:8px 10px; border-bottom:1px solid var(--line-strong); white-space:nowrap; }
+  td{ padding:9px 10px; border-bottom:1px solid var(--line); vertical-align:top; }
+  tbody tr{ cursor:pointer; }
+  tbody tr:hover{ background:var(--bg-sunk); }
+
+  .empty{ text-align:center; padding:48px 16px; color:var(--ink-soft); background:var(--bg-elevated); border:1px dashed var(--line-strong); border-radius:12px; }
+  .empty h2{ font-size:1.1rem; margin-bottom:6px; color:var(--ink); }
+
+  /* dialogs */
+  dialog{ border:0; padding:0; border-radius:14px; background:var(--bg-elevated); color:var(--ink); width:min(1100px, calc(100vw - 20px)); max-height:calc(100dvh - 24px); box-shadow:0 30px 80px -30px rgba(0,0,0,0.5); }
+  dialog.narrow{ width:min(620px, calc(100vw - 20px)); }
+  dialog::backdrop{ background:rgba(10,14,16,0.55); }
+  .dlg{ display:flex; flex-direction:column; max-height:calc(100dvh - 24px); }
+  .dlg-head{ display:flex; align-items:center; gap:10px; padding:14px 18px; border-bottom:1px solid var(--line); }
+  .dlg-head h2{ font-size:1.1rem; flex:1; min-width:0; }
+  .dlg-body{ padding:16px 18px; overflow-y:auto; display:flex; flex-direction:column; gap:16px; }
+  .dlg-foot{ display:flex; gap:8px; align-items:center; padding:12px 18px; border-top:1px solid var(--line); flex-wrap:wrap; }
+  .x{ border:0; background:transparent; font-size:1.3rem; line-height:1; padding:4px 8px; }
+
+  .grid{ display:grid; gap:10px 12px; }
+  .g2{ grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .g3{ grid-template-columns:repeat(3,minmax(0,1fr)); }
+  .g5{ grid-template-columns:repeat(5,minmax(0,1fr)); }
+  @media (max-width:760px){ .g3,.g5{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
+  @media (max-width:460px){ .g2,.g3,.g5{ grid-template-columns:1fr; } }
+  .span2{ grid-column:span 2; }
+  @media (max-width:460px){ .span2{ grid-column:auto; } }
+
+  .split{ display:grid; grid-template-columns:minmax(0,5fr) minmax(0,7fr); gap:18px; align-items:start; }
+  @media (max-width:860px){ .split{ grid-template-columns:1fr; } }
+  .section-lab{ font-size:0.72rem; font-weight:700; letter-spacing:0.12em; color:var(--ink-faint); margin-bottom:8px; display:flex; align-items:center; gap:8px; }
+  .section-lab::after{ content:""; flex:1; height:1px; background:var(--line); }
+
+  .drop{ border:2px dashed var(--line-strong); border-radius:12px; padding:22px 14px; text-align:center; color:var(--ink-soft); font-size:0.84rem; background:var(--bg); cursor:pointer; }
+  .drop.on{ border-color:var(--accent); background:var(--accent-soft); }
+  .drop strong{ display:block; color:var(--ink); font-size:0.95rem; margin-bottom:2px; }
+  .pending{ display:flex; flex-wrap:wrap; gap:6px; }
+  .pending .chip{ font-size:0.72rem; }
+
+  .files{ display:grid; grid-template-columns:repeat(auto-fill,minmax(96px,1fr)); gap:8px; }
+  .file{ position:relative; border:1px solid var(--line); border-radius:8px; overflow:hidden; background:var(--bg); aspect-ratio:3/4; max-width:100%; display:flex; flex-direction:column; text-decoration:none; color:inherit; }
+  .file img{ width:100%; height:100%; object-fit:cover; }
+  .file .pdf{ flex:1; display:grid; place-items:center; font-family:var(--font-display); font-weight:700; color:var(--accent-2); font-size:1.1rem; }
+  .file .nm{ position:absolute; left:0; right:0; bottom:0; font-size:0.62rem; padding:2px 5px; background:color-mix(in srgb, var(--bg-elevated) 88%, transparent); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .ai-bar{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .ai-msg{ font-size:0.78rem; color:var(--ink-soft); }
+  .ai-msg.err{ color:var(--danger); }
+  .ai-filled{ border-color:var(--ai) !important; background:color-mix(in srgb, var(--ai) 8%, var(--bg)) !important; }
+
+  .tabs{ display:flex; gap:4px; border-bottom:1px solid var(--line); }
+  .tabs button{ border:0; border-bottom:2px solid transparent; border-radius:0; background:transparent; color:var(--ink-soft); padding:8px 12px; }
+  .tabs button[aria-selected="true"]{ color:var(--ink); border-bottom-color:var(--accent); }
+
+  .hist{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:6px; font-size:0.8rem; }
+  .hist li{ display:flex; gap:10px; }
+  .hist time{ color:var(--ink-faint); white-space:nowrap; font-size:0.74rem; padding-top:1px; }
+  .note-row{ display:flex; gap:8px; margin-top:8px; }
+  .note-row input{ flex:1; min-width:0; }
+
+  /* 物件概要書 */
+  .sheet{ background:var(--paper); color:var(--paper-ink); border-radius:6px; padding:22px clamp(14px,3vw,30px); box-shadow:0 1px 0 var(--line), 0 12px 30px -20px rgba(0,0,0,0.4); }
+  .sheet .s-head{ display:flex; justify-content:space-between; align-items:flex-end; gap:10px; flex-wrap:wrap; border-bottom:3px double #1b2023; padding-bottom:8px; margin-bottom:12px; }
+  .sheet .s-kind{ font-size:0.72rem; letter-spacing:0.2em; color:#4b5459; }
+  .sheet h3{ font-size:1.35rem; overflow-wrap:anywhere; }
+  .sheet .s-price{ font-family:var(--font-display); font-size:1.6rem; font-weight:700; color:#8f3b22; white-space:nowrap; }
+  .sheet .s-body{ display:grid; grid-template-columns:minmax(0,1fr); gap:14px; }
+  .sheet .s-photo{ width:100%; max-height:300px; object-fit:contain; background:#eee; border-radius:4px; }
+  .sheet table{ font-size:0.8rem; border:1px solid #1b2023; }
+  .sheet th, .sheet td{ border:1px solid rgba(27,32,35,0.35); padding:6px 8px; color:#1b2023; vertical-align:top; }
+  .sheet th{ background:#eceae4; width:6.5em; font-size:0.74rem; white-space:nowrap; }
+  .sheet .s-point{ font-size:0.84rem; border-left:3px solid #1f6f6b; padding:4px 10px; background:#f1f5f3; }
+  .sheet .s-foot{ display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; font-size:0.74rem; margin-top:12px; padding-top:8px; border-top:1px solid rgba(27,32,35,0.35); }
+  .sheet .s-foot b{ font-size:0.9rem; }
+  .sheet-tbl{ overflow-x:auto; }
+
+  .toast{ position:fixed; left:50%; bottom:calc(20px + env(safe-area-inset-bottom, 0px)); transform:translateX(-50%); background:var(--ink); color:var(--bg-elevated); padding:10px 18px; border-radius:99px; font-size:0.82rem; opacity:0; pointer-events:none; transition:opacity .2s; max-width:calc(100vw - 32px); z-index:10; }
+  .toast.show{ opacity:1; }
+  .hint{ font-size:0.76rem; color:var(--ink-faint); margin:0; }
+  @media (prefers-reduced-motion: reduce){ *{ transition:none !important; } }
+</style>
+
+<header class="top">
+  <div class="wrap">
+    <h1>物件情報台帳</h1>
+    <span class="mode" id="mode">読み込み中…</span>
+    <span class="spacer"></span>
+    <button id="btnSettings" class="small">会社情報</button>
+    <button id="btnIntake" class="primary">＋ 物件資料を取り込む</button>
+  </div>
+</header>
+
+<div class="wrap">
+  <section class="summary" id="summary" aria-label="進捗サマリー"></section>
+  <div class="toolbar">
+    <input type="search" id="q" placeholder="物件名・所在地・送り元で検索" aria-label="検索">
+    <select id="fSource" aria-label="取得元で絞り込み">
+      <option value="">取得元：すべて</option>
+    </select>
+    <div class="seg" role="group" aria-label="表示切替">
+      <button id="vBoard" aria-pressed="true">ボード</button>
+      <button id="vList" aria-pressed="false">一覧</button>
+    </div>
+  </div>
+  <main id="main"></main>
+</div>
+
+<!-- 取込 -->
+<dialog id="dlgIntake" class="narrow">
+  <form class="dlg" id="intakeForm" method="dialog">
+    <div class="dlg-head"><h2>物件資料を取り込む</h2><button type="button" class="x" data-close aria-label="閉じる">×</button></div>
+    <div class="dlg-body">
+      <div class="drop" id="drop" tabindex="0" role="button" aria-label="ファイルを選択">
+        <strong>PDF・写真をここにドロップ</strong>
+        クリックで選択／スクリーンショットは Ctrl+V で貼り付け
+        <input type="file" id="intakeFiles" multiple accept="application/pdf,image/jpeg,image/png,image/webp,image/gif,.pdf,.jpg,.jpeg,.png,.webp" hidden>
+      </div>
+      <div class="pending" id="pendingFiles"></div>
+      <div>
+        <label for="intakeText">LINE・メールの本文（コピーして貼り付け）</label>
+        <textarea id="intakeText" rows="6" placeholder="例）お世話になります。新規物件のご紹介です。&#10;所在地：福岡市東区香椎駅前2丁目&#10;価格：2,480万円&#10;土地面積：132.5㎡ …"></textarea>
+      </div>
+      <div class="grid g3">
+        <div><label for="intakeSource">取得元</label><select id="intakeSource"></select></div>
+        <div><label for="intakeSender">送り元（業者・担当）</label><input type="text" id="intakeSender" placeholder="○○不動産 田中様"></div>
+        <div><label for="intakeDate">受領日</label><input type="date" id="intakeDate"></div>
+      </div>
+      <label style="display:flex;gap:8px;align-items:center;font-size:0.82rem;color:var(--ink)" id="intakeAiWrap"><input type="checkbox" id="intakeAi" checked> 取り込み後、AIで自社フォーマットに読み取る</label>
+      <p class="hint" id="intakeHint"></p>
+    </div>
+    <div class="dlg-foot">
+      <span class="ai-msg" id="intakeMsg"></span>
+      <span class="spacer"></span>
+      <button type="button" data-close>キャンセル</button>
+      <button type="submit" class="primary" id="intakeGo">取り込む</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- 詳細 -->
+<dialog id="dlgDetail">
+  <div class="dlg">
+    <div class="dlg-head">
+      <h2 id="dTitle">物件詳細</h2>
+      <button type="button" class="x" data-close aria-label="閉じる">×</button>
+    </div>
+    <div class="dlg-body">
+      <div class="grid g5">
+        <div><label for="dStatus">進捗</label><select id="dStatus"></select></div>
+        <div><label for="dAssignee">担当者</label><input type="text" id="dAssignee"></div>
+        <div><label for="dSource">取得元</label><select id="dSource"></select></div>
+        <div><label for="dSender">送り元</label><input type="text" id="dSender"></div>
+        <div><label for="dReceived">受領日</label><input type="date" id="dReceived"></div>
+      </div>
+      <div class="grid g3">
+        <div class="span2"><label for="dNext">次にやること</label><input type="text" id="dNext" placeholder="例）現地確認・役所調査・〇〇工務店へ紹介"></div>
+        <div><label for="dNextDate">期日</label><input type="date" id="dNextDate"></div>
+      </div>
+
+      <div class="tabs" role="tablist">
+        <button role="tab" id="tabEdit" aria-selected="true">入力</button>
+        <button role="tab" id="tabSheet" aria-selected="false">物件概要書</button>
+      </div>
+
+      <div id="paneEdit" class="split">
+        <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
+          <div class="section-lab">受け取った資料</div>
+          <div class="files" id="dFiles"></div>
+          <div class="ai-bar">
+            <button type="button" class="small" id="dAddFile">資料を追加</button>
+            <input type="file" id="dFileInput" multiple accept="application/pdf,image/jpeg,image/png,image/webp,image/gif,.pdf,.jpg,.jpeg,.png,.webp" hidden>
+            <button type="button" class="ai small" id="dAi">AIで読み取る</button>
+            <button type="button" class="small" id="dStop" hidden>停止</button>
+          </div>
+          <p class="ai-msg" id="dAiMsg"></p>
+          <div>
+            <label for="dSourceText">原文（LINE・メール本文）</label>
+            <textarea id="dSourceText" rows="7"></textarea>
+          </div>
+        </div>
+        <div style="min-width:0">
+          <div class="section-lab">自社フォーマット</div>
+          <div class="grid g2" id="dFields"></div>
+        </div>
+      </div>
+
+      <div id="paneSheet" hidden>
+        <div class="ai-bar" style="margin-bottom:10px">
+          <button type="button" class="small" id="dCopy">概要をテキストでコピー</button>
+          <span class="hint">LINE・メールへの貼り付け用。会社情報は右上「会社情報」で設定します。</span>
+        </div>
+        <div id="sheet"></div>
+      </div>
+
+      <div>
+        <div class="section-lab">経過</div>
+        <ul class="hist" id="dHist"></ul>
+        <div class="note-row">
+          <input type="text" id="dNote" placeholder="メモを追加（例：売主と価格交渉中、2,300万まで可）" aria-label="経過メモ">
+          <button type="button" class="small" id="dNoteAdd">追加</button>
+        </div>
+      </div>
+    </div>
+    <div class="dlg-foot">
+      <button type="button" class="danger small" id="dDelete">削除</button>
+      <span class="spacer"></span>
+      <span class="ai-msg" id="dSaveMsg"></span>
+      <button type="button" data-close>閉じる</button>
+      <button type="button" class="primary" id="dSave">保存</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- 会社情報 -->
+<dialog id="dlgSettings" class="narrow">
+  <form class="dlg" id="settingsForm" method="dialog">
+    <div class="dlg-head"><h2>会社情報（概要書の帯に表示）</h2><button type="button" class="x" data-close aria-label="閉じる">×</button></div>
+    <div class="dlg-body">
+      <div class="grid g2">
+        <div class="span2"><label for="setCompany">会社名</label><input type="text" id="setCompany"></div>
+        <div><label for="setTel">電話番号</label><input type="text" id="setTel"></div>
+        <div><label for="setLicense">免許番号</label><input type="text" id="setLicense" placeholder="福岡県知事(1)第00000号"></div>
+        <div class="span2"><label for="setAddress">所在地</label><input type="text" id="setAddress"></div>
+      </div>
+    </div>
+    <div class="dlg-foot"><span class="spacer"></span><button type="button" data-close>キャンセル</button><button type="submit" class="primary">保存</button></div>
+  </form>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+'use strict';
+
+/* ---------- 定義 ---------- */
+const STATUSES = [
+  {k:'new',      label:'新着'},
+  {k:'review',   label:'精査中'},
+  {k:'intro',    label:'紹介中'},
+  {k:'nego',     label:'商談中'},
+  {k:'contract', label:'契約済'},
+  {k:'closed',   label:'決済済'},
+  {k:'drop',     label:'見送り'},
+];
+const ST = Object.fromEntries(STATUSES.map(s=>[s.k,s]));
+const SOURCES = ['LINE','メール','FAX','レインズ','電話・来店','その他'];
+const KINDS = ['','土地','戸建','マンション','収益一棟','店舗・事務所','その他'];
+// [key, label, type]
+const FIELDS = [
+  ['name','物件名','text'], ['kind','種別','kind'],
+  ['price','価格','text'], ['address','所在地','text'],
+  ['access','交通','text'], ['landArea','土地面積','text'],
+  ['buildingArea','建物面積','text'], ['layout','間取り','text'],
+  ['structure','構造','text'], ['built','築年月','text'],
+  ['zoning','用途地域','text'], ['coverage','建ぺい率','text'],
+  ['far','容積率','text'], ['road','接道','text'],
+  ['rights','土地権利','text'], ['current','現況','text'],
+  ['delivery','引渡し','text'], ['dealType','取引態様','text'],
+  ['point','物件のポイント','area'], ['remarks','備考','area'],
+];
+const WIDE = new Set(['name','address','access','road','point','remarks']);
+
+/* ---------- 小物 ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad = n => String(n).padStart(2,'0');
+const ymd = d => d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const today = () => ymd(new Date());
+const md = s => s ? (+s.slice(5,7))+'/'+(+s.slice(8,10)) : '';
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+const clone = o => JSON.parse(JSON.stringify(o));
+const stamp = () => { const d=new Date(); return ymd(d)+' '+pad(d.getHours())+':'+pad(d.getMinutes()); };
+let toastT;
+function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),2600); }
+function guessType(name){
+  const e=(name.split('.').pop()||'').toLowerCase();
+  return {pdf:'application/pdf',jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',webp:'image/webp',gif:'image/gif'}[e]||'';
+}
+const OK_TYPES = ['application/pdf','image/jpeg','image/png','image/webp','image/gif'];
+function fileType(f){ return OK_TYPES.includes(f.type) ? f.type : guessType(f.name||''); }
+function displayName(p){ return (p.f&&p.f.name) || (p.f&&p.f.address) || '名称未設定（'+(p.sender||p.source||'')+'）'; }
+function dueClass(d){ if(!d) return ''; const t=today(); return d<t?'over':(d===t?'today':''); }
+
+/* ---------- 状態 ---------- */
+const S = { items:[], loaded:false, status:null, q:'', source:'', view:'board', settings:{} };
+try{ const v=localStorage.getItem('bukken.view'); if(v==='list'||v==='board') S.view=v; }catch(e){}
+let store=null, sample=null, imgLimits=null;
+
+/* ---------- 保存先：クラウド（共有） ---------- */
+function makeCloud(db, assets){
+  const col = db.collection('properties');
+  const setDoc = db.doc('settings/main');
+  return {
+    mode:'cloud', canUpload:!!assets,
+    subscribe(cb){
+      col.onSnapshot(s=>cb(s.docs.map(d=>Object.assign({}, d.data(), {id:d.id}))),
+        ()=>toast('データの同期が止まりました。ページを再読み込みしてください'));
+      setDoc.onSnapshot(s=>{ S.settings = s.exists ? Object.assign({}, s.data()) : {}; }, ()=>{});
+    },
+    async save(p){ const b=clone(p); delete b.id; await col.doc(p.id).set(b); },
+    async remove(p){
+      await col.doc(p.id).delete();
+      if(assets) for(const f of p.files||[]){ try{ await assets.delete(f.id); }catch(e){} }
+    },
+    async upload(file){
+      const r = await assets.upload(file, {type:fileType(file)});
+      return {id:r.id, name:file.name||'image', type:r.contentType, size:r.sizeBytes};
+    },
+    async url(f){ return '/_blob/'+f.id; },
+    async blob(f){ const r=await fetch('/_blob/'+f.id); if(!r.ok) throw new Error('missing'); return r.blob(); },
+    async saveSettings(s){ await setDoc.set(s); S.settings=s; },
+  };
+}
+
+/* ---------- 保存先：このブラウザ（IndexedDB） ---------- */
+async function makeLocal(){
+  let dbp = null;
+  try{
+    dbp = new Promise((res,rej)=>{
+      const r = indexedDB.open('bukken-daicho',1);
+      r.onupgradeneeded = ()=>{ const d=r.result; d.createObjectStore('props',{keyPath:'id'}); d.createObjectStore('files',{keyPath:'id'}); };
+      r.onsuccess = ()=>res(r.result); r.onerror = ()=>rej(r.error);
+    });
+    await dbp;
+  }catch(e){ dbp = null; }
+  const mem = {props:new Map(), files:new Map()};
+  const req = (name,mode,fn)=>dbp.then(d=>new Promise((res,rej)=>{
+    const t=d.transaction(name,mode); const r=fn(t.objectStore(name));
+    t.oncomplete=()=>res(r.result); t.onerror=t.onabort=()=>rej(t.error);
+  }));
+  const urls = new Map();
+  let listener = ()=>{};
+  const all = async()=> dbp ? req('props','readonly',s=>s.getAll()) : [...mem.props.values()];
+  const refresh = ()=>all().then(listener);
+  try{ S.settings = JSON.parse(localStorage.getItem('bukken.settings')||'{}'); }catch(e){}
+  const api = {
+    mode: dbp ? 'local' : 'memory', canUpload:true,
+    subscribe(cb){ listener=cb; refresh(); },
+    async save(p){ const c=clone(p); if(dbp) await req('props','readwrite',s=>s.put(c)); else mem.props.set(c.id,c); refresh(); },
+    async remove(p){
+      if(dbp){ await req('props','readwrite',s=>s.delete(p.id)); for(const f of p.files||[]) await req('files','readwrite',s=>s.delete(f.id)); }
+      else mem.props.delete(p.id);
+      refresh();
+    },
+    async upload(file){
+      const id=uid(); const rec={id, blob:file, name:file.name||'image', type:fileType(file)};
+      if(dbp) await req('files','readwrite',s=>s.put(rec)); else mem.files.set(id,rec);
+      return {id, name:rec.name, type:rec.type, size:file.size};
+    },
+    async blob(f){ const r = dbp ? await req('files','readonly',s=>s.get(f.id)) : mem.files.get(f.id); if(!r) throw new Error('missing'); return r.blob; },
+    async url(f){ if(!urls.has(f.id)) urls.set(f.id, URL.createObjectURL(await api.blob(f))); return urls.get(f.id); },
+    async saveSettings(s){ S.settings=s; try{ localStorage.setItem('bukken.settings', JSON.stringify(s)); }catch(e){} },
+  };
+  return api;
+}
+
+/* ---------- 一覧描画 ---------- */
+function filtered(){
+  const q = S.q.trim().toLowerCase();
+  return S.items.filter(p=>{
+    if(S.source && p.source!==S.source) return false;
+    if(!q) return true;
+    const hay = [displayName(p), p.f&&p.f.address, p.sender, p.assignee, p.f&&p.f.kind, p.next].join(' ').toLowerCase();
+    return hay.includes(q);
+  }).sort((a,b)=>{
+    const ad=a.nextDate||'9999', bd=b.nextDate||'9999';
+    if(ad!==bd) return ad<bd?-1:1;
+    return (b.receivedAt||'').localeCompare(a.receivedAt||'');
+  });
+}
+
+function renderSummary(){
+  const counts = Object.fromEntries(STATUSES.map(s=>[s.k,0]));
+  let due = 0; const t = today();
+  for(const p of S.items){ counts[p.status]=(counts[p.status]||0)+1; if(p.nextDate && p.nextDate<=t && !['closed','drop'].includes(p.status)) due++; }
+  $('#summary').innerHTML = STATUSES.map(s=>
+    `<button class="tile" style="--s:var(--s-${s.k})" data-st="${s.k}" aria-pressed="${S.status===s.k}"><span class="lab">${s.label}</span><span class="num tnum">${counts[s.k]||0}</span></button>`
+  ).join('') + `<button class="tile ${due?'alert':''}" style="--s:var(--danger)" data-st="__due" aria-pressed="${S.status==='__due'}"><span class="lab">期日到来・超過</span><span class="num tnum">${due}</span></button>`;
+}
+
+function card(p){
+  const nfiles=(p.files||[]).length;
+  return `<article class="card" draggable="true" tabindex="0" data-id="${esc(p.id)}">
+    <div class="card-top"><span class="chip">${esc(p.source||'—')}</span>${p.f&&p.f.kind?`<span class="chip outline">${esc(p.f.kind)}</span>`:''}${nfiles?`<span class="chip outline">資料${nfiles}</span>`:''}</div>
+    <h3>${esc(displayName(p))}</h3>
+    ${p.f&&p.f.address&&p.f.name?`<p class="addr">${esc(p.f.address)}</p>`:''}
+    <div class="card-foot"><span class="price tnum">${esc((p.f&&p.f.price)||'価格未定')}</span>
+    ${p.nextDate||p.next?`<span class="due ${dueClass(p.nextDate)}">${p.nextDate?esc(md(p.nextDate))+' ':''}${esc(p.next||'')}</span>`:(p.assignee?`<span class="due">担当 ${esc(p.assignee)}</span>`:'')}</div>
+  </article>`;
+}
+
+function renderMain(){
+  const main = $('#main');
+  if(!S.loaded){ main.innerHTML = `<div class="empty"><h2>読み込み中…</h2></div>`; return; }
+  if(!S.items.length){
+    main.innerHTML = `<div class="empty"><h2>まだ物件がありません</h2><p>LINEやメールで届いたPDF・写真・本文を「物件資料を取り込む」から登録すると、ここに進捗ごとに並びます。</p><button class="primary" id="emptyIntake">＋ 最初の物件を取り込む</button></div>`;
+    $('#emptyIntake').onclick = openIntake; return;
+  }
+  let items = filtered();
+  const t = today();
+  if(S.status==='__due') items = items.filter(p=>p.nextDate && p.nextDate<=t && !['closed','drop'].includes(p.status));
+  if(S.view==='board' && S.status!=='__due'){
+    const cols = S.status ? STATUSES.filter(s=>s.k===S.status) : STATUSES;
+    main.innerHTML = `<div class="board">${cols.map(s=>{
+      const its = items.filter(p=>(p.status||'new')===s.k);
+      return `<section class="col" style="--s:var(--s-${s.k})" data-col="${s.k}"><div class="col-head">${s.label}<span class="c tnum">${its.length}件</span></div>${its.map(card).join('')||'<div class="col-empty">ここにドラッグで移動</div>'}</section>`;
+    }).join('')}</div>`;
+  }else{
+    if(S.status && S.status!=='__due') items = items.filter(p=>(p.status||'new')===S.status);
+    main.innerHTML = items.length ? `<div class="list-wrap"><table><thead><tr><th>進捗</th><th>物件名</th><th>種別</th><th>所在地</th><th>価格</th><th>取得元・送り元</th><th>受領日</th><th>次にやること</th><th>担当</th></tr></thead><tbody>${items.map(p=>{
+      const s=ST[p.status]||ST.new;
+      return `<tr data-id="${esc(p.id)}"><td><span class="chip st" style="--s:var(--s-${s.k})">${s.label}</span></td><td><b>${esc(displayName(p))}</b></td><td>${esc(p.f&&p.f.kind)}</td><td>${esc(p.f&&p.f.address)}</td><td class="tnum" style="white-space:nowrap">${esc(p.f&&p.f.price)}</td><td>${esc(p.source)}<br><span class="hint">${esc(p.sender)}</span></td><td class="tnum" style="white-space:nowrap">${esc(p.receivedAt)}</td><td><span class="due ${dueClass(p.nextDate)}">${esc(md(p.nextDate))}</span> ${esc(p.next)}</td><td>${esc(p.assignee)}</td></tr>`;
+    }).join('')}</tbody></table></div>` : `<div class="empty"><h2>該当する物件はありません</h2><p>検索語や絞り込みを変えてください。</p></div>`;
+  }
+}
+
+function render(){
+  renderSummary(); renderMain();
+  const srcs = [...new Set([...SOURCES, ...S.items.map(p=>p.source).filter(Boolean)])];
+  const fs = $('#fSource'); const cur = fs.value;
+  fs.innerHTML = `<option value="">取得元：すべて</option>` + srcs.map(s=>`<option ${s===cur?'selected':''}>${esc(s)}</option>`).join('');
+  $('#vBoard').setAttribute('aria-pressed', S.view==='board'); $('#vList').setAttribute('aria-pressed', S.view==='list');
+}
+
+/* ---------- イベント：一覧 ---------- */
+$('#summary').addEventListener('click', e=>{ const b=e.target.closest('[data-st]'); if(!b) return; S.status = S.status===b.dataset.st ? null : b.dataset.st; render(); });
+$('#q').addEventListener('input', e=>{ S.q=e.target.value; renderMain(); });
+$('#fSource').addEventListener('change', e=>{ S.source=e.target.value; renderMain(); });
+function setView(v){ S.view=v; try{ localStorage.setItem('bukken.view',v); }catch(e){} render(); }
+$('#vBoard').onclick=()=>setView('board'); $('#vList').onclick=()=>setView('list');
+$('#main').addEventListener('click', e=>{ const el=e.target.closest('[data-id]'); if(el) openDetail(el.dataset.id); });
+$('#main').addEventListener('keydown', e=>{ if(e.key==='Enter'){ const el=e.target.closest('.card'); if(el) openDetail(el.dataset.id); } });
+let dragId=null;
+$('#main').addEventListener('dragstart', e=>{ const c=e.target.closest('.card'); if(!c) return; dragId=c.dataset.id; c.classList.add('dragging'); e.dataTransfer.effectAllowed='move'; try{ e.dataTransfer.setData('text/plain', dragId); }catch(_){} });
+$('#main').addEventListener('dragend', e=>{ const c=e.target.closest('.card'); if(c) c.classList.remove('dragging'); document.querySelectorAll('.drop-on').forEach(x=>x.classList.remove('drop-on')); });
+$('#main').addEventListener('dragover', e=>{ const col=e.target.closest('.col'); if(!col||!dragId) return; e.preventDefault(); document.querySelectorAll('.drop-on').forEach(x=>x!==col&&x.classList.remove('drop-on')); col.classList.add('drop-on'); });
+$('#main').addEventListener('drop', async e=>{
+  const col=e.target.closest('.col'); if(!col||!dragId) return; e.preventDefault();
+  const p=S.items.find(x=>x.id===dragId); dragId=null; col.classList.remove('drop-on');
+  if(!p || p.status===col.dataset.col) return;
+  const n=clone(p); n.history=(n.history||[]).concat({at:stamp(), text:`進捗：${(ST[p.status]||ST.new).label} → ${ST[col.dataset.col].label}`});
+  n.status=col.dataset.col; n.updatedAt=stamp();
+  try{ await store.save(n); toast(`「${displayName(n)}」を${ST[n.status].label}に移動しました`); }catch(err){ toast('保存できませんでした。編集権限があるか確認してください'); }
+});
+
+/* ---------- 取込 ---------- */
+let pendingFiles = [];
+function fillSourceSelect(sel, val){ sel.innerHTML = SOURCES.map(s=>`<option ${s===val?'selected':''}>${s}</option>`).join(''); if(val && !SOURCES.includes(val)) sel.insertAdjacentHTML('beforeend', `<option selected>${esc(val)}</option>`); }
+function renderPending(){
+  $('#pendingFiles').innerHTML = pendingFiles.map((f,i)=>`<span class="chip outline">${esc(f.name||'画像')} <button type="button" class="x" style="font-size:0.9rem;padding:0 2px" data-rm="${i}" aria-label="外す">×</button></span>`).join('');
+}
+function addPending(list){
+  let bad=0;
+  for(const f of list){ if(fileType(f)) pendingFiles.push(f); else bad++; }
+  renderPending();
+  if(bad) toast('PDF・JPEG・PNG以外は取り込めません（iPhoneのHEICはスクリーンショットで代用してください）');
+}
+$('#pendingFiles').addEventListener('click', e=>{ const b=e.target.closest('[data-rm]'); if(b){ pendingFiles.splice(+b.dataset.rm,1); renderPending(); } });
+function openIntake(){
+  if(!store){ toast('読み込み中です。少し待ってから操作してください'); return; }
+  if(!store.canUpload){ toast('閲覧権限のため取り込みできません'); return; }
+  pendingFiles=[]; renderPending();
+  $('#intakeText').value=''; $('#intakeSender').value=''; $('#intakeDate').value=today(); $('#intakeMsg').textContent='';
+  fillSourceSelect($('#intakeSource'),'LINE');
+  $('#intakeAiWrap').hidden = !sample;
+  $('#intakeHint').textContent = sample ? 'AI読み取りは Claude を使います（初回のみ許可の確認が出ます）。読み取り結果は保存前に確認できます。'
+    : '本文に「価格：」「所在地：」などの見出しがあれば、自動で項目に振り分けます。';
+  $('#intakeGo').disabled=false;
+  $('#dlgIntake').showModal();
+}
+$('#btnIntake').onclick = openIntake;
+const drop = $('#drop');
+drop.onclick = ()=>$('#intakeFiles').click();
+drop.onkeydown = e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); $('#intakeFiles').click(); } };
+$('#intakeFiles').onchange = e=>{ addPending([...e.target.files]); e.target.value=''; };
+['dragenter','dragover'].forEach(t=>drop.addEventListener(t, e=>{ e.preventDefault(); drop.classList.add('on'); }));
+['dragleave','drop'].forEach(t=>drop.addEventListener(t, e=>{ e.preventDefault(); drop.classList.remove('on'); }));
+drop.addEventListener('drop', e=>addPending([...e.dataTransfer.files]));
+$('#dlgIntake').addEventListener('paste', e=>{
+  const fs=[...(e.clipboardData&&e.clipboardData.files)||[]];
+  if(fs.length){ e.preventDefault(); addPending(fs.map((f,i)=>f.name&&f.name!=='image.png'?f:new File([f], `貼り付け画像${pendingFiles.length+i+1}.png`, {type:f.type||'image/png'}))); }
+});
+$('#intakeForm').addEventListener('submit', async e=>{
+  e.preventDefault();
+  const text=$('#intakeText').value.trim();
+  if(!pendingFiles.length && !text){ $('#intakeMsg').textContent='資料か本文のどちらかを入れてください'; $('#intakeMsg').className='ai-msg err'; return; }
+  $('#intakeGo').disabled=true; const msg=$('#intakeMsg'); msg.className='ai-msg';
+  const p = { id:uid(), status:'new', source:$('#intakeSource').value, sender:$('#intakeSender').value.trim(),
+    receivedAt:$('#intakeDate').value||today(), assignee:'', next:'', nextDate:'', sourceText:text, files:[], f:{},
+    history:[{at:stamp(), text:`取込（${$('#intakeSource').value}${$('#intakeSender').value.trim()?'・'+$('#intakeSender').value.trim():''}）`}], createdAt:stamp(), updatedAt:stamp() };
+  const failed=[];
+  for(let i=0;i<pendingFiles.length;i++){
+    msg.textContent = `資料を保存中… ${i+1}/${pendingFiles.length}`;
+    try{ p.files.push(await store.upload(pendingFiles[i])); }
+    catch(err){ failed.push(pendingFiles[i].name + (err&&err.code==='too_large'?'（20MB超）':'')); }
+  }
+  if(!sample) Object.assign(p.f, extractByLabels(text));
+  try{ await store.save(p); }
+  catch(err){ msg.textContent='保存できませんでした。編集権限があるか確認してください'; msg.className='ai-msg err'; $('#intakeGo').disabled=false; return; }
+  if(!S.items.find(x=>x.id===p.id)) S.items.push(p);
+  const withAi = sample && $('#intakeAi').checked;
+  $('#dlgIntake').close();
+  if(failed.length) toast('保存できなかった資料：'+failed.join('、'));
+  openDetail(p.id, p);
+  if(withAi) runAi();
+});
+
+/* ---------- 詳細 ---------- */
+let cur=null, dirty=false, aiCtl=null;
+(function buildFields(){
+  $('#dFields').innerHTML = FIELDS.map(([k,l,t])=>{
+    const cls = WIDE.has(k)?' class="span2"':'';
+    if(t==='kind') return `<div${cls}><label for="f_${k}">${l}</label><select id="f_${k}" data-f="${k}">${KINDS.map(x=>`<option value="${x}">${x||'—'}</option>`).join('')}</select></div>`;
+    if(t==='area') return `<div class="span2"><label for="f_${k}">${l}</label><textarea id="f_${k}" data-f="${k}" rows="2"></textarea></div>`;
+    return `<div${cls}><label for="f_${k}">${l}</label><input type="text" id="f_${k}" data-f="${k}"></div>`;
+  }).join('');
+  $('#dStatus').innerHTML = STATUSES.map(s=>`<option value="${s.k}">${s.label}</option>`).join('');
+})();
+function formToCur(){
+  if(!cur) return;
+  const f = {};
+  document.querySelectorAll('#dFields [data-f]').forEach(el=>{ f[el.dataset.f]=el.value.trim(); });
+  cur.f = f;
+  cur.assignee=$('#dAssignee').value.trim(); cur.source=$('#dSource').value; cur.sender=$('#dSender').value.trim();
+  cur.receivedAt=$('#dReceived').value; cur.next=$('#dNext').value.trim(); cur.nextDate=$('#dNextDate').value;
+  cur.sourceText=$('#dSourceText').value;
+  const ns=$('#dStatus').value;
+  if(ns!==cur.status){ cur.history=(cur.history||[]).concat({at:stamp(), text:`進捗：${(ST[cur.status]||ST.new).label} → ${ST[ns].label}`}); cur.status=ns; }
+}
+function fillForm(){
+  document.querySelectorAll('#dFields [data-f]').forEach(el=>{ el.value = (cur.f&&cur.f[el.dataset.f])||''; el.classList.remove('ai-filled'); });
+  $('#dStatus').value=cur.status||'new'; $('#dAssignee').value=cur.assignee||''; fillSourceSelect($('#dSource'),cur.source||'その他');
+  $('#dSender').value=cur.sender||''; $('#dReceived').value=cur.receivedAt||''; $('#dNext').value=cur.next||''; $('#dNextDate').value=cur.nextDate||'';
+  $('#dSourceText').value=cur.sourceText||'';
+  $('#dTitle').textContent=displayName(cur);
+  renderFiles(); renderHist();
+}
+function renderHist(){
+  $('#dHist').innerHTML = (cur.history||[]).slice().reverse().map(h=>`<li><time class="tnum">${esc(h.at)}</time><span>${esc(h.text)}</span></li>`).join('') || '<li class="hint">まだ記録がありません</li>';
+}
+function renderFiles(){
+  const box=$('#dFiles');
+  const fs=cur.files||[];
+  box.innerHTML = fs.length ? fs.map((f,i)=> f.type==='application/pdf'
+    ? `<a class="file" data-fi="${i}" target="_blank" rel="noopener"><span class="pdf">PDF</span><span class="nm">${esc(f.name)}</span></a>`
+    : `<a class="file" data-fi="${i}" target="_blank" rel="noopener"><img alt="${esc(f.name)}" data-fimg="${i}"><span class="nm">${esc(f.name)}</span></a>`).join('')
+    : '<p class="hint" style="grid-column:1/-1">資料はまだありません。「資料を追加」からPDF・写真を登録できます。</p>';
+  fs.forEach((f,i)=>{ store.url(f).then(u=>{ const a=box.querySelector(`[data-fi="${i}"]`); if(a) a.href=u; const im=box.querySelector(`[data-fimg="${i}"]`); if(im) im.src=u; }).catch(()=>{}); });
+  $('#dAddFile').hidden = !store.canUpload;
+}
+function setTab(t){
+  const edit = t==='edit';
+  if(!edit){ formToCur(); renderSheet(); }
+  $('#paneEdit').hidden=!edit; $('#paneSheet').hidden=edit;
+  $('#tabEdit').setAttribute('aria-selected',edit); $('#tabSheet').setAttribute('aria-selected',!edit);
+}
+$('#tabEdit').onclick=()=>setTab('edit'); $('#tabSheet').onclick=()=>setTab('sheet');
+function openDetail(id, obj){
+  const p = obj || S.items.find(x=>x.id===id); if(!p) return;
+  cur = clone(p); dirty=false;
+  $('#dAiMsg').textContent=''; $('#dAiMsg').className='ai-msg'; $('#dSaveMsg').textContent='';
+  $('#dAi').textContent = sample ? 'AIで読み取る' : '本文から自動入力';
+  resetDelete(); fillForm(); setTab('edit');
+  if(!$('#dlgDetail').open) $('#dlgDetail').showModal();
+}
+$('#dlgDetail').addEventListener('input', e=>{ if(e.target.closest('.dlg-body')){ dirty=true; if(e.target.dataset.f) e.target.classList.remove('ai-filled'); if(e.target.dataset.f==='name') $('#dTitle').textContent=e.target.value||'物件詳細'; } });
+async function saveCur(msg){
+  formToCur(); cur.updatedAt=stamp();
+  $('#dSave').disabled=true;
+  try{ await store.save(cur); dirty=false; $('#dSaveMsg').textContent='保存しました '+cur.updatedAt.slice(11); if(msg) toast(msg); return true; }
+  catch(e){ $('#dSaveMsg').textContent='保存できませんでした（編集権限・容量を確認してください）'; return false; }
+  finally{ $('#dSave').disabled=false; }
+}
+$('#dSave').onclick=()=>saveCur('保存しました');
+$('#dNoteAdd').onclick=()=>{ const v=$('#dNote').value.trim(); if(!v) return; formToCur(); cur.history=(cur.history||[]).concat({at:stamp(), text:v}); $('#dNote').value=''; renderHist(); saveCur('メモを追加しました'); };
+$('#dNote').addEventListener('keydown', e=>{ if(e.key==='Enter' && !e.isComposing){ e.preventDefault(); $('#dNoteAdd').click(); } });
+$('#dAddFile').onclick=()=>$('#dFileInput').click();
+$('#dFileInput').onchange = async e=>{
+  const list=[...e.target.files]; e.target.value='';
+  formToCur();
+  for(const f of list){
+    if(!fileType(f)){ toast(`${f.name} は対応していない形式です`); continue; }
+    $('#dAiMsg').textContent=`${f.name} を保存中…`;
+    try{ cur.files=(cur.files||[]).concat(await store.upload(f)); }catch(err){ toast(`${f.name} を保存できませんでした`); }
+  }
+  cur.history=(cur.history||[]).concat({at:stamp(), text:`資料追加（${list.length}件）`});
+  $('#dAiMsg').textContent=''; renderFiles(); renderHist(); saveCur();
+};
+let delArmed=false, delT;
+function resetDelete(){ delArmed=false; clearTimeout(delT); $('#dDelete').textContent='削除'; }
+$('#dDelete').onclick = async ()=>{
+  if(!delArmed){ delArmed=true; $('#dDelete').textContent='もう一度押すと資料ごと削除'; delT=setTimeout(resetDelete,4000); return; }
+  resetDelete();
+  try{ await store.remove(cur); S.items=S.items.filter(x=>x.id!==cur.id); render(); $('#dlgDetail').close(); toast('削除しました'); }
+  catch(e){ toast('削除できませんでした'); }
+};
+document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click', ()=>b.closest('dialog').close()));
+$('#dlgDetail').addEventListener('close', ()=>{ if(aiCtl) aiCtl.abort(); if(dirty) toast('未保存の変更は破棄しました'); cur=null; });
+
+/* ---------- 物件概要書 ---------- */
+function renderSheet(){
+  const f=cur.f||{}, s=S.settings||{};
+  const rows = FIELDS.filter(([k])=>!['name','price','point','remarks','dealType'].includes(k)).map(([k,l])=>[l, f[k]]);
+  const photo=(cur.files||[]).find(x=>x.type.startsWith('image/'));
+  const pairs=[]; for(let i=0;i<rows.length;i+=2) pairs.push([rows[i], rows[i+1]||['','']]);
+  const narrow = window.innerWidth<640;
+  const tbody = narrow ? rows.map(([l,v])=>`<tr><th>${esc(l)}</th><td>${esc(v)||'—'}</td></tr>`).join('')
+    : pairs.map(([a,b])=>`<tr><th>${esc(a[0])}</th><td>${esc(a[1])||'—'}</td><th>${esc(b[0])}</th><td>${b[0]?(esc(b[1])||'—'):''}</td></tr>`).join('');
+  $('#sheet').innerHTML = `<article class="sheet">
+    <div class="s-head"><div style="min-width:0"><div class="s-kind">物件概要書${f.kind?'｜'+esc(f.kind):''}</div><h3>${esc(f.name||f.address||'物件名未入力')}</h3></div><div class="s-price">${esc(f.price||'価格応相談')}</div></div>
+    <div class="s-body">
+      ${photo?`<img class="s-photo" alt="物件写真" id="sheetPhoto">`:''}
+      ${f.point?`<div class="s-point">${esc(f.point).replace(/\n/g,'<br>')}</div>`:''}
+      <div class="sheet-tbl"><table><tbody>${tbody}${f.remarks?`<tr><th>備考</th><td colspan="${narrow?1:3}">${esc(f.remarks).replace(/\n/g,'<br>')}</td></tr>`:''}</tbody></table></div>
+    </div>
+    <div class="s-foot"><div><b>${esc(s.company||'（会社名未設定）')}</b><br>${esc(s.address||'')}${s.tel?'　TEL '+esc(s.tel):''}<br>${esc(s.license||'')}</div><div style="text-align:right">取引態様：${esc(f.dealType||'—')}<br>作成日 ${esc(today())}<br><span style="color:#7c8388">※現況優先。図面と現況が異なる場合は現況を優先します。</span></div></div>
+  </article>`;
+  if(photo) store.url(photo).then(u=>{ const im=$('#sheetPhoto'); if(im) im.src=u; }).catch(()=>{});
+}
+function sheetText(){
+  const f=cur.f||{}, s=S.settings||{};
+  const lines=[`【物件概要】${f.name||f.address||''}`];
+  if(f.price) lines.push(`価格：${f.price}`);
+  for(const [k,l] of FIELDS){ if(['name','price','point','remarks'].includes(k)) continue; if(f[k]) lines.push(`${l}：${f[k]}`); }
+  if(f.point) lines.push('', '■ポイント', f.point);
+  if(f.remarks) lines.push('', '■備考', f.remarks);
+  if(s.company) lines.push('', `${s.company}${s.tel?'　TEL '+s.tel:''}`);
+  return lines.join('\n');
+}
+$('#dCopy').onclick = async ()=>{
+  formToCur(); const t=sheetText();
+  try{ await navigator.clipboard.writeText(t); toast('コピーしました'); }
+  catch(e){ const ta=document.createElement('textarea'); ta.value=t; ta.rows=12; ta.readOnly=true; $('#sheet').prepend(ta); ta.select(); toast('自動コピーできないため、表示した文面を選択してコピーしてください'); }
+};
+
+/* ---------- 会社情報 ---------- */
+$('#btnSettings').onclick=()=>{
+  if(!store){ toast('読み込み中です'); return; }
+  const s=S.settings||{}; $('#setCompany').value=s.company||''; $('#setTel').value=s.tel||''; $('#setLicense').value=s.license||''; $('#setAddress').value=s.address||'';
+  $('#dlgSettings').showModal();
+};
+$('#settingsForm').addEventListener('submit', async e=>{
+  e.preventDefault();
+  const s={company:$('#setCompany').value.trim(), tel:$('#setTel').value.trim(), license:$('#setLicense').value.trim(), address:$('#setAddress').value.trim()};
+  try{ await store.saveSettings(s); toast('会社情報を保存しました'); $('#dlgSettings').close(); }catch(err){ toast('保存できませんでした'); }
+});
+
+/* ---------- 読み取り（見出しベース） ---------- */
+const LABELS = {
+  price:['販売価格','売買価格','価格','価額'], address:['所在地','住居表示','所在','住所','地番'],
+  access:['最寄り駅','最寄駅','交通','アクセス'], landArea:['土地面積','敷地面積','地積'],
+  buildingArea:['延べ床面積','延床面積','建物面積','専有面積','床面積'], layout:['間取り','間取'],
+  structure:['構造'], built:['新築年月','建築年月','築年月','築年'], zoning:['用途地域'],
+  coverage:['建ぺい率','建蔽率','建ペい率'], far:['容積率'], road:['接道状況','前面道路','接道'],
+  rights:['土地権利','土地の権利','権利'], current:['現況'], delivery:['引渡時期','引き渡し','引渡し','引渡'],
+  dealType:['取引態様','態様'], kind:['物件種別','種別','種目'], name:['物件名','名称'],
+};
+function extractByLabels(text){
+  const out={}; if(!text) return out;
+  const lines=text.split(/\r?\n/).map(l=>l.trim().replace(/^[■◆●◇○・\-\s【［\[<＜]+/,''));
+  for(const [k,labs] of Object.entries(LABELS)){
+    outer: for(const line of lines){
+      for(const l of labs){
+        if(line.startsWith(l)){
+          const rest=line.slice(l.length).replace(/^[】］\]>＞\s:：=＝]+/,'').trim();
+          if(rest){ out[k]=rest; break outer; }
+        }
+      }
+    }
+  }
+  if(out.kind && !KINDS.includes(out.kind)){ const m=KINDS.find(x=>x&&out.kind.includes(x)) || (/中古|新築|一戸建/.test(out.kind)?'戸建':(/売地|土地/.test(out.kind)?'土地':'')); out.kind=m||'その他'; }
+  if(!out.price){ const m=text.match(/([\d,，.]+\s*(億|万)\s*[\d,，]*\s*万?円)/); if(m) out.price=m[1]; }
+  return out;
+}
+
+/* ---------- PDF ---------- */
+let pdfjsP=null;
+function loadPdfjs(){
+  if(pdfjsP) return pdfjsP;
+  const base='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/';
+  const load=src=>new Promise((res,rej)=>{ const s=document.createElement('script'); s.src=src; s.onload=res; s.onerror=()=>rej(new Error('pdfjs')); document.head.appendChild(s); });
+  pdfjsP = load(base+'pdf.min.js').then(()=>load(base+'pdf.worker.min.js')).then(()=>window.pdfjsLib);
+  pdfjsP.catch(()=>{ pdfjsP=null; });
+  return pdfjsP;
+}
+async function readPdf(blob, maxImgs){
+  const lib=await loadPdfjs();
+  const doc=await lib.getDocument({data:new Uint8Array(await blob.arrayBuffer()), isEvalSupported:false}).promise;
+  let text=''; const imgs=[];
+  for(let i=1;i<=Math.min(doc.numPages,6);i++){
+    const pg=await doc.getPage(i);
+    try{ const tc=await pg.getTextContent(); text+=tc.items.map(t=>t.str+(t.hasEOL?'\n':'')).join('')+'\n'; }catch(e){}
+    if(imgs.length<maxImgs){
+      const v0=pg.getViewport({scale:1}); const sc=Math.min(3, 1800/Math.max(v0.width,v0.height));
+      const vp=pg.getViewport({scale:sc}); const c=document.createElement('canvas'); c.width=Math.ceil(vp.width); c.height=Math.ceil(vp.height);
+      const ctx=c.getContext('2d'); ctx.fillStyle='#fff'; ctx.fillRect(0,0,c.width,c.height);
+      await pg.render({canvasContext:ctx, viewport:vp}).promise;
+      const b=await new Promise(r=>c.toBlob(r,'image/jpeg',0.88)); if(b) imgs.push(b);
+    }
+  }
+  return {text, imgs};
+}
+
+/* ---------- AI 読み取り ---------- */
+function applyResult(res){
+  let n=0;
+  for(const [k] of FIELDS){
+    let v=res[k]; if(v==null) continue; v=String(v).trim(); if(!v) continue;
+    if(k==='kind' && !KINDS.includes(v)) v='その他';
+    const el=document.querySelector(`#dFields [data-f="${k}"]`);
+    if(el && el.value!==v){ el.value=v; el.classList.add('ai-filled'); n++; }
+  }
+  if(res.sender && !$('#dSender').value.trim()){ $('#dSender').value=String(res.sender); n++; }
+  const nm=$('#f_name').value; $('#dTitle').textContent=nm||$('#f_address').value||'物件詳細';
+  if(n) dirty=true;
+  return n;
+}
+async function runAi(){
+  if(!cur) return;
+  const msg=$('#dAiMsg'); msg.className='ai-msg';
+  formToCur();
+  const btn=$('#dAi'); btn.disabled=true;
+  try{
+    // 資料を集める
+    const maxImgs = sample && imgLimits ? imgLimits.maxCount : 0;
+    const imgs=[]; let pdfText='';
+    for(const f of cur.files||[]){
+      try{
+        if(f.type==='application/pdf'){
+          msg.textContent=`${f.name} を読み込み中…`;
+          const r=await readPdf(await store.blob(f), Math.max(0, Math.min(4, maxImgs-imgs.length)));
+          pdfText+=`\n--- ${f.name} ---\n`+r.text; imgs.push(...r.imgs);
+        }else if(imgs.length<maxImgs && imgLimits.mediaTypes.includes(f.type)){
+          imgs.push(await store.blob(f));
+        }
+      }catch(e){ msg.textContent=`${f.name} を読めませんでした。続行します…`; }
+    }
+    const text=[cur.sourceText||'', pdfText].join('\n').trim();
+    if(!sample){
+      const n=applyResult(extractByLabels(text));
+      msg.textContent = n ? `${n}項目を本文から入力しました。紫の枠を確認して保存してください。` : '本文に「価格：」「所在地：」などの見出しが見つかりませんでした。手入力してください。';
+      return;
+    }
+    if(!imgs.length && !text){ msg.textContent='読み取る資料がありません。資料を追加するか原文を貼り付けてください。'; msg.className='ai-msg err'; return; }
+    const prompt = `あなたは日本の不動産仲介会社の事務担当です。他社（元付業者）からLINE・メールで届いた物件資料を、自社の物件概要書の項目に転記してください。
+添付画像は物件資料（販売図面・PDFのページ・写真）です。${imgs.length?`画像は${imgs.length}枚あります。`:'画像はありません。'}下のテキストはメッセージ本文とPDFから抽出した文字です（文字化けしている場合は画像を優先）。
+
+出力はJSONオブジェクトのみ。キーと内容：
+- name: 物件名（無ければ「町名＋種別」例「香椎駅前2丁目 中古戸建」）
+- kind: 「土地」「戸建」「マンション」「収益一棟」「店舗・事務所」「その他」のいずれか
+- price: 価格（資料の表記どおり。例「2,480万円」「税込」等の注記も含める）
+- address: 所在地（住居表示または地番）
+- access: 交通（路線・駅・徒歩分数、バス便）
+- landArea: 土地面積（㎡。坪表記もあれば「132.50㎡（40.08坪）」）
+- buildingArea: 建物面積・専有面積（㎡、坪併記可）
+- layout, structure, built(築年月), zoning(用途地域), coverage(建ぺい率), far(容積率), road(接道：方位・幅員・接面), rights(土地権利), current(現況), delivery(引渡し), dealType(取引態様)
+- point: 物件の特徴・売りを1〜2文（資料に書かれている事実のみ）
+- remarks: その他の重要事項（私道負担、セットバック、告知事項、設備、手数料・広告可否など）
+- sender: 資料を送ってきた業者名・担当者（わかる場合）
+
+ルール：資料に無い項目は空文字 ""。推測で埋めない。数値と単位は資料の表記を保つ。
+
+本文・抽出テキスト：
+"""
+${text.slice(0,15000) || '（なし）'}
+"""`;
+    aiCtl = new AbortController(); $('#dStop').hidden=false;
+    msg.textContent='AIが資料を読んでいます…（30秒〜1分ほど）';
+    const opts={signal:aiCtl.signal}; if(imgs.length) opts.images=imgs;
+    const res = await sample.json(prompt, opts);
+    if(!cur) return;
+    if(!res || typeof res!=='object'){ throw {code:'invalid_json'}; }
+    const n=applyResult(res);
+    msg.textContent = n ? `${n}項目を読み取りました。紫の枠が変更箇所です。確認して「保存」を押してください。` : '新しく読み取れる項目はありませんでした。';
+    if(n){ cur.history=(cur.history||[]).concat({at:stamp(), text:`AI読み取り（${n}項目）`}); renderHist(); }
+  }catch(e){
+    const c=e&&e.code;
+    msg.className = c==='cancelled' ? 'ai-msg' : 'ai-msg err';
+    msg.textContent = ({
+      cancelled:'読み取りを停止しました。',
+      not_granted:'AIの利用が許可されていません。見出し付きの本文なら「本文から自動入力」を使えます。',
+      sampling_disabled:'このアカウントではAI読み取りを使えません。',
+      rate_limited:'AIの利用が混み合っています。少し時間をおいてもう一度押してください。',
+      image_rejected:'読み取れない画像がありました。JPEG・PNGで取り込み直してください。',
+      prompt_too_large:'資料が大きすぎます。ページ数の少ないPDFに分けてください。',
+      invalid_json:'読み取り結果を項目に変換できませんでした。もう一度押してください。',
+      refused:'この資料は読み取れませんでした。',
+      session_expired:'ログインが切れました。再読み込みしてください。',
+    })[c] || 'AI読み取りに失敗しました。もう一度押してください。';
+    if(['not_granted','sampling_disabled','not_declared','capability_disabled','capability_removed'].includes(c)){ sample=null; $('#dAi').textContent='本文から自動入力'; }
+  }finally{
+    btn.disabled=false; $('#dStop').hidden=true; aiCtl=null;
+  }
+}
+$('#dAi').onclick=runAi;
+$('#dStop').onclick=()=>{ if(aiCtl) aiCtl.abort(); };
+
+/* ---------- 起動 ---------- */
+async function init(){
+  render();
+  let db=null, assets=null;
+  if(window.claude && typeof window.claude.use==='function'){
+    [db, assets, sample] = await Promise.all(['db','assets','sample'].map(n=>window.claude.use(n).catch(()=>null)));
+  }
+  if(sample){ try{ imgLimits=(await sample.limits()).images||null; }catch(e){ imgLimits=null; } }
+  store = db ? makeCloud(db, assets) : await makeLocal();
+  $('#mode').textContent = {cloud:'共有データ（社内で同期）', local:'このブラウザに保存', memory:'一時保存（再読み込みで消えます）'}[store.mode];
+  if(!store.canUpload){ $('#btnIntake').hidden=true; }
+  store.subscribe(items=>{ S.items=items; S.loaded=true; render(); });
+}
+init();
+})();
+</script>
