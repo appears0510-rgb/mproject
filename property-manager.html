@@ -2,18 +2,20 @@
 <meta name="robots" content="noindex, nofollow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-  /* Layout: 受付→進捗ボード（横スクロール列）→詳細ダイアログ（資料｜自社フォーマット）。社内ツール群と同じトークン。 */
+  /* Layout: 受付→進捗ボード（横スクロール列）→詳細ダイアログ（資料・原文→その場で書ける物件概要書）。社内ツール群と同じトークン。 */
   :root{
     --bg:#ece7de; --bg-elevated:#f7f4ee; --bg-sunk:#e2ddd2;
     --ink:#1b2023; --ink-soft:#4b5459; --ink-faint:#7c8388;
     --accent:#1f6f6b; --accent-ink:#f7f4ee; --accent-soft:#e3ede9; --accent-2:#b5573c;
     --line:rgba(27,32,35,0.14); --line-strong:rgba(27,32,35,0.28);
-    --paper:#ffffff; --paper-ink:#1b2023;
     --danger:#b5573c; --ai:#6a4c9c;
     --s-new:#2f6fb0; --s-review:#8a6a12; --s-intro:#1f6f6b; --s-nego:#b5573c;
     --s-contract:#6a4c9c; --s-closed:#3d7a3a; --s-drop:#7c8388;
+    /* 物件概要書は紙として常に明るい配色 */
+    --paper:#ffffff; --sheet-ink:#15191b; --sheet-rule:#15191b; --sheet-head:#dcebf2;
+    --sheet-hover:#eef5f9; --sheet-focus:#1f6f6b; --sheet-red:#c62f1f; --sheet-ai:#efe9f8; --sheet-muted:#6b7478;
     --font-display:"Shippori Mincho","Hiragino Mincho ProN","Yu Mincho",serif;
     --font-body:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",sans-serif;
   }
@@ -23,7 +25,6 @@
       --ink:#ece7de; --ink-soft:#a9b2b4; --ink-faint:#727c7e;
       --accent:#4fbdb6; --accent-ink:#0e1516; --accent-soft:#1c2d2c; --accent-2:#d97c5d;
       --line:rgba(236,231,222,0.14); --line-strong:rgba(236,231,222,0.28);
-      --paper:#f4f1ea; --paper-ink:#1b2023;
       --danger:#e08a6e; --ai:#b39ae0;
       --s-new:#7fb2e8; --s-review:#d9b55a; --s-intro:#4fbdb6; --s-nego:#e08a6e;
       --s-contract:#b39ae0; --s-closed:#8cc587; --s-drop:#8f989a;
@@ -35,7 +36,6 @@
     --ink:#ece7de; --ink-soft:#a9b2b4; --ink-faint:#727c7e;
     --accent:#4fbdb6; --accent-ink:#0e1516; --accent-soft:#1c2d2c; --accent-2:#d97c5d;
     --line:rgba(236,231,222,0.14); --line-strong:rgba(236,231,222,0.28);
-    --paper:#f4f1ea; --paper-ink:#1b2023;
     --danger:#e08a6e; --ai:#b39ae0;
     --s-new:#7fb2e8; --s-review:#d9b55a; --s-intro:#4fbdb6; --s-nego:#e08a6e;
     --s-contract:#b39ae0; --s-closed:#8cc587; --s-drop:#8f989a;
@@ -72,7 +72,6 @@
   button.small{ padding:4px 10px; font-size:0.74rem; }
   button:disabled{ opacity:0.45; cursor:not-allowed; }
 
-  /* summary strip */
   .summary{ display:grid; grid-template-columns:repeat(auto-fit,minmax(110px,1fr)); gap:8px; margin-bottom:16px; }
   .tile{ text-align:left; display:flex; flex-direction:column; gap:2px; padding:10px 12px; border-radius:10px; background:var(--bg-elevated); border:1px solid var(--line); border-top:3px solid var(--s); }
   .tile .lab{ font-size:0.72rem; color:var(--ink-soft); font-weight:500; }
@@ -87,7 +86,6 @@
   .seg button{ border:0; border-radius:0; background:transparent; }
   .seg button[aria-pressed="true"]{ background:var(--ink); color:var(--bg); }
 
-  /* board */
   .board{ display:grid; grid-auto-flow:column; grid-auto-columns:minmax(230px,1fr); gap:10px; overflow-x:auto; padding-bottom:8px; align-items:start; }
   .col{ background:var(--bg-sunk); border-radius:12px; padding:8px; min-height:120px; display:flex; flex-direction:column; gap:8px; }
   .col.drop-on{ outline:2px dashed var(--s); outline-offset:-2px; }
@@ -103,6 +101,7 @@
   .card .addr{ font-size:0.75rem; color:var(--ink-soft); margin:0; overflow-wrap:anywhere; }
   .card-foot{ display:flex; justify-content:space-between; align-items:baseline; gap:8px; flex-wrap:wrap; margin-top:2px; }
   .price{ font-family:var(--font-display); font-weight:700; font-size:1rem; }
+  .yield{ font-size:0.72rem; color:var(--ink-soft); margin-left:4px; font-family:var(--font-body); font-weight:500; }
   .due{ font-size:0.72rem; color:var(--ink-soft); }
   .due.over{ color:var(--danger); font-weight:700; }
   .due.today{ color:var(--s-review); font-weight:700; }
@@ -111,16 +110,15 @@
   .chip.outline{ background:transparent; border:1px solid var(--line); }
 
   .list-wrap{ overflow-x:auto; background:var(--bg-elevated); border:1px solid var(--line); border-radius:12px; }
-  table{ width:100%; border-collapse:collapse; font-size:0.82rem; }
-  th{ text-align:left; font-size:0.7rem; color:var(--ink-soft); font-weight:700; letter-spacing:0.04em; padding:8px 10px; border-bottom:1px solid var(--line-strong); white-space:nowrap; }
-  td{ padding:9px 10px; border-bottom:1px solid var(--line); vertical-align:top; }
-  tbody tr{ cursor:pointer; }
-  tbody tr:hover{ background:var(--bg-sunk); }
+  .list-wrap table{ width:100%; border-collapse:collapse; font-size:0.82rem; }
+  .list-wrap th{ text-align:left; font-size:0.7rem; color:var(--ink-soft); font-weight:700; letter-spacing:0.04em; padding:8px 10px; border-bottom:1px solid var(--line-strong); white-space:nowrap; }
+  .list-wrap td{ padding:9px 10px; border-bottom:1px solid var(--line); vertical-align:top; }
+  .list-wrap tbody tr{ cursor:pointer; }
+  .list-wrap tbody tr:hover{ background:var(--bg-sunk); }
 
   .empty{ text-align:center; padding:48px 16px; color:var(--ink-soft); background:var(--bg-elevated); border:1px dashed var(--line-strong); border-radius:12px; }
   .empty h2{ font-size:1.1rem; margin-bottom:6px; color:var(--ink); }
 
-  /* dialogs */
   dialog{ border:0; padding:0; border-radius:14px; background:var(--bg-elevated); color:var(--ink); width:min(1100px, calc(100vw - 20px)); max-height:calc(100dvh - 24px); box-shadow:0 30px 80px -30px rgba(0,0,0,0.5); }
   dialog.narrow{ width:min(620px, calc(100vw - 20px)); }
   dialog::backdrop{ background:rgba(10,14,16,0.55); }
@@ -128,22 +126,23 @@
   .dlg-head{ display:flex; align-items:center; gap:10px; padding:14px 18px; border-bottom:1px solid var(--line); }
   .dlg-head h2{ font-size:1.1rem; flex:1; min-width:0; }
   .dlg-body{ padding:16px 18px; overflow-y:auto; display:flex; flex-direction:column; gap:16px; }
+  .dlg-body > *{ flex-shrink:0; }
   .dlg-foot{ display:flex; gap:8px; align-items:center; padding:12px 18px; border-top:1px solid var(--line); flex-wrap:wrap; }
   .x{ border:0; background:transparent; font-size:1.3rem; line-height:1; padding:4px 8px; }
 
   .grid{ display:grid; gap:10px 12px; }
-  .g2{ grid-template-columns:repeat(2,minmax(0,1fr)); }
   .g3{ grid-template-columns:repeat(3,minmax(0,1fr)); }
-  .g5{ grid-template-columns:repeat(5,minmax(0,1fr)); }
-  @media (max-width:760px){ .g3,.g5{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
-  @media (max-width:460px){ .g2,.g3,.g5{ grid-template-columns:1fr; } }
+  @media (max-width:760px){ .g3{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
+  @media (max-width:460px){ .g3{ grid-template-columns:1fr; } }
   .span2{ grid-column:span 2; }
   @media (max-width:460px){ .span2{ grid-column:auto; } }
 
-  .split{ display:grid; grid-template-columns:minmax(0,5fr) minmax(0,7fr); gap:18px; align-items:start; }
-  @media (max-width:860px){ .split{ grid-template-columns:1fr; } }
+  .split{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:18px; align-items:start; }
+  @media (max-width:760px){ .split{ grid-template-columns:1fr; } }
   .section-lab{ font-size:0.72rem; font-weight:700; letter-spacing:0.12em; color:var(--ink-faint); margin-bottom:8px; display:flex; align-items:center; gap:8px; }
   .section-lab::after{ content:""; flex:1; height:1px; background:var(--line); }
+  .sheet-bar{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .sheet-bar .section-lab{ flex:1 1 200px; margin:0; }
 
   .drop{ border:2px dashed var(--line-strong); border-radius:12px; padding:22px 14px; text-align:center; color:var(--ink-soft); font-size:0.84rem; background:var(--bg); cursor:pointer; }
   .drop.on{ border-color:var(--accent); background:var(--accent-soft); }
@@ -151,19 +150,14 @@
   .pending{ display:flex; flex-wrap:wrap; gap:6px; }
   .pending .chip{ font-size:0.72rem; }
 
-  .files{ display:grid; grid-template-columns:repeat(auto-fill,minmax(96px,1fr)); gap:8px; }
+  .files{ display:grid; grid-template-columns:repeat(auto-fill,minmax(88px,1fr)); gap:8px; }
   .file{ position:relative; border:1px solid var(--line); border-radius:8px; overflow:hidden; background:var(--bg); aspect-ratio:3/4; max-width:100%; display:flex; flex-direction:column; text-decoration:none; color:inherit; }
   .file img{ width:100%; height:100%; object-fit:cover; }
   .file .pdf{ flex:1; display:grid; place-items:center; font-family:var(--font-display); font-weight:700; color:var(--accent-2); font-size:1.1rem; }
   .file .nm{ position:absolute; left:0; right:0; bottom:0; font-size:0.62rem; padding:2px 5px; background:color-mix(in srgb, var(--bg-elevated) 88%, transparent); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .ai-bar{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
-  .ai-msg{ font-size:0.78rem; color:var(--ink-soft); }
+  .ai-msg{ font-size:0.78rem; color:var(--ink-soft); margin:0; }
   .ai-msg.err{ color:var(--danger); }
-  .ai-filled{ border-color:var(--ai) !important; background:color-mix(in srgb, var(--ai) 8%, var(--bg)) !important; }
-
-  .tabs{ display:flex; gap:4px; border-bottom:1px solid var(--line); }
-  .tabs button{ border:0; border-bottom:2px solid transparent; border-radius:0; background:transparent; color:var(--ink-soft); padding:8px 12px; }
-  .tabs button[aria-selected="true"]{ color:var(--ink); border-bottom-color:var(--accent); }
 
   .hist{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:6px; font-size:0.8rem; }
   .hist li{ display:flex; gap:10px; }
@@ -171,21 +165,32 @@
   .note-row{ display:flex; gap:8px; margin-top:8px; }
   .note-row input{ flex:1; min-width:0; }
 
-  /* 物件概要書 */
-  .sheet{ background:var(--paper); color:var(--paper-ink); border-radius:6px; padding:22px clamp(14px,3vw,30px); box-shadow:0 1px 0 var(--line), 0 12px 30px -20px rgba(0,0,0,0.4); }
-  .sheet .s-head{ display:flex; justify-content:space-between; align-items:flex-end; gap:10px; flex-wrap:wrap; border-bottom:3px double #1b2023; padding-bottom:8px; margin-bottom:12px; }
-  .sheet .s-kind{ font-size:0.72rem; letter-spacing:0.2em; color:#4b5459; }
-  .sheet h3{ font-size:1.35rem; overflow-wrap:anywhere; }
-  .sheet .s-price{ font-family:var(--font-display); font-size:1.6rem; font-weight:700; color:#8f3b22; white-space:nowrap; }
-  .sheet .s-body{ display:grid; grid-template-columns:minmax(0,1fr); gap:14px; }
-  .sheet .s-photo{ width:100%; max-height:300px; object-fit:contain; background:#eee; border-radius:4px; }
-  .sheet table{ font-size:0.8rem; border:1px solid #1b2023; }
-  .sheet th, .sheet td{ border:1px solid rgba(27,32,35,0.35); padding:6px 8px; color:#1b2023; vertical-align:top; }
-  .sheet th{ background:#eceae4; width:6.5em; font-size:0.74rem; white-space:nowrap; }
-  .sheet .s-point{ font-size:0.84rem; border-left:3px solid #1f6f6b; padding:4px 10px; background:#f1f5f3; }
-  .sheet .s-foot{ display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; font-size:0.74rem; margin-top:12px; padding-top:8px; border-top:1px solid rgba(27,32,35,0.35); }
-  .sheet .s-foot b{ font-size:0.9rem; }
-  .sheet-tbl{ overflow-x:auto; }
+  /* ===== 物件概要書 ===== */
+  .sheet-scroll{ overflow-x:auto; border-radius:6px; }
+  .sheet{ background:var(--paper); color:var(--sheet-ink); color-scheme:light; padding:20px 22px 16px; min-width:700px; font-family:var(--font-display); font-weight:500; box-shadow:0 1px 0 var(--line), 0 12px 30px -20px rgba(0,0,0,0.4); }
+  .s-title{ border:3px solid var(--sheet-rule); background:var(--sheet-head); text-align:center; font-size:1.7rem; font-weight:600; letter-spacing:0.7em; padding:6px 0 6px 0.7em; margin-bottom:14px; }
+  table.gaiyo{ width:100%; border-collapse:collapse; table-layout:fixed; border:3px solid var(--sheet-rule); font-size:0.9rem; line-height:1.45; }
+  .gaiyo th, .gaiyo td{ border:1px solid var(--sheet-rule); padding:3px 6px; height:2em; color:var(--sheet-ink); font-weight:500; }
+  .gaiyo th{ background:var(--sheet-head); text-align:center; white-space:nowrap; letter-spacing:0.15em; }
+  .gaiyo th.sec{ font-size:1.05rem; letter-spacing:0.6em; border-right-width:3px; border-bottom-width:3px; border-top-width:3px; }
+  .gaiyo th.sub{ letter-spacing:0; font-size:0.84rem; }
+  .gaiyo td{ text-align:center; }
+  .gaiyo td.l{ text-align:left; }
+  .gaiyo tr.band > *{ border-top-width:3px; }
+  .gaiyo .big{ font-size:1.2rem; }
+  .gaiyo .unit{ color:var(--sheet-muted); font-size:0.82em; margin-inline:0.35em; white-space:nowrap; }
+  .gaiyo input, .gaiyo textarea{ font:inherit; color:inherit; background:transparent; border:0; border-radius:3px; padding:1px 3px; text-align:inherit; width:100%; min-width:0; }
+  .gaiyo input.i{ display:inline-block; vertical-align:baseline; }
+  .gaiyo input:hover, .gaiyo textarea:hover{ background:var(--sheet-hover); }
+  .gaiyo input:focus, .gaiyo textarea:focus{ outline:2px solid var(--sheet-focus); outline-offset:0; background:var(--paper); }
+  .gaiyo input::placeholder, .gaiyo textarea::placeholder{ color:#b3b9bc; }
+  .gaiyo textarea{ resize:vertical; text-align:left; line-height:1.7; }
+  .gaiyo .ai-filled{ background:var(--sheet-ai); box-shadow:inset 0 -2px 0 var(--ai); }
+  .gaiyo .calc:not(:placeholder-shown){ color:var(--sheet-focus); }
+  .s-foot{ display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; font-size:0.78rem; margin-top:10px; font-family:var(--font-body); color:var(--sheet-ink); }
+  .s-foot b{ font-size:0.95rem; font-family:var(--font-display); }
+  .s-foot .muted{ color:var(--sheet-muted); }
+  .sheet-hint{ font-size:0.74rem; color:var(--ink-faint); margin:0; }
 
   .toast{ position:fixed; left:50%; bottom:calc(20px + env(safe-area-inset-bottom, 0px)); transform:translateX(-50%); background:var(--ink); color:var(--bg-elevated); padding:10px 18px; border-radius:99px; font-size:0.82rem; opacity:0; pointer-events:none; transition:opacity .2s; max-width:calc(100vw - 32px); z-index:10; }
   .toast.show{ opacity:1; }
@@ -207,9 +212,7 @@
   <section class="summary" id="summary" aria-label="進捗サマリー"></section>
   <div class="toolbar">
     <input type="search" id="q" placeholder="物件名・所在地・送り元で検索" aria-label="検索">
-    <select id="fSource" aria-label="取得元で絞り込み">
-      <option value="">取得元：すべて</option>
-    </select>
+    <select id="fSource" aria-label="取得元で絞り込み"><option value="">取得元：すべて</option></select>
     <div class="seg" role="group" aria-label="表示切替">
       <button id="vBoard" aria-pressed="true">ボード</button>
       <button id="vList" aria-pressed="false">一覧</button>
@@ -238,7 +241,7 @@
         <div><label for="intakeSender">送り元（業者・担当）</label><input type="text" id="intakeSender" placeholder="○○不動産 田中様"></div>
         <div><label for="intakeDate">受領日</label><input type="date" id="intakeDate"></div>
       </div>
-      <label style="display:flex;gap:8px;align-items:center;font-size:0.82rem;color:var(--ink)" id="intakeAiWrap"><input type="checkbox" id="intakeAi" checked> 取り込み後、AIで自社フォーマットに読み取る</label>
+      <label style="display:flex;gap:8px;align-items:center;font-size:0.82rem;color:var(--ink)" id="intakeAiWrap"><input type="checkbox" id="intakeAi" checked> 取り込み後、AIで物件概要書に読み取る</label>
       <p class="hint" id="intakeHint"></p>
     </div>
     <div class="dlg-foot">
@@ -258,26 +261,21 @@
       <button type="button" class="x" data-close aria-label="閉じる">×</button>
     </div>
     <div class="dlg-body">
-      <div class="grid g5">
+      <div class="grid g3">
         <div><label for="dStatus">進捗</label><select id="dStatus"></select></div>
         <div><label for="dAssignee">担当者</label><input type="text" id="dAssignee"></div>
+        <div><label for="dDeal">取引態様</label><input type="text" id="dDeal" list="dealList" placeholder="一般媒介・専任媒介・売主 など"></div>
         <div><label for="dSource">取得元</label><select id="dSource"></select></div>
         <div><label for="dSender">送り元</label><input type="text" id="dSender"></div>
         <div><label for="dReceived">受領日</label><input type="date" id="dReceived"></div>
-      </div>
-      <div class="grid g3">
         <div class="span2"><label for="dNext">次にやること</label><input type="text" id="dNext" placeholder="例）現地確認・役所調査・〇〇工務店へ紹介"></div>
         <div><label for="dNextDate">期日</label><input type="date" id="dNextDate"></div>
       </div>
+      <datalist id="dealList"><option>一般媒介</option><option>専任媒介</option><option>専属専任媒介</option><option>売主</option><option>代理</option></datalist>
 
-      <div class="tabs" role="tablist">
-        <button role="tab" id="tabEdit" aria-selected="true">入力</button>
-        <button role="tab" id="tabSheet" aria-selected="false">物件概要書</button>
-      </div>
-
-      <div id="paneEdit" class="split">
-        <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
-          <div class="section-lab">受け取った資料</div>
+      <div class="split">
+        <div style="display:flex;flex-direction:column;gap:10px;min-width:0">
+          <div class="section-lab" style="margin:0">受け取った資料</div>
           <div class="files" id="dFiles"></div>
           <div class="ai-bar">
             <button type="button" class="small" id="dAddFile">資料を追加</button>
@@ -286,30 +284,29 @@
             <button type="button" class="small" id="dStop" hidden>停止</button>
           </div>
           <p class="ai-msg" id="dAiMsg"></p>
-          <div>
-            <label for="dSourceText">原文（LINE・メール本文）</label>
-            <textarea id="dSourceText" rows="7"></textarea>
-          </div>
         </div>
         <div style="min-width:0">
-          <div class="section-lab">自社フォーマット</div>
-          <div class="grid g2" id="dFields"></div>
+          <label for="dSourceText">原文（LINE・メール本文）</label>
+          <textarea id="dSourceText" rows="6"></textarea>
         </div>
       </div>
 
-      <div id="paneSheet" hidden>
-        <div class="ai-bar" style="margin-bottom:10px">
-          <button type="button" class="small" id="dCopy">概要をテキストでコピー</button>
-          <span class="hint">LINE・メールへの貼り付け用。会社情報は右上「会社情報」で設定します。</span>
+      <div class="sheet-bar">
+        <div class="section-lab">物件概要書</div>
+        <div class="seg" role="group" aria-label="概要書の表示">
+          <button type="button" id="mEdit" aria-pressed="true">編集</button>
+          <button type="button" id="mView" aria-pressed="false">仕上がり</button>
         </div>
-        <div id="sheet"></div>
+        <button type="button" class="small" id="dCopy">テキストでコピー</button>
       </div>
+      <p class="sheet-hint" id="sheetHint">表の中をクリックしてそのまま入力できます。坪数・坪単価・利回り・稼働率は数字を入れると自動で計算します。</p>
+      <div class="sheet-scroll"><div id="sheet"></div></div>
 
       <div>
         <div class="section-lab">経過</div>
         <ul class="hist" id="dHist"></ul>
         <div class="note-row">
-          <input type="text" id="dNote" placeholder="メモを追加（例：売主と価格交渉中、2,300万まで可）" aria-label="経過メモ">
+          <input type="text" id="dNote" placeholder="メモを追加（例：売主と価格交渉中、1億7,500万まで可）" aria-label="経過メモ">
           <button type="button" class="small" id="dNoteAdd">追加</button>
         </div>
       </div>
@@ -327,13 +324,13 @@
 <!-- 会社情報 -->
 <dialog id="dlgSettings" class="narrow">
   <form class="dlg" id="settingsForm" method="dialog">
-    <div class="dlg-head"><h2>会社情報（概要書の帯に表示）</h2><button type="button" class="x" data-close aria-label="閉じる">×</button></div>
+    <div class="dlg-head"><h2>会社情報（概要書の下に表示）</h2><button type="button" class="x" data-close aria-label="閉じる">×</button></div>
     <div class="dlg-body">
-      <div class="grid g2">
+      <div class="grid g3">
         <div class="span2"><label for="setCompany">会社名</label><input type="text" id="setCompany"></div>
         <div><label for="setTel">電話番号</label><input type="text" id="setTel"></div>
-        <div><label for="setLicense">免許番号</label><input type="text" id="setLicense" placeholder="福岡県知事(1)第00000号"></div>
         <div class="span2"><label for="setAddress">所在地</label><input type="text" id="setAddress"></div>
+        <div><label for="setLicense">免許番号</label><input type="text" id="setLicense" placeholder="福岡県知事(1)第00000号"></div>
       </div>
     </div>
     <div class="dlg-foot"><span class="spacer"></span><button type="button" data-close>キャンセル</button><button type="submit" class="primary">保存</button></div>
@@ -348,31 +345,28 @@
 
 /* ---------- 定義 ---------- */
 const STATUSES = [
-  {k:'new',      label:'新着'},
-  {k:'review',   label:'精査中'},
-  {k:'intro',    label:'紹介中'},
-  {k:'nego',     label:'商談中'},
-  {k:'contract', label:'契約済'},
-  {k:'closed',   label:'決済済'},
-  {k:'drop',     label:'見送り'},
+  {k:'new',label:'新着'}, {k:'review',label:'精査中'}, {k:'intro',label:'紹介中'}, {k:'nego',label:'商談中'},
+  {k:'contract',label:'契約済'}, {k:'closed',label:'決済済'}, {k:'drop',label:'見送り'},
 ];
 const ST = Object.fromEntries(STATUSES.map(s=>[s.k,s]));
 const SOURCES = ['LINE','メール','FAX','レインズ','電話・来店','その他'];
-const KINDS = ['','土地','戸建','マンション','収益一棟','店舗・事務所','その他'];
-// [key, label, type]
-const FIELDS = [
-  ['name','物件名','text'], ['kind','種別','kind'],
-  ['price','価格','text'], ['address','所在地','text'],
-  ['access','交通','text'], ['landArea','土地面積','text'],
-  ['buildingArea','建物面積','text'], ['layout','間取り','text'],
-  ['structure','構造','text'], ['built','築年月','text'],
-  ['zoning','用途地域','text'], ['coverage','建ぺい率','text'],
-  ['far','容積率','text'], ['road','接道','text'],
-  ['rights','土地権利','text'], ['current','現況','text'],
-  ['delivery','引渡し','text'], ['dealType','取引態様','text'],
-  ['point','物件のポイント','area'], ['remarks','備考','area'],
-];
-const WIDE = new Set(['name','address','access','road','point','remarks']);
+const KINDS = ['売土地','売戸建','売マンション','売区分マンション','売アパート','売ビル','売店舗・事務所'];
+// 概要書の項目（キー → 表示名）
+const LABEL = {
+  kind:'種別', name:'物件名', addrDisplay:'住居表示', addrLot:'地番', line:'路線', station:'駅', walk:'徒歩（分）',
+  price:'価格', taxNote:'税区分',
+  landRegArea:'面積（公簿）', landActArea:'面積（実測）', landCategory:'地目', landCurrent:'土地の現況',
+  cityPlan:'都市計画', zoning:'用途地域', coverage:'建ぺい率', far:'容積率', rights:'権利内容', shape:'形状', legalLimits:'その他法令上の制限',
+  structure:'構造規模', floorArea:'延床面積', built:'竣工年月', use:'用途', units:'総戸数', bldCurrent:'建物の現況',
+  designer:'設計会社', builder:'施工会社', parking:'駐車場', bldOther:'建物その他',
+  elec:'電気', gas:'ガス', water:'上下水道', drain:'雑排水', ev:'EV', equipOther:'設備その他',
+  landPrice:'土地価格', bldPrice:'建物価格', landEval:'土地評価額', bldEval:'建物評価額',
+  rentFull:'満室賃料', rentNow:'現況賃料', yieldFull:'表面利回り（満室）', yieldNow:'表面利回り（現況）',
+  propTax:'固都税', mgmtCost:'保守管理費', netFull:'ネット利回り（満室）', netNow:'ネット利回り（現況）',
+  occFull:'稼働率（満室時）', occNow:'稼働率（現況）', remarks:'備考', delivCond:'引渡し条件', delivTime:'引渡し時期',
+};
+const MONEY = new Set(['price','landPrice','bldPrice','landEval','bldEval','rentFull','rentNow','propTax','mgmtCost']);
+const CALC = new Set(['yieldFull','yieldNow','netFull','netNow','occFull','occNow']);
 
 /* ---------- 小物 ---------- */
 const $ = s => document.querySelector(s);
@@ -384,16 +378,71 @@ const md = s => s ? (+s.slice(5,7))+'/'+(+s.slice(8,10)) : '';
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,8);
 const clone = o => JSON.parse(JSON.stringify(o));
 const stamp = () => { const d=new Date(); return ymd(d)+' '+pad(d.getHours())+':'+pad(d.getMinutes()); };
+const zen2han = s => String(s ?? '').replace(/[０-９．，－]/g, c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0));
+// 「1億8,500万円」「¥185,000,000」「18500万」→ 数値
+function num(s){
+  s = zen2han(s).replace(/[,\s¥￥円]/g,'');
+  if(!s) return NaN;
+  if(/[億万]/.test(s)){
+    let t=0, m;
+    if((m=s.match(/([\d.]+)億/))) t+=parseFloat(m[1])*1e8;
+    if((m=s.match(/(?:億|^)([\d.]+)万/))) t+=parseFloat(m[1])*1e4;
+    return t||NaN;
+  }
+  const m = s.match(/-?[\d.]+/); return m ? parseFloat(m[0]) : NaN;
+}
+const fmtInt = n => isFinite(n) ? Math.round(n).toLocaleString('ja-JP') : '';
+const fmtMoney = s => { const n=num(s); return isFinite(n) ? Math.round(n).toLocaleString('ja-JP') : String(s||''); };
+const tsubo = s => { const n=num(s); return isFinite(n)&&n>0 ? (n*0.3025).toFixed(2) : ''; };
+const pct = v => isFinite(v) ? v.toFixed(2)+'%' : '';
+function man(s){
+  const n=num(s); if(!isFinite(n)||n<=0) return '';
+  if(n>=1e8){ const r=Math.round((n%1e8)/1e4); return Math.floor(n/1e8)+'億'+(r?r.toLocaleString('ja-JP')+'万':'')+'円'; }
+  return Math.round(n/1e4).toLocaleString('ja-JP')+'万円';
+}
 let toastT;
 function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),2600); }
-function guessType(name){
-  const e=(name.split('.').pop()||'').toLowerCase();
-  return {pdf:'application/pdf',jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',webp:'image/webp',gif:'image/gif'}[e]||'';
-}
+function guessType(name){ const e=(name.split('.').pop()||'').toLowerCase(); return {pdf:'application/pdf',jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',webp:'image/webp',gif:'image/gif'}[e]||''; }
 const OK_TYPES = ['application/pdf','image/jpeg','image/png','image/webp','image/gif'];
 function fileType(f){ return OK_TYPES.includes(f.type) ? f.type : guessType(f.name||''); }
-function displayName(p){ return (p.f&&p.f.name) || (p.f&&p.f.address) || '名称未設定（'+(p.sender||p.source||'')+'）'; }
+const addrOf = f => (f&&(f.addrDisplay||f.addrLot)) || '';
+function displayName(p){ return (p.f&&p.f.name) || addrOf(p.f) || '名称未設定（'+(p.sender||p.source||'')+'）'; }
 function dueClass(d){ if(!d) return ''; const t=today(); return d<t?'over':(d===t?'today':''); }
+
+// 初期版の形式で保存されたデータを概要書の項目に寄せる
+function migrate(p){
+  const f = p.f || (p.f={});
+  if(f._v===2) return p;
+  const mv=(a,b)=>{ if(f[a]&&!f[b]) f[b]=f[a]; delete f[a]; };
+  mv('address','addrDisplay'); mv('access','line'); mv('buildingArea','floorArea'); mv('delivery','delivTime'); mv('current','landCurrent');
+  if(f.landArea&&!f.landRegArea){ const n=num(f.landArea); f.landRegArea=isFinite(n)?String(n):f.landArea; } delete f.landArea;
+  if(f.road&&!f.roads) f.roads=[{dir:f.road,type:'',width:'',frontage:''}]; delete f.road;
+  if(f.price && !/^\d+$/.test(f.price)){ const n=num(f.price); if(isFinite(n)) f.price=String(Math.round(n)); }
+  if(f.kind && !/^売/.test(f.kind)) f.kind = {'土地':'売土地','戸建':'売戸建','マンション':'売マンション','収益一棟':'売アパート','店舗・事務所':'売店舗・事務所'}[f.kind]||f.kind;
+  const extra=[f.layout&&('間取り：'+f.layout), f.point].filter(Boolean); delete f.layout; delete f.point;
+  if(extra.length) f.remarks=[...extra, f.remarks].filter(Boolean).join('\n');
+  if(f.dealType && !p.dealType) p.dealType=f.dealType; delete f.dealType;
+  f._v=2; return p;
+}
+
+/* ---------- 自動計算 ---------- */
+function recompute(f){
+  const price=num(f.price), rf=num(f.rentFull), rn=num(f.rentNow), tax=num(f.propTax), mg=num(f.mgmtCost);
+  const cost=(isFinite(tax)?tax:0)+(isFinite(mg)?mg:0);
+  const out={};
+  if(price>0 && rf>0) out.yieldFull=pct(rf/price*100);
+  if(price>0 && rn>0) out.yieldNow=pct(rn/price*100);
+  if(price>0 && rf>0 && cost>0) out.netFull=pct((rf-cost)/price*100);
+  if(price>0 && rn>0 && cost>0) out.netNow=pct((rn-cost)/price*100);
+  if(rf>0){ out.occFull='100.00%'; if(rn>0) out.occNow=pct(rn/rf*100); }
+  Object.assign(f,out);
+  return out;
+}
+function tsuboPrice(f){
+  const price=num(f.price), act=num(f.landActArea), reg=num(f.landRegArea);
+  const a = act>0 ? act : reg;
+  return price>0 && a>0 ? Math.round(price/(a*0.3025)) : NaN;
+}
 
 /* ---------- 状態 ---------- */
 const S = { items:[], loaded:false, status:null, q:'', source:'', view:'board', settings:{} };
@@ -407,7 +456,7 @@ function makeCloud(db, assets){
   return {
     mode:'cloud', canUpload:!!assets,
     subscribe(cb){
-      col.onSnapshot(s=>cb(s.docs.map(d=>Object.assign({}, d.data(), {id:d.id}))),
+      col.onSnapshot(s=>cb(s.docs.map(d=>migrate(Object.assign(clone(d.data()), {id:d.id})))),
         ()=>toast('データの同期が止まりました。ページを再読み込みしてください'));
       setDoc.onSnapshot(s=>{ S.settings = s.exists ? Object.assign({}, s.data()) : {}; }, ()=>{});
     },
@@ -416,10 +465,7 @@ function makeCloud(db, assets){
       await col.doc(p.id).delete();
       if(assets) for(const f of p.files||[]){ try{ await assets.delete(f.id); }catch(e){} }
     },
-    async upload(file){
-      const r = await assets.upload(file, {type:fileType(file)});
-      return {id:r.id, name:file.name||'image', type:r.contentType, size:r.sizeBytes};
-    },
+    async upload(file){ const r=await assets.upload(file, {type:fileType(file)}); return {id:r.id, name:file.name||'image', type:r.contentType, size:r.sizeBytes}; },
     async url(f){ return '/_blob/'+f.id; },
     async blob(f){ const r=await fetch('/_blob/'+f.id); if(!r.ok) throw new Error('missing'); return r.blob(); },
     async saveSettings(s){ await setDoc.set(s); S.settings=s; },
@@ -444,7 +490,7 @@ async function makeLocal(){
   }));
   const urls = new Map();
   let listener = ()=>{};
-  const all = async()=> dbp ? req('props','readonly',s=>s.getAll()) : [...mem.props.values()];
+  const all = async()=> (dbp ? await req('props','readonly',s=>s.getAll()) : [...mem.props.values()].map(clone)).map(migrate);
   const refresh = ()=>all().then(listener);
   try{ S.settings = JSON.parse(localStorage.getItem('bukken.settings')||'{}'); }catch(e){}
   const api = {
@@ -474,15 +520,14 @@ function filtered(){
   return S.items.filter(p=>{
     if(S.source && p.source!==S.source) return false;
     if(!q) return true;
-    const hay = [displayName(p), p.f&&p.f.address, p.sender, p.assignee, p.f&&p.f.kind, p.next].join(' ').toLowerCase();
-    return hay.includes(q);
+    const f=p.f||{};
+    return [displayName(p), f.addrDisplay, f.addrLot, f.station, p.sender, p.assignee, f.kind, p.next].join(' ').toLowerCase().includes(q);
   }).sort((a,b)=>{
     const ad=a.nextDate||'9999', bd=b.nextDate||'9999';
     if(ad!==bd) return ad<bd?-1:1;
     return (b.receivedAt||'').localeCompare(a.receivedAt||'');
   });
 }
-
 function renderSummary(){
   const counts = Object.fromEntries(STATUSES.map(s=>[s.k,0]));
   let due = 0; const t = today();
@@ -491,18 +536,16 @@ function renderSummary(){
     `<button class="tile" style="--s:var(--s-${s.k})" data-st="${s.k}" aria-pressed="${S.status===s.k}"><span class="lab">${s.label}</span><span class="num tnum">${counts[s.k]||0}</span></button>`
   ).join('') + `<button class="tile ${due?'alert':''}" style="--s:var(--danger)" data-st="__due" aria-pressed="${S.status==='__due'}"><span class="lab">期日到来・超過</span><span class="num tnum">${due}</span></button>`;
 }
-
 function card(p){
-  const nfiles=(p.files||[]).length;
+  const f=p.f||{}, nfiles=(p.files||[]).length, pr=man(f.price);
   return `<article class="card" draggable="true" tabindex="0" data-id="${esc(p.id)}">
-    <div class="card-top"><span class="chip">${esc(p.source||'—')}</span>${p.f&&p.f.kind?`<span class="chip outline">${esc(p.f.kind)}</span>`:''}${nfiles?`<span class="chip outline">資料${nfiles}</span>`:''}</div>
+    <div class="card-top"><span class="chip">${esc(p.source||'—')}</span>${f.kind?`<span class="chip outline">${esc(f.kind)}</span>`:''}${nfiles?`<span class="chip outline">資料${nfiles}</span>`:''}</div>
     <h3>${esc(displayName(p))}</h3>
-    ${p.f&&p.f.address&&p.f.name?`<p class="addr">${esc(p.f.address)}</p>`:''}
-    <div class="card-foot"><span class="price tnum">${esc((p.f&&p.f.price)||'価格未定')}</span>
+    ${addrOf(f)&&f.name?`<p class="addr">${esc(addrOf(f))}${f.station?`／${esc(f.station)}駅${f.walk?' 徒歩'+esc(f.walk)+'分':''}`:''}</p>`:''}
+    <div class="card-foot"><span class="price tnum">${esc(pr||'価格未定')}${f.yieldFull?`<span class="yield">利回り ${esc(f.yieldFull)}</span>`:''}</span>
     ${p.nextDate||p.next?`<span class="due ${dueClass(p.nextDate)}">${p.nextDate?esc(md(p.nextDate))+' ':''}${esc(p.next||'')}</span>`:(p.assignee?`<span class="due">担当 ${esc(p.assignee)}</span>`:'')}</div>
   </article>`;
 }
-
 function renderMain(){
   const main = $('#main');
   if(!S.loaded){ main.innerHTML = `<div class="empty"><h2>読み込み中…</h2></div>`; return; }
@@ -521,13 +564,12 @@ function renderMain(){
     }).join('')}</div>`;
   }else{
     if(S.status && S.status!=='__due') items = items.filter(p=>(p.status||'new')===S.status);
-    main.innerHTML = items.length ? `<div class="list-wrap"><table><thead><tr><th>進捗</th><th>物件名</th><th>種別</th><th>所在地</th><th>価格</th><th>取得元・送り元</th><th>受領日</th><th>次にやること</th><th>担当</th></tr></thead><tbody>${items.map(p=>{
-      const s=ST[p.status]||ST.new;
-      return `<tr data-id="${esc(p.id)}"><td><span class="chip st" style="--s:var(--s-${s.k})">${s.label}</span></td><td><b>${esc(displayName(p))}</b></td><td>${esc(p.f&&p.f.kind)}</td><td>${esc(p.f&&p.f.address)}</td><td class="tnum" style="white-space:nowrap">${esc(p.f&&p.f.price)}</td><td>${esc(p.source)}<br><span class="hint">${esc(p.sender)}</span></td><td class="tnum" style="white-space:nowrap">${esc(p.receivedAt)}</td><td><span class="due ${dueClass(p.nextDate)}">${esc(md(p.nextDate))}</span> ${esc(p.next)}</td><td>${esc(p.assignee)}</td></tr>`;
+    main.innerHTML = items.length ? `<div class="list-wrap"><table><thead><tr><th>進捗</th><th>物件名</th><th>種別</th><th>所在地</th><th>価格</th><th>利回り</th><th>取得元・送り元</th><th>受領日</th><th>次にやること</th><th>担当</th></tr></thead><tbody>${items.map(p=>{
+      const s=ST[p.status]||ST.new, f=p.f||{};
+      return `<tr data-id="${esc(p.id)}"><td><span class="chip st" style="--s:var(--s-${s.k})">${s.label}</span></td><td><b>${esc(displayName(p))}</b></td><td>${esc(f.kind)}</td><td>${esc(addrOf(f))}</td><td class="tnum" style="white-space:nowrap">${esc(man(f.price))}</td><td class="tnum">${esc(f.yieldFull)}</td><td>${esc(p.source)}<br><span class="hint">${esc(p.sender)}</span></td><td class="tnum" style="white-space:nowrap">${esc(p.receivedAt)}</td><td><span class="due ${dueClass(p.nextDate)}">${esc(md(p.nextDate))}</span> ${esc(p.next)}</td><td>${esc(p.assignee)}</td></tr>`;
     }).join('')}</tbody></table></div>` : `<div class="empty"><h2>該当する物件はありません</h2><p>検索語や絞り込みを変えてください。</p></div>`;
   }
 }
-
 function render(){
   renderSummary(); renderMain();
   const srcs = [...new Set([...SOURCES, ...S.items.map(p=>p.source).filter(Boolean)])];
@@ -596,19 +638,20 @@ $('#dlgIntake').addEventListener('paste', e=>{
 });
 $('#intakeForm').addEventListener('submit', async e=>{
   e.preventDefault();
-  const text=$('#intakeText').value.trim();
-  if(!pendingFiles.length && !text){ $('#intakeMsg').textContent='資料か本文のどちらかを入れてください'; $('#intakeMsg').className='ai-msg err'; return; }
-  $('#intakeGo').disabled=true; const msg=$('#intakeMsg'); msg.className='ai-msg';
-  const p = { id:uid(), status:'new', source:$('#intakeSource').value, sender:$('#intakeSender').value.trim(),
-    receivedAt:$('#intakeDate').value||today(), assignee:'', next:'', nextDate:'', sourceText:text, files:[], f:{},
-    history:[{at:stamp(), text:`取込（${$('#intakeSource').value}${$('#intakeSender').value.trim()?'・'+$('#intakeSender').value.trim():''}）`}], createdAt:stamp(), updatedAt:stamp() };
+  const text=$('#intakeText').value.trim(), msg=$('#intakeMsg');
+  if(!pendingFiles.length && !text){ msg.textContent='資料か本文のどちらかを入れてください'; msg.className='ai-msg err'; return; }
+  $('#intakeGo').disabled=true; msg.className='ai-msg';
+  const src=$('#intakeSource').value, sender=$('#intakeSender').value.trim();
+  const p = { id:uid(), status:'new', source:src, sender, receivedAt:$('#intakeDate').value||today(), assignee:'', dealType:'',
+    next:'', nextDate:'', sourceText:text, files:[], f:{_v:2, roads:[]},
+    history:[{at:stamp(), text:`取込（${src}${sender?'・'+sender:''}）`}], createdAt:stamp(), updatedAt:stamp() };
   const failed=[];
   for(let i=0;i<pendingFiles.length;i++){
     msg.textContent = `資料を保存中… ${i+1}/${pendingFiles.length}`;
     try{ p.files.push(await store.upload(pendingFiles[i])); }
     catch(err){ failed.push(pendingFiles[i].name + (err&&err.code==='too_large'?'（20MB超）':'')); }
   }
-  if(!sample) Object.assign(p.f, extractByLabels(text));
+  if(!sample){ mergeInto(p, extractByLabels(text)); recompute(p.f); }
   try{ await store.save(p); }
   catch(err){ msg.textContent='保存できませんでした。編集権限があるか確認してください'; msg.className='ai-msg err'; $('#intakeGo').disabled=false; return; }
   if(!S.items.find(x=>x.id===p.id)) S.items.push(p);
@@ -619,42 +662,167 @@ $('#intakeForm').addEventListener('submit', async e=>{
   if(withAi) runAi();
 });
 
+/* ---------- 物件概要書（編集と仕上がりを同じ表で描く） ---------- */
+let cur=null, dirty=false, aiCtl=null, sheetMode='edit', aiKeys=new Set();
+const road = i => (cur.f.roads && cur.f.roads[i]) || {};
+function getV(key){
+  const m=key.match(/^roads\.(\d)\.(\w+)$/);
+  if(m) return road(+m[1])[m[2]]||'';
+  const v=cur.f[key]; return v==null?'':String(v);
+}
+function setV(key, val){
+  const m=key.match(/^roads\.(\d)\.(\w+)$/);
+  if(m){ const r=cur.f.roads||(cur.f.roads=[]); while(r.length<=+m[1]) r.push({dir:'',type:'',width:'',frontage:''}); r[+m[1]][m[2]]=val; return; }
+  cur.f[key]=val;
+}
+// 1マス分。編集なら入力欄、仕上がりなら文字。
+function V(key, o={}){
+  let v=getV(key);
+  if(sheetMode==='view') return esc(MONEY.has(key)?fmtMoney(v):v);
+  const disp = MONEY.has(key) ? fmtMoney(v) : v;
+  const cls=[o.i?'i':'', CALC.has(key)?'calc':'', aiKeys.has(key)?'ai-filled':''].filter(Boolean).join(' ');
+  return `<input type="text" data-f="${key}" value="${esc(disp)}" aria-label="${esc(o.label||LABEL[key]||key)}" placeholder="${esc(o.ph||'')}"${o.list?` list="${o.list}"`:''}${cls?` class="${cls}"`:''}${o.w?` style="width:${o.w}"`:''}${MONEY.has(key)?' inputmode="numeric"':''}>`;
+}
+const U = t => `<span class="unit">${t}</span>`;
+function pair(l1,k1,l2,k2){ return `<th>${l1}</th><td>${V(k1)}</td><th>${l2}</th><td>${V(k2)}</td>`; }
+function sheetHTML(){
+  const f=cur.f, s=S.settings||{}, view=sheetMode==='view';
+  const tp=tsuboPrice(f);
+  const roadRow = i => `<td colspan="3">${V(`roads.${i}.dir`,{i:1,w:'4.5em',label:'接道 方位',ph:'方位'})}${U('側')}${V(`roads.${i}.type`,{i:1,w:'3.5em',label:'公道／私道',ph:'公道'})}${U('：幅員 約')}${V(`roads.${i}.width`,{i:1,w:'3.5em',label:'幅員'})}${U('m　：間口 約')}${V(`roads.${i}.frontage`,{i:1,w:'3.5em',label:'間口'})}${U('m')}</td>`;
+  const nRoads = view ? Math.max(1,(f.roads||[]).filter(r=>r&&(r.dir||r.width||r.frontage)).length) : 3;
+  const remarks = String(f.remarks||'').split('\n').map(x=>x.trim()).filter(Boolean);
+  const remRows = view
+    ? (remarks.length?remarks:['']).map((r,i)=>`<tr${i===0?' class="band"':''}>${i===0?`<th class="sec" rowspan="${Math.max(1,remarks.length)}">備　考</th>`:''}<td colspan="4" class="l">${r?esc(/^※/.test(r)?r:'※'+r):''}</td></tr>`).join('')
+    : `<tr class="band"><th class="sec">備　考</th><td colspan="4" class="l"><textarea data-f="remarks" rows="${Math.max(4,remarks.length+1)}" aria-label="備考" placeholder="1行に1項目（例：店舗×2戸　2DK×7戸　合計9戸）" class="${aiKeys.has('remarks')?'ai-filled':''}">${esc(f.remarks||'')}</textarea></td></tr>`;
+  const sq = k => view&&!f[k] ? '' : `${U('㎡　（')}${esc(tsubo(f[k]))}${U('坪）')}`;
+  return `<article class="sheet">
+  <div class="s-title">物件概要書</div>
+  <table class="gaiyo">
+    <colgroup><col style="width:15%"><col style="width:14%"><col style="width:22%"><col style="width:14%"><col style="width:35%"></colgroup>
+    <tr><th class="sec">種　別</th><td colspan="2">${V('kind',{ph:'売マンション',list:'kindList'})}</td><th>物件名</th><td>${V('name')}</td></tr>
+    <tr class="band"><th class="sec" rowspan="2">所在地</th><th class="sub">【住居表示】</th><td colspan="3" class="l">${V('addrDisplay')}</td></tr>
+    <tr><th class="sub">【地　番】</th><td colspan="3" class="l">${V('addrLot')}</td></tr>
+    <tr class="band"><th class="sec">交　通</th><td colspan="4">${V('line',{i:1,w:'9em',ph:'JR筑肥線'})}${U('線')}${V('station',{i:1,w:'7em',ph:'下山門'})}${U('駅　徒歩 約')}${V('walk',{i:1,w:'3em'})}${U('分')}</td></tr>
+    <tr class="band"><th class="sec">価　格</th><td colspan="4"><span class="big">¥${V('price',{i:1,w:'9em'})}</span>${view&&!f.taxNote?'':U('（')+V('taxNote',{i:1,w:'3.5em',ph:'税込'})+U('）')}　${U('（坪')}¥${esc(fmtInt(tp))}${U('）')}</td></tr>
+    <tr class="band"><th class="sec" rowspan="${7+nRoads}">土　地</th><th rowspan="2">面　積</th><td colspan="3">${U('公　簿')}${V('landRegArea',{i:1,w:'6em'})}${sq('landRegArea')}</td></tr>
+    <tr><td colspan="3">${U('実　測')}${V('landActArea',{i:1,w:'6em'})}${sq('landActArea')}</td></tr>
+    <tr>${pair('地　目','landCategory','現　況','landCurrent')}</tr>
+    <tr><th rowspan="${nRoads}">接道状況</th>${roadRow(0)}</tr>
+    ${[1,2].slice(0,nRoads-1).map(i=>`<tr>${roadRow(i)}</tr>`).join('')}
+    <tr>${pair('都市計画','cityPlan','用途地域','zoning')}</tr>
+    <tr>${pair('建ぺい率','coverage','容積率','far')}</tr>
+    <tr>${pair('権利内容','rights','形　状','shape')}</tr>
+    <tr><th class="sub">その他法令上<br>の制限</th><td colspan="3" class="l">${V('legalLimits')}</td></tr>
+    <tr class="band"><th class="sec" rowspan="6">建　物</th><th>構造規模</th><td colspan="3" class="l">${V('structure')}</td></tr>
+    <tr><th>延床面積</th><td colspan="3">${V('floorArea',{i:1,w:'6em'})}${sq('floorArea')}</td></tr>
+    <tr>${pair('竣工年月','built','用　途','use')}</tr>
+    <tr>${pair('総戸数','units','現　況','bldCurrent')}</tr>
+    <tr>${pair('設計会社','designer','施工会社','builder')}</tr>
+    <tr>${pair('駐車場','parking','その他','bldOther')}</tr>
+    <tr class="band"><th class="sec" rowspan="3">設　備</th>${pair('電　気','elec','ガ　ス','gas')}</tr>
+    <tr>${pair('上下水道','water','雑排水','drain')}</tr>
+    <tr>${pair('Ｅ　Ｖ','ev','その他','equipOther')}</tr>
+    <tr class="band"><th class="sec" rowspan="6">収支計算</th>${pair('土地価格','landPrice','建物価格','bldPrice')}</tr>
+    <tr>${pair('土地評価額','landEval','建物評価額','bldEval')}</tr>
+    <tr>${pair('満室賃料','rentFull','現況賃料','rentNow')}</tr>
+    <tr>${pair('表面利回り','yieldFull','表面利回り','yieldNow')}</tr>
+    <tr>${pair('固都税','propTax','保守管理費','mgmtCost')}</tr>
+    <tr>${pair('ネット利回り','netFull','ネット利回り','netNow')}</tr>
+    <tr class="band"><th class="sec">稼働率</th>${pair('満室時','occFull','現　況','occNow')}</tr>
+    ${remRows}
+    <tr class="band"><th class="sec">引渡し</th>${pair('条　件','delivCond','時　期','delivTime')}</tr>
+  </table>
+  <div class="s-foot">
+    <div>取引態様：${esc(cur.dealType||'—')}<br><span class="muted">賃料・固都税・管理費は年額。本書と現況が異なる場合は現況を優先します。</span></div>
+    <div style="text-align:right"><b>${esc(s.company||'（会社名未設定）')}</b><br>${esc(s.address||'')}${s.tel?'　TEL '+esc(s.tel):''}<br>${esc(s.license||'')}${s.license?'　':''}作成日 ${esc(today())}</div>
+  </div>
+  </article>`;
+}
+function renderSheet(){
+  $('#sheet').innerHTML = sheetHTML() + `<datalist id="kindList">${KINDS.map(k=>`<option>${k}</option>`).join('')}</datalist>`;
+  $('#sheetHint').hidden = sheetMode!=='edit';
+  $('#mEdit').setAttribute('aria-pressed', sheetMode==='edit'); $('#mView').setAttribute('aria-pressed', sheetMode==='view');
+}
+// 入力のたびに値を保持し、自動計算欄と坪数だけ差し替える（入力中のマスは描き直さない）
+function refreshDerived(){
+  const f=cur.f, tp=tsuboPrice(f);
+  const cells = document.querySelectorAll('#sheet .gaiyo td');
+  cells.forEach(td=>{
+    const inp=td.querySelector('[data-f]'); if(!inp) return;
+    const k=inp.dataset.f;
+    if(['landRegArea','landActArea','floorArea'].includes(k)){ const u=td.querySelectorAll('.unit'); const node=u[u.length-1]&&u[u.length-1].previousSibling; if(node&&node.nodeType===3) node.nodeValue=tsubo(f[k]); }
+    if(k==='price'){ const u=[...td.querySelectorAll('.unit')].pop(); const node=u&&u.previousSibling; if(node&&node.nodeType===3) node.nodeValue='¥'+fmtInt(tp); }
+  });
+}
+$('#sheet').addEventListener('input', e=>{
+  const el=e.target; if(!el.dataset||!el.dataset.f||!cur) return;
+  const k=el.dataset.f; setV(k, el.value); dirty=true;
+  aiKeys.delete(k); el.classList.remove('ai-filled');
+  if(k==='name'||k==='addrDisplay') $('#dTitle').textContent=displayName(cur);
+  const out=recompute(cur.f);
+  for(const [ck,cv] of Object.entries(out)){ const c=document.querySelector(`#sheet [data-f="${ck}"]`); if(c && c!==el) c.value=cv; }
+  refreshDerived();
+});
+// 金額はフォーカスが外れたら 3桁区切りに
+$('#sheet').addEventListener('focusout', e=>{ const el=e.target; if(el.dataset && MONEY.has(el.dataset.f)){ const n=num(el.value); if(isFinite(n)){ setV(el.dataset.f, String(Math.round(n))); el.value=fmtMoney(n); } } });
+$('#mEdit').onclick=()=>{ sheetMode='edit'; renderSheet(); };
+$('#mView').onclick=()=>{ sheetMode='view'; renderSheet(); };
+
+function sheetText(){
+  const f=cur.f, s=S.settings||{}, L=[];
+  const add=(l,v)=>{ if(v) L.push(`${l}：${v}`); };
+  L.push(`【物件概要書】${f.name||addrOf(f)}`);
+  add('種別',f.kind); add('所在地（住居表示）',f.addrDisplay); add('所在地（地番）',f.addrLot);
+  if(f.station) add('交通', `${f.line?f.line+' ':''}「${f.station}」駅 徒歩約${f.walk||'?'}分`);
+  const tp=tsuboPrice(f);
+  if(f.price) add('価格', `¥${fmtMoney(f.price)}${f.taxNote?'（'+f.taxNote+'）':''}${isFinite(tp)?'（坪 ¥'+fmtInt(tp)+'）':''}`);
+  L.push('','■土地');
+  if(f.landRegArea) add('面積（公簿）', `${f.landRegArea}㎡（${tsubo(f.landRegArea)}坪）`);
+  if(f.landActArea) add('面積（実測）', `${f.landActArea}㎡（${tsubo(f.landActArea)}坪）`);
+  add('地目',f.landCategory); add('現況',f.landCurrent);
+  (f.roads||[]).filter(r=>r&&(r.dir||r.width)).forEach(r=>add('接道', `${r.dir}側 ${r.type} 幅員約${r.width}m 間口約${r.frontage}m`));
+  for(const k of ['cityPlan','zoning','coverage','far','rights','shape','legalLimits']) add(LABEL[k],f[k]);
+  const bl=['built','use','units','bldCurrent','designer','builder','parking','bldOther'];
+  if(f.structure||f.floorArea||bl.some(k=>f[k])){ L.push('','■建物'); add('構造規模',f.structure); if(f.floorArea) add('延床面積',`${f.floorArea}㎡（${tsubo(f.floorArea)}坪）`); for(const k of bl) add(LABEL[k].replace('建物の',''),f[k]); }
+  const eq=['elec','gas','water','drain','ev','equipOther'];
+  if(eq.some(k=>f[k])){ L.push('','■設備'); for(const k of eq) add(LABEL[k],f[k]); }
+  const inc=['landPrice','bldPrice','landEval','bldEval','rentFull','rentNow','yieldFull','yieldNow','propTax','mgmtCost','netFull','netNow','occFull','occNow'];
+  if(inc.some(k=>f[k])){ L.push('','■収支（年額）'); for(const k of inc) add(LABEL[k], MONEY.has(k)&&f[k]?'¥'+fmtMoney(f[k]):f[k]); }
+  const rem=String(f.remarks||'').split('\n').map(x=>x.trim()).filter(Boolean);
+  if(rem.length){ L.push('','■備考'); rem.forEach(r=>L.push(/^※/.test(r)?r:'※'+r)); }
+  if(f.delivCond||f.delivTime){ L.push(''); add('引渡し',[f.delivCond,f.delivTime].filter(Boolean).join('／')); }
+  add('取引態様',cur.dealType);
+  if(s.company) L.push('', `${s.company}${s.tel?'　TEL '+s.tel:''}`);
+  return L.join('\n');
+}
+$('#dCopy').onclick = async ()=>{
+  if(!cur) return; formToCur(); const t=sheetText();
+  try{ await navigator.clipboard.writeText(t); toast('コピーしました'); }
+  catch(e){ const ta=document.createElement('textarea'); ta.value=t; ta.rows=12; ta.readOnly=true; ta.style.marginBottom='10px'; $('#sheet').prepend(ta); ta.select(); toast('自動コピーできないため、表示した文面を選択してコピーしてください'); }
+};
+
 /* ---------- 詳細 ---------- */
-let cur=null, dirty=false, aiCtl=null;
-(function buildFields(){
-  $('#dFields').innerHTML = FIELDS.map(([k,l,t])=>{
-    const cls = WIDE.has(k)?' class="span2"':'';
-    if(t==='kind') return `<div${cls}><label for="f_${k}">${l}</label><select id="f_${k}" data-f="${k}">${KINDS.map(x=>`<option value="${x}">${x||'—'}</option>`).join('')}</select></div>`;
-    if(t==='area') return `<div class="span2"><label for="f_${k}">${l}</label><textarea id="f_${k}" data-f="${k}" rows="2"></textarea></div>`;
-    return `<div${cls}><label for="f_${k}">${l}</label><input type="text" id="f_${k}" data-f="${k}"></div>`;
-  }).join('');
-  $('#dStatus').innerHTML = STATUSES.map(s=>`<option value="${s.k}">${s.label}</option>`).join('');
-})();
+$('#dStatus').innerHTML = STATUSES.map(s=>`<option value="${s.k}">${s.label}</option>`).join('');
 function formToCur(){
   if(!cur) return;
-  const f = {};
-  document.querySelectorAll('#dFields [data-f]').forEach(el=>{ f[el.dataset.f]=el.value.trim(); });
-  cur.f = f;
   cur.assignee=$('#dAssignee').value.trim(); cur.source=$('#dSource').value; cur.sender=$('#dSender').value.trim();
   cur.receivedAt=$('#dReceived').value; cur.next=$('#dNext').value.trim(); cur.nextDate=$('#dNextDate').value;
-  cur.sourceText=$('#dSourceText').value;
+  cur.dealType=$('#dDeal').value.trim(); cur.sourceText=$('#dSourceText').value;
   const ns=$('#dStatus').value;
   if(ns!==cur.status){ cur.history=(cur.history||[]).concat({at:stamp(), text:`進捗：${(ST[cur.status]||ST.new).label} → ${ST[ns].label}`}); cur.status=ns; }
 }
 function fillForm(){
-  document.querySelectorAll('#dFields [data-f]').forEach(el=>{ el.value = (cur.f&&cur.f[el.dataset.f])||''; el.classList.remove('ai-filled'); });
   $('#dStatus').value=cur.status||'new'; $('#dAssignee').value=cur.assignee||''; fillSourceSelect($('#dSource'),cur.source||'その他');
   $('#dSender').value=cur.sender||''; $('#dReceived').value=cur.receivedAt||''; $('#dNext').value=cur.next||''; $('#dNextDate').value=cur.nextDate||'';
-  $('#dSourceText').value=cur.sourceText||'';
+  $('#dDeal').value=cur.dealType||''; $('#dSourceText').value=cur.sourceText||'';
   $('#dTitle').textContent=displayName(cur);
-  renderFiles(); renderHist();
+  renderFiles(); renderHist(); renderSheet();
 }
 function renderHist(){
   $('#dHist').innerHTML = (cur.history||[]).slice().reverse().map(h=>`<li><time class="tnum">${esc(h.at)}</time><span>${esc(h.text)}</span></li>`).join('') || '<li class="hint">まだ記録がありません</li>';
 }
 function renderFiles(){
-  const box=$('#dFiles');
-  const fs=cur.files||[];
+  const box=$('#dFiles'), fs=cur.files||[];
   box.innerHTML = fs.length ? fs.map((f,i)=> f.type==='application/pdf'
     ? `<a class="file" data-fi="${i}" target="_blank" rel="noopener"><span class="pdf">PDF</span><span class="nm">${esc(f.name)}</span></a>`
     : `<a class="file" data-fi="${i}" target="_blank" rel="noopener"><img alt="${esc(f.name)}" data-fimg="${i}"><span class="nm">${esc(f.name)}</span></a>`).join('')
@@ -662,22 +830,16 @@ function renderFiles(){
   fs.forEach((f,i)=>{ store.url(f).then(u=>{ const a=box.querySelector(`[data-fi="${i}"]`); if(a) a.href=u; const im=box.querySelector(`[data-fimg="${i}"]`); if(im) im.src=u; }).catch(()=>{}); });
   $('#dAddFile').hidden = !store.canUpload;
 }
-function setTab(t){
-  const edit = t==='edit';
-  if(!edit){ formToCur(); renderSheet(); }
-  $('#paneEdit').hidden=!edit; $('#paneSheet').hidden=edit;
-  $('#tabEdit').setAttribute('aria-selected',edit); $('#tabSheet').setAttribute('aria-selected',!edit);
-}
-$('#tabEdit').onclick=()=>setTab('edit'); $('#tabSheet').onclick=()=>setTab('sheet');
 function openDetail(id, obj){
   const p = obj || S.items.find(x=>x.id===id); if(!p) return;
-  cur = clone(p); dirty=false;
+  cur = migrate(clone(p)); dirty=false; aiKeys=new Set(); sheetMode='edit';
+  if(!cur.f.roads) cur.f.roads=[];
   $('#dAiMsg').textContent=''; $('#dAiMsg').className='ai-msg'; $('#dSaveMsg').textContent='';
   $('#dAi').textContent = sample ? 'AIで読み取る' : '本文から自動入力';
-  resetDelete(); fillForm(); setTab('edit');
+  resetDelete(); fillForm();
   if(!$('#dlgDetail').open) $('#dlgDetail').showModal();
 }
-$('#dlgDetail').addEventListener('input', e=>{ if(e.target.closest('.dlg-body')){ dirty=true; if(e.target.dataset.f) e.target.classList.remove('ai-filled'); if(e.target.dataset.f==='name') $('#dTitle').textContent=e.target.value||'物件詳細'; } });
+$('#dlgDetail').addEventListener('input', e=>{ if(e.target.closest('.dlg-body') && !e.target.closest('#sheet')) dirty=true; });
 async function saveCur(msg){
   formToCur(); cur.updatedAt=stamp();
   $('#dSave').disabled=true;
@@ -685,7 +847,7 @@ async function saveCur(msg){
   catch(e){ $('#dSaveMsg').textContent='保存できませんでした（編集権限・容量を確認してください）'; return false; }
   finally{ $('#dSave').disabled=false; }
 }
-$('#dSave').onclick=()=>saveCur('保存しました');
+$('#dSave').onclick=()=>{ saveCur('保存しました').then(ok=>{ if(ok){ aiKeys.clear(); renderSheet(); } }); };
 $('#dNoteAdd').onclick=()=>{ const v=$('#dNote').value.trim(); if(!v) return; formToCur(); cur.history=(cur.history||[]).concat({at:stamp(), text:v}); $('#dNote').value=''; renderHist(); saveCur('メモを追加しました'); };
 $('#dNote').addEventListener('keydown', e=>{ if(e.key==='Enter' && !e.isComposing){ e.preventDefault(); $('#dNoteAdd').click(); } });
 $('#dAddFile').onclick=()=>$('#dFileInput').click();
@@ -711,42 +873,6 @@ $('#dDelete').onclick = async ()=>{
 document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click', ()=>b.closest('dialog').close()));
 $('#dlgDetail').addEventListener('close', ()=>{ if(aiCtl) aiCtl.abort(); if(dirty) toast('未保存の変更は破棄しました'); cur=null; });
 
-/* ---------- 物件概要書 ---------- */
-function renderSheet(){
-  const f=cur.f||{}, s=S.settings||{};
-  const rows = FIELDS.filter(([k])=>!['name','price','point','remarks','dealType'].includes(k)).map(([k,l])=>[l, f[k]]);
-  const photo=(cur.files||[]).find(x=>x.type.startsWith('image/'));
-  const pairs=[]; for(let i=0;i<rows.length;i+=2) pairs.push([rows[i], rows[i+1]||['','']]);
-  const narrow = window.innerWidth<640;
-  const tbody = narrow ? rows.map(([l,v])=>`<tr><th>${esc(l)}</th><td>${esc(v)||'—'}</td></tr>`).join('')
-    : pairs.map(([a,b])=>`<tr><th>${esc(a[0])}</th><td>${esc(a[1])||'—'}</td><th>${esc(b[0])}</th><td>${b[0]?(esc(b[1])||'—'):''}</td></tr>`).join('');
-  $('#sheet').innerHTML = `<article class="sheet">
-    <div class="s-head"><div style="min-width:0"><div class="s-kind">物件概要書${f.kind?'｜'+esc(f.kind):''}</div><h3>${esc(f.name||f.address||'物件名未入力')}</h3></div><div class="s-price">${esc(f.price||'価格応相談')}</div></div>
-    <div class="s-body">
-      ${photo?`<img class="s-photo" alt="物件写真" id="sheetPhoto">`:''}
-      ${f.point?`<div class="s-point">${esc(f.point).replace(/\n/g,'<br>')}</div>`:''}
-      <div class="sheet-tbl"><table><tbody>${tbody}${f.remarks?`<tr><th>備考</th><td colspan="${narrow?1:3}">${esc(f.remarks).replace(/\n/g,'<br>')}</td></tr>`:''}</tbody></table></div>
-    </div>
-    <div class="s-foot"><div><b>${esc(s.company||'（会社名未設定）')}</b><br>${esc(s.address||'')}${s.tel?'　TEL '+esc(s.tel):''}<br>${esc(s.license||'')}</div><div style="text-align:right">取引態様：${esc(f.dealType||'—')}<br>作成日 ${esc(today())}<br><span style="color:#7c8388">※現況優先。図面と現況が異なる場合は現況を優先します。</span></div></div>
-  </article>`;
-  if(photo) store.url(photo).then(u=>{ const im=$('#sheetPhoto'); if(im) im.src=u; }).catch(()=>{});
-}
-function sheetText(){
-  const f=cur.f||{}, s=S.settings||{};
-  const lines=[`【物件概要】${f.name||f.address||''}`];
-  if(f.price) lines.push(`価格：${f.price}`);
-  for(const [k,l] of FIELDS){ if(['name','price','point','remarks'].includes(k)) continue; if(f[k]) lines.push(`${l}：${f[k]}`); }
-  if(f.point) lines.push('', '■ポイント', f.point);
-  if(f.remarks) lines.push('', '■備考', f.remarks);
-  if(s.company) lines.push('', `${s.company}${s.tel?'　TEL '+s.tel:''}`);
-  return lines.join('\n');
-}
-$('#dCopy').onclick = async ()=>{
-  formToCur(); const t=sheetText();
-  try{ await navigator.clipboard.writeText(t); toast('コピーしました'); }
-  catch(e){ const ta=document.createElement('textarea'); ta.value=t; ta.rows=12; ta.readOnly=true; $('#sheet').prepend(ta); ta.select(); toast('自動コピーできないため、表示した文面を選択してコピーしてください'); }
-};
-
 /* ---------- 会社情報 ---------- */
 $('#btnSettings').onclick=()=>{
   if(!store){ toast('読み込み中です'); return; }
@@ -756,34 +882,69 @@ $('#btnSettings').onclick=()=>{
 $('#settingsForm').addEventListener('submit', async e=>{
   e.preventDefault();
   const s={company:$('#setCompany').value.trim(), tel:$('#setTel').value.trim(), license:$('#setLicense').value.trim(), address:$('#setAddress').value.trim()};
-  try{ await store.saveSettings(s); toast('会社情報を保存しました'); $('#dlgSettings').close(); }catch(err){ toast('保存できませんでした'); }
+  try{ await store.saveSettings(s); toast('会社情報を保存しました'); $('#dlgSettings').close(); if(cur) renderSheet(); }catch(err){ toast('保存できませんでした'); }
 });
+
+/* ---------- 読み取り結果を反映 ---------- */
+// res: {kind, name, ..., roads:[{dir,type,width,frontage}], remarks:[..]|"", sender, dealType}
+function mergeInto(p, res, marks){
+  let n=0; const f=p.f;
+  const put=(k,v)=>{
+    if(v==null) return; if(Array.isArray(v)) v=v.map(x=>String(x).trim()).filter(Boolean).join('\n');
+    v=String(v).trim(); if(!v) return;
+    if(MONEY.has(k)){ const x=num(v); if(!isFinite(x)||x<=0) return; v=String(Math.round(x)); }
+    if(String(f[k]??'')!==v){ f[k]=v; n++; if(marks) marks.add(k); }
+  };
+  for(const k of Object.keys(LABEL)) put(k, res[k]);
+  if(Array.isArray(res.roads)){
+    const rs=res.roads.filter(r=>r&&typeof r==='object').slice(0,3).map(r=>({dir:String(r.dir||''),type:String(r.type||''),width:String(r.width||''),frontage:String(r.frontage||'')}));
+    if(rs.length && JSON.stringify(rs)!==JSON.stringify(f.roads||[])){ f.roads=rs; n++; if(marks) rs.forEach((r,i)=>['dir','type','width','frontage'].forEach(x=>r[x]&&marks.add(`roads.${i}.${x}`))); }
+  }
+  if(res.sender && !p.sender){ p.sender=String(res.sender); n++; }
+  if(res.dealType && !p.dealType){ p.dealType=String(res.dealType); n++; }
+  return n;
+}
+function applyResult(res){
+  formToCur();
+  const n=mergeInto(cur, res, aiKeys);
+  recompute(cur.f);
+  $('#dSender').value=cur.sender||''; $('#dDeal').value=cur.dealType||'';
+  $('#dTitle').textContent=displayName(cur);
+  sheetMode='edit'; renderSheet();
+  if(n) dirty=true;
+  return n;
+}
 
 /* ---------- 読み取り（見出しベース） ---------- */
 const LABELS = {
-  price:['販売価格','売買価格','価格','価額'], address:['所在地','住居表示','所在','住所','地番'],
-  access:['最寄り駅','最寄駅','交通','アクセス'], landArea:['土地面積','敷地面積','地積'],
-  buildingArea:['延べ床面積','延床面積','建物面積','専有面積','床面積'], layout:['間取り','間取'],
-  structure:['構造'], built:['新築年月','建築年月','築年月','築年'], zoning:['用途地域'],
-  coverage:['建ぺい率','建蔽率','建ペい率'], far:['容積率'], road:['接道状況','前面道路','接道'],
-  rights:['土地権利','土地の権利','権利'], current:['現況'], delivery:['引渡時期','引き渡し','引渡し','引渡'],
-  dealType:['取引態様','態様'], kind:['物件種別','種別','種目'], name:['物件名','名称'],
+  name:['物件名','名称','マンション名','建物名'], kind:['物件種別','種別','種目'],
+  price:['販売価格','売買価格','価格','価額'], addrDisplay:['住居表示','所在地','所在','住所'], addrLot:['地番'],
+  landRegArea:['土地面積','敷地面積','地積','公簿'], landActArea:['実測'], landCategory:['地目'],
+  cityPlan:['都市計画'], zoning:['用途地域'], coverage:['建ぺい率','建蔽率','建ペい率'], far:['容積率'],
+  rights:['権利内容','土地権利','土地の権利','権利'], shape:['形状'], legalLimits:['その他法令上の制限','法令上の制限'],
+  structure:['構造規模','構造'], floorArea:['延床面積','延べ床面積','建物面積','専有面積'], built:['竣工年月','新築年月','建築年月','築年月','築年'],
+  use:['用途'], units:['総戸数'], parking:['駐車場'], rentFull:['満室賃料','満室想定賃料','満室想定年収'], rentNow:['現況賃料','現行賃料','現況年収'],
+  delivCond:['引渡条件','引渡し条件'], delivTime:['引渡時期','引渡し時期','引き渡し','引渡し','引渡'], dealType:['取引態様','態様'],
 };
+const NUMERIC = ['landRegArea','landActArea','floorArea'];
 function extractByLabels(text){
   const out={}; if(!text) return out;
-  const lines=text.split(/\r?\n/).map(l=>l.trim().replace(/^[■◆●◇○・\-\s【［\[<＜]+/,''));
+  const lines=zen2han(text).split(/\r?\n/).map(l=>l.trim().replace(/^[■◆●◇○・\-\s【［\[<＜]+/,''));
   for(const [k,labs] of Object.entries(LABELS)){
     outer: for(const line of lines){
       for(const l of labs){
-        if(line.startsWith(l)){
+        if(line.startsWith(l) && /^([】］\]>＞\s:：=＝]|$)/.test(line.slice(l.length))){
           const rest=line.slice(l.length).replace(/^[】］\]>＞\s:：=＝]+/,'').trim();
           if(rest){ out[k]=rest; break outer; }
         }
       }
     }
   }
-  if(out.kind && !KINDS.includes(out.kind)){ const m=KINDS.find(x=>x&&out.kind.includes(x)) || (/中古|新築|一戸建/.test(out.kind)?'戸建':(/売地|土地/.test(out.kind)?'土地':'')); out.kind=m||'その他'; }
-  if(!out.price){ const m=text.match(/([\d,，.]+\s*(億|万)\s*[\d,，]*\s*万?円)/); if(m) out.price=m[1]; }
+  for(const k of NUMERIC){ if(out[k]){ const m=out[k].match(/[\d,]+(\.\d+)?/); out[k]=m?m[0].replace(/,/g,''):out[k]; } }
+  const acc = lines.find(l=>/駅/.test(l)&&/徒歩/.test(l));
+  if(acc){ const m=acc.replace(/^(交通|最寄り?駅|アクセス)[\s:：]*/,'').match(/^(.*?)線?\s*[「『]?([^\s「『」』]+?)[」』]?駅\s*徒歩\s*約?\s*(\d+)\s*分/); if(m){ out.line=m[1].trim(); out.station=m[2]; out.walk=m[3]; } }
+  if(out.kind && !/^売/.test(out.kind)){ out.kind = /土地|売地/.test(out.kind)?'売土地':/戸建|一戸建/.test(out.kind)?'売戸建':/区分/.test(out.kind)?'売区分マンション':/マンション/.test(out.kind)?'売マンション':/アパート/.test(out.kind)?'売アパート':out.kind; }
+  if(!out.price){ const m=zen2han(text).match(/([\d,.]+\s*億\s*[\d,]*\s*万?|[\d,.]+\s*万)\s*円/); if(m) out.price=m[1]; }
   return out;
 }
 
@@ -816,26 +977,42 @@ async function readPdf(blob, maxImgs){
 }
 
 /* ---------- AI 読み取り ---------- */
-function applyResult(res){
-  let n=0;
-  for(const [k] of FIELDS){
-    let v=res[k]; if(v==null) continue; v=String(v).trim(); if(!v) continue;
-    if(k==='kind' && !KINDS.includes(v)) v='その他';
-    const el=document.querySelector(`#dFields [data-f="${k}"]`);
-    if(el && el.value!==v){ el.value=v; el.classList.add('ai-filled'); n++; }
-  }
-  if(res.sender && !$('#dSender').value.trim()){ $('#dSender').value=String(res.sender); n++; }
-  const nm=$('#f_name').value; $('#dTitle').textContent=nm||$('#f_address').value||'物件詳細';
-  if(n) dirty=true;
-  return n;
-}
+const AI_PROMPT = (n, text) => `あなたは日本の不動産仲介会社の事務担当です。他社（元付業者）からLINE・メールで届いた物件資料を、自社の「物件概要書」の項目に転記してください。
+添付画像は物件資料（販売図面・物件概要書・PDFのページ・写真）です。${n?`画像は${n}枚あります。`:'画像はありません。'}下のテキストはメッセージ本文とPDFから抽出した文字です（文字化けしている場合は画像を優先）。
+
+出力はJSONオブジェクトのみ。キーと書き方：
+- kind: 種別。「売土地」「売戸建」「売マンション」（一棟）「売区分マンション」「売アパート」「売ビル」「売店舗・事務所」のいずれか
+- name: 物件名（無ければ「町名＋種別」例「香椎駅前2丁目 中古戸建」）
+- addrDisplay: 住居表示 / addrLot: 地番（資料に「所在地」しか無ければ addrDisplay に）
+- line: 路線名（例「JR筑肥線」） / station: 駅名（「駅」を除く） / walk: 徒歩分数（数字のみ）
+- price: 価格を円の整数（例 1億8,500万円 → 185000000） / taxNote: 「税込」「税別」「非課税」など
+- landRegArea: 土地面積（公簿）㎡の数字のみ / landActArea: 実測㎡の数字のみ（記載なし・0なら ""）
+- landCategory: 地目 / landCurrent: 土地の現況（更地・建付地・古家付など）
+- roads: 接道の配列（最大3件） [{"dir":"方位","type":"公道か私道","width":"幅員mの数字","frontage":"間口mの数字"}]
+- cityPlan: 都市計画（市街化区域など） / zoning: 用途地域 / coverage: 建ぺい率（例「60%」） / far: 容積率 / rights: 権利内容 / shape: 形状 / legalLimits: その他法令上の制限（高度地区・防火地域など）
+- structure: 構造規模（例「鉄筋コンクリート造陸屋根4階建」） / floorArea: 延床面積（区分なら専有面積）㎡の数字のみ / built: 竣工年月（資料の表記どおり） / use: 用途 / units: 総戸数（例「9戸」） / bldCurrent: 建物の現況（賃貸中・空家など）
+- designer: 設計会社 / builder: 施工会社 / parking: 駐車場 / bldOther: 建物その他
+- elec: 電気 / gas: ガス / water: 上下水道 / drain: 雑排水 / ev: エレベーター / equipOther: 設備その他
+- landPrice, bldPrice, landEval, bldEval: 土地・建物の価格と評価額（円の整数）
+- rentFull: 満室想定賃料（年額・円の整数） / rentNow: 現況賃料（年額・円の整数。月額しか無ければ12倍）
+- yieldFull, yieldNow: 表面利回り（例「5.98%」） / propTax: 固都税（年額・円の整数） / mgmtCost: 保守管理費（年額・円の整数） / netFull, netNow: ネット利回り
+- occFull, occNow: 稼働率（例「99.05%」）
+- remarks: 備考の配列（1項目1要素、先頭の※は不要。戸数内訳・改修履歴・告知事項・私道負担・調査の有無・手数料や広告可否など）
+- delivCond: 引渡し条件（現況渡し等） / delivTime: 引渡し時期
+- dealType: 取引態様 / sender: 資料を送ってきた業者名・担当者
+
+ルール：資料に無い項目は空文字 ""（roads と remarks は空配列）。推測で埋めない。
+
+本文・抽出テキスト：
+"""
+${text.slice(0,15000) || '（なし）'}
+"""`;
 async function runAi(){
   if(!cur) return;
   const msg=$('#dAiMsg'); msg.className='ai-msg';
   formToCur();
   const btn=$('#dAi'); btn.disabled=true;
   try{
-    // 資料を集める
     const maxImgs = sample && imgLimits ? imgLimits.maxCount : 0;
     const imgs=[]; let pdfText='';
     for(const f of cur.files||[]){
@@ -852,40 +1029,18 @@ async function runAi(){
     const text=[cur.sourceText||'', pdfText].join('\n').trim();
     if(!sample){
       const n=applyResult(extractByLabels(text));
-      msg.textContent = n ? `${n}項目を本文から入力しました。紫の枠を確認して保存してください。` : '本文に「価格：」「所在地：」などの見出しが見つかりませんでした。手入力してください。';
+      msg.textContent = n ? `${n}項目を本文から入力しました。紫の下線が変更箇所です。確認して保存してください。` : '本文に「価格：」「所在地：」などの見出しが見つかりませんでした。概要書に直接入力してください。';
       return;
     }
     if(!imgs.length && !text){ msg.textContent='読み取る資料がありません。資料を追加するか原文を貼り付けてください。'; msg.className='ai-msg err'; return; }
-    const prompt = `あなたは日本の不動産仲介会社の事務担当です。他社（元付業者）からLINE・メールで届いた物件資料を、自社の物件概要書の項目に転記してください。
-添付画像は物件資料（販売図面・PDFのページ・写真）です。${imgs.length?`画像は${imgs.length}枚あります。`:'画像はありません。'}下のテキストはメッセージ本文とPDFから抽出した文字です（文字化けしている場合は画像を優先）。
-
-出力はJSONオブジェクトのみ。キーと内容：
-- name: 物件名（無ければ「町名＋種別」例「香椎駅前2丁目 中古戸建」）
-- kind: 「土地」「戸建」「マンション」「収益一棟」「店舗・事務所」「その他」のいずれか
-- price: 価格（資料の表記どおり。例「2,480万円」「税込」等の注記も含める）
-- address: 所在地（住居表示または地番）
-- access: 交通（路線・駅・徒歩分数、バス便）
-- landArea: 土地面積（㎡。坪表記もあれば「132.50㎡（40.08坪）」）
-- buildingArea: 建物面積・専有面積（㎡、坪併記可）
-- layout, structure, built(築年月), zoning(用途地域), coverage(建ぺい率), far(容積率), road(接道：方位・幅員・接面), rights(土地権利), current(現況), delivery(引渡し), dealType(取引態様)
-- point: 物件の特徴・売りを1〜2文（資料に書かれている事実のみ）
-- remarks: その他の重要事項（私道負担、セットバック、告知事項、設備、手数料・広告可否など）
-- sender: 資料を送ってきた業者名・担当者（わかる場合）
-
-ルール：資料に無い項目は空文字 ""。推測で埋めない。数値と単位は資料の表記を保つ。
-
-本文・抽出テキスト：
-"""
-${text.slice(0,15000) || '（なし）'}
-"""`;
     aiCtl = new AbortController(); $('#dStop').hidden=false;
     msg.textContent='AIが資料を読んでいます…（30秒〜1分ほど）';
     const opts={signal:aiCtl.signal}; if(imgs.length) opts.images=imgs;
-    const res = await sample.json(prompt, opts);
+    const res = await sample.json(AI_PROMPT(imgs.length, text), opts);
     if(!cur) return;
-    if(!res || typeof res!=='object'){ throw {code:'invalid_json'}; }
+    if(!res || typeof res!=='object' || Array.isArray(res)) throw {code:'invalid_json'};
     const n=applyResult(res);
-    msg.textContent = n ? `${n}項目を読み取りました。紫の枠が変更箇所です。確認して「保存」を押してください。` : '新しく読み取れる項目はありませんでした。';
+    msg.textContent = n ? `${n}項目を読み取りました。紫の下線が変更箇所です。確認して「保存」を押してください。` : '新しく読み取れる項目はありませんでした。';
     if(n){ cur.history=(cur.history||[]).concat({at:stamp(), text:`AI読み取り（${n}項目）`}); renderHist(); }
   }catch(e){
     const c=e&&e.code;
