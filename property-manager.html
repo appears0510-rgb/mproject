@@ -141,6 +141,17 @@
   @media (max-width:760px){ .split{ grid-template-columns:1fr; } }
   .section-lab{ font-size:0.72rem; font-weight:700; letter-spacing:0.12em; color:var(--ink-faint); margin-bottom:8px; display:flex; align-items:center; gap:8px; }
   .section-lab::after{ content:""; flex:1; height:1px; background:var(--line); }
+  .map-row{ display:flex; gap:8px 10px; align-items:center; flex-wrap:wrap; padding:10px 12px; border:1px solid var(--line); border-radius:10px; background:var(--bg); }
+  .map-row .where{ flex:1 1 220px; min-width:0; font-size:0.86rem; overflow-wrap:anywhere; }
+  .map-row .where small{ display:block; font-size:0.7rem; color:var(--ink-faint); }
+  .map-row .pin{ flex:1 1 100%; display:flex; gap:8px; align-items:center; }
+  .map-row .pin label{ margin:0; white-space:nowrap; }
+  .map-row .pin input{ flex:1; min-width:0; padding:6px 8px; font-size:0.8rem; }
+  a.btn{ display:inline-flex; align-items:center; gap:4px; font-weight:700; font-size:0.74rem; border-radius:8px; border:1px solid var(--line-strong); background:var(--bg-elevated); color:var(--ink); padding:4px 10px; text-decoration:none; white-space:nowrap; }
+  a.btn:hover{ border-color:var(--accent); color:var(--accent); }
+  a.btn.off{ opacity:0.45; pointer-events:none; }
+  a.maplink{ font-size:0.72rem; color:var(--accent); text-decoration:none; font-weight:700; white-space:nowrap; }
+  a.maplink:hover{ text-decoration:underline; }
   .sheet-bar{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
   .sheet-bar .section-lab{ flex:1 1 200px; margin:0; }
 
@@ -217,6 +228,7 @@
       <button id="vBoard" aria-pressed="true">ボード</button>
       <button id="vList" aria-pressed="false">一覧</button>
     </div>
+    <button id="btnCsv" class="small" title="Google マイマップに読み込むと全物件をピンで表示できます">地図用CSVを書き出す</button>
   </div>
   <main id="main"></main>
 </div>
@@ -270,6 +282,13 @@
         <div><label for="dReceived">受領日</label><input type="date" id="dReceived"></div>
         <div class="span2"><label for="dNext">次にやること</label><input type="text" id="dNext" placeholder="例）現地確認・役所調査・〇〇工務店へ紹介"></div>
         <div><label for="dNextDate">期日</label><input type="date" id="dNextDate"></div>
+      </div>
+      <div class="map-row">
+        <div class="where"><small>地図</small><span id="mapWhere">所在地が未入力です</span></div>
+        <a class="btn" id="mapOpen" target="_blank" rel="noopener">Googleマップで開く</a>
+        <a class="btn" id="mapRoute" target="_blank" rel="noopener">ルート案内</a>
+        <a class="btn" id="mapStreet" target="_blank" rel="noopener" title="位置（緯度・経度）を入れると使えます">ストリートビュー</a>
+        <div class="pin"><label for="dPin">ピン位置（任意）</label><input type="text" id="dPin" placeholder="地番しかない土地などは、GoogleマップのURLか「33.5812, 130.3021」を貼り付け"></div>
       </div>
       <datalist id="dealList"><option>一般媒介</option><option>専任媒介</option><option>専属専任媒介</option><option>売主</option><option>代理</option></datalist>
 
@@ -406,6 +425,28 @@ function guessType(name){ const e=(name.split('.').pop()||'').toLowerCase(); ret
 const OK_TYPES = ['application/pdf','image/jpeg','image/png','image/webp','image/gif'];
 function fileType(f){ return OK_TYPES.includes(f.type) ? f.type : guessType(f.name||''); }
 const addrOf = f => (f&&(f.addrDisplay||f.addrLot)) || '';
+// Googleマップ：ピン位置（URL・緯度経度）＞住居表示＞地番（先頭の1筆）の順で場所を決める
+function pinCoords(s){
+  s=zen2han(s||''); if(!s) return null;
+  const m = s.match(/@(-?\d{1,3}\.\d+),(-?\d{1,3}\.\d+)/) || s.match(/!3d(-?\d{1,3}\.\d+)!4d(-?\d{1,3}\.\d+)/) || s.match(/(-?\d{1,3}\.\d{3,})\s*[,，、\s]\s*(-?\d{1,3}\.\d{3,})/);
+  if(!m) return null;
+  const lat=+m[1], lng=+m[2];
+  return Math.abs(lat)<=90 && Math.abs(lng)<=180 ? {lat, lng} : null;
+}
+function mapQuery(p){
+  if(!p) return '';
+  const c=pinCoords(p.mapPin); if(c) return `${c.lat},${c.lng}`;
+  const f=p.f||{};
+  if(f.addrDisplay) return f.addrDisplay;
+  if(f.addrLot) return f.addrLot.split(/[、,，]/)[0].trim();
+  return '';
+}
+const isUrl = s => /^https?:\/\//.test(s||'');
+function mapUrl(p){
+  if(isUrl(p.mapPin) && !pinCoords(p.mapPin)) return p.mapPin;   // maps.app.goo.gl などの共有リンクはそのまま
+  return 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(mapQuery(p));
+}
+function routeUrl(p){ return 'https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent(mapQuery(p)); }
 function displayName(p){ return (p.f&&p.f.name) || addrOf(p.f) || '名称未設定（'+(p.sender||p.source||'')+'）'; }
 function dueClass(d){ if(!d) return ''; const t=today(); return d<t?'over':(d===t?'today':''); }
 
@@ -542,6 +583,7 @@ function card(p){
     <div class="card-top"><span class="chip">${esc(p.source||'—')}</span>${f.kind?`<span class="chip outline">${esc(f.kind)}</span>`:''}${nfiles?`<span class="chip outline">資料${nfiles}</span>`:''}</div>
     <h3>${esc(displayName(p))}</h3>
     ${addrOf(f)&&f.name?`<p class="addr">${esc(addrOf(f))}${f.station?`／${esc(f.station)}駅${f.walk?' 徒歩'+esc(f.walk)+'分':''}`:''}</p>`:''}
+    ${mapQuery(p)?`<a class="maplink" href="${esc(mapUrl(p))}" target="_blank" rel="noopener">地図を開く</a>`:''}
     <div class="card-foot"><span class="price tnum">${esc(pr||'価格未定')}${f.yieldFull?`<span class="yield">利回り ${esc(f.yieldFull)}</span>`:''}</span>
     ${p.nextDate||p.next?`<span class="due ${dueClass(p.nextDate)}">${p.nextDate?esc(md(p.nextDate))+' ':''}${esc(p.next||'')}</span>`:(p.assignee?`<span class="due">担当 ${esc(p.assignee)}</span>`:'')}</div>
   </article>`;
@@ -564,9 +606,9 @@ function renderMain(){
     }).join('')}</div>`;
   }else{
     if(S.status && S.status!=='__due') items = items.filter(p=>(p.status||'new')===S.status);
-    main.innerHTML = items.length ? `<div class="list-wrap"><table><thead><tr><th>進捗</th><th>物件名</th><th>種別</th><th>所在地</th><th>価格</th><th>利回り</th><th>取得元・送り元</th><th>受領日</th><th>次にやること</th><th>担当</th></tr></thead><tbody>${items.map(p=>{
+    main.innerHTML = items.length ? `<div class="list-wrap"><table><thead><tr><th>進捗</th><th>物件名</th><th>種別</th><th>所在地</th><th>価格</th><th>利回り</th><th>地図</th><th>取得元・送り元</th><th>受領日</th><th>次にやること</th><th>担当</th></tr></thead><tbody>${items.map(p=>{
       const s=ST[p.status]||ST.new, f=p.f||{};
-      return `<tr data-id="${esc(p.id)}"><td><span class="chip st" style="--s:var(--s-${s.k})">${s.label}</span></td><td><b>${esc(displayName(p))}</b></td><td>${esc(f.kind)}</td><td>${esc(addrOf(f))}</td><td class="tnum" style="white-space:nowrap">${esc(man(f.price))}</td><td class="tnum">${esc(f.yieldFull)}</td><td>${esc(p.source)}<br><span class="hint">${esc(p.sender)}</span></td><td class="tnum" style="white-space:nowrap">${esc(p.receivedAt)}</td><td><span class="due ${dueClass(p.nextDate)}">${esc(md(p.nextDate))}</span> ${esc(p.next)}</td><td>${esc(p.assignee)}</td></tr>`;
+      return `<tr data-id="${esc(p.id)}"><td><span class="chip st" style="--s:var(--s-${s.k})">${s.label}</span></td><td><b>${esc(displayName(p))}</b></td><td>${esc(f.kind)}</td><td>${esc(addrOf(f))}</td><td class="tnum" style="white-space:nowrap">${esc(man(f.price))}</td><td class="tnum">${esc(f.yieldFull)}</td><td>${mapQuery(p)?`<a class="maplink" href="${esc(mapUrl(p))}" target="_blank" rel="noopener">開く</a>`:''}</td><td>${esc(p.source)}<br><span class="hint">${esc(p.sender)}</span></td><td class="tnum" style="white-space:nowrap">${esc(p.receivedAt)}</td><td><span class="due ${dueClass(p.nextDate)}">${esc(md(p.nextDate))}</span> ${esc(p.next)}</td><td>${esc(p.assignee)}</td></tr>`;
     }).join('')}</tbody></table></div>` : `<div class="empty"><h2>該当する物件はありません</h2><p>検索語や絞り込みを変えてください。</p></div>`;
   }
 }
@@ -584,7 +626,7 @@ $('#q').addEventListener('input', e=>{ S.q=e.target.value; renderMain(); });
 $('#fSource').addEventListener('change', e=>{ S.source=e.target.value; renderMain(); });
 function setView(v){ S.view=v; try{ localStorage.setItem('bukken.view',v); }catch(e){} render(); }
 $('#vBoard').onclick=()=>setView('board'); $('#vList').onclick=()=>setView('list');
-$('#main').addEventListener('click', e=>{ const el=e.target.closest('[data-id]'); if(el) openDetail(el.dataset.id); });
+$('#main').addEventListener('click', e=>{ if(e.target.closest('a')) return; const el=e.target.closest('[data-id]'); if(el) openDetail(el.dataset.id); });
 $('#main').addEventListener('keydown', e=>{ if(e.key==='Enter'){ const el=e.target.closest('.card'); if(el) openDetail(el.dataset.id); } });
 let dragId=null;
 $('#main').addEventListener('dragstart', e=>{ const c=e.target.closest('.card'); if(!c) return; dragId=c.dataset.id; c.classList.add('dragging'); e.dataTransfer.effectAllowed='move'; try{ e.dataTransfer.setData('text/plain', dragId); }catch(_){} });
@@ -759,6 +801,7 @@ $('#sheet').addEventListener('input', e=>{
   const k=el.dataset.f; setV(k, el.value); dirty=true;
   aiKeys.delete(k); el.classList.remove('ai-filled');
   if(k==='name'||k==='addrDisplay') $('#dTitle').textContent=displayName(cur);
+  if(k==='addrDisplay'||k==='addrLot') renderMapRow();
   const out=recompute(cur.f);
   for(const [ck,cv] of Object.entries(out)){ const c=document.querySelector(`#sheet [data-f="${ck}"]`); if(c && c!==el) c.value=cv; }
   refreshDerived();
@@ -772,7 +815,7 @@ function sheetText(){
   const f=cur.f, s=S.settings||{}, L=[];
   const add=(l,v)=>{ if(v) L.push(`${l}：${v}`); };
   L.push(`【物件概要書】${f.name||addrOf(f)}`);
-  add('種別',f.kind); add('所在地（住居表示）',f.addrDisplay); add('所在地（地番）',f.addrLot);
+  add('種別',f.kind); add('所在地（住居表示）',f.addrDisplay); add('所在地（地番）',f.addrLot); if(mapQuery(cur)) add('地図',mapUrl(cur));
   if(f.station) add('交通', `${f.line?f.line+' ':''}「${f.station}」駅 徒歩約${f.walk||'?'}分`);
   const tp=tsuboPrice(f);
   if(f.price) add('価格', `¥${fmtMoney(f.price)}${f.taxNote?'（'+f.taxNote+'）':''}${isFinite(tp)?'（坪 ¥'+fmtInt(tp)+'）':''}`);
@@ -807,14 +850,15 @@ function formToCur(){
   if(!cur) return;
   cur.assignee=$('#dAssignee').value.trim(); cur.source=$('#dSource').value; cur.sender=$('#dSender').value.trim();
   cur.receivedAt=$('#dReceived').value; cur.next=$('#dNext').value.trim(); cur.nextDate=$('#dNextDate').value;
-  cur.dealType=$('#dDeal').value.trim(); cur.sourceText=$('#dSourceText').value;
+  cur.dealType=$('#dDeal').value.trim(); cur.sourceText=$('#dSourceText').value; cur.mapPin=$('#dPin').value.trim();
   const ns=$('#dStatus').value;
   if(ns!==cur.status){ cur.history=(cur.history||[]).concat({at:stamp(), text:`進捗：${(ST[cur.status]||ST.new).label} → ${ST[ns].label}`}); cur.status=ns; }
 }
 function fillForm(){
   $('#dStatus').value=cur.status||'new'; $('#dAssignee').value=cur.assignee||''; fillSourceSelect($('#dSource'),cur.source||'その他');
   $('#dSender').value=cur.sender||''; $('#dReceived').value=cur.receivedAt||''; $('#dNext').value=cur.next||''; $('#dNextDate').value=cur.nextDate||'';
-  $('#dDeal').value=cur.dealType||''; $('#dSourceText').value=cur.sourceText||'';
+  $('#dDeal').value=cur.dealType||''; $('#dSourceText').value=cur.sourceText||''; $('#dPin').value=cur.mapPin||'';
+  renderMapRow();
   $('#dTitle').textContent=displayName(cur);
   renderFiles(); renderHist(); renderSheet();
 }
@@ -840,6 +884,14 @@ function openDetail(id, obj){
   if(!$('#dlgDetail').open) $('#dlgDetail').showModal();
 }
 $('#dlgDetail').addEventListener('input', e=>{ if(e.target.closest('.dlg-body') && !e.target.closest('#sheet')) dirty=true; });
+$('#dPin').addEventListener('input', ()=>{ if(!cur) return; cur.mapPin=$('#dPin').value.trim(); renderMapRow(); });
+function renderMapRow(){
+  const q=mapQuery(cur), c=pinCoords(cur.mapPin), off=(a,on)=>{ a.classList.toggle('off',!on); if(on) a.removeAttribute('aria-disabled'); else a.setAttribute('aria-disabled','true'); };
+  $('#mapWhere').textContent = c ? `ピン位置 ${c.lat}, ${c.lng}` : (q || '所在地が未入力です。概要書の住居表示か地番を入れると地図を開けます');
+  $('#mapOpen').href = q ? mapUrl(cur) : '#'; off($('#mapOpen'), !!q);
+  $('#mapRoute').href = q ? routeUrl(cur) : '#'; off($('#mapRoute'), !!q);
+  $('#mapStreet').href = c ? `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${c.lat},${c.lng}` : '#'; off($('#mapStreet'), !!c);
+}
 async function saveCur(msg){
   formToCur(); cur.updatedAt=stamp();
   $('#dSave').disabled=true;
@@ -1064,12 +1116,34 @@ async function runAi(){
 $('#dAi').onclick=runAi;
 $('#dStop').onclick=()=>{ if(aiCtl) aiCtl.abort(); };
 
+/* ---------- 地図用CSV（Google マイマップ用） ---------- */
+let downloads=null;
+function csvCell(v){ v=String(v??''); return /[",\n]/.test(v) ? '"'+v.replace(/"/g,'""')+'"' : v; }
+$('#btnCsv').onclick = async ()=>{
+  let items = filtered();
+  if(S.status && S.status!=='__due') items=items.filter(p=>(p.status||'new')===S.status);
+  items = items.filter(p=>mapQuery(p));
+  if(!items.length){ toast('所在地が入っている物件がありません'); return; }
+  const head=['物件名','住所','緯度','経度','種別','価格','利回り','進捗','担当','次にやること','GoogleマップURL'];
+  const rows=items.map(p=>{ const f=p.f||{}, c=pinCoords(p.mapPin);
+    return [displayName(p), f.addrDisplay||(f.addrLot||'').split(/[、,，]/)[0], c?c.lat:'', c?c.lng:'', f.kind, man(f.price), f.yieldFull, (ST[p.status]||ST.new).label, p.assignee, p.next, mapUrl(p)]; });
+  const csv='\uFEFF'+[head,...rows].map(r=>r.map(csvCell).join(',')).join('\r\n');
+  const name=`物件地図_${today()}.csv`;
+  if(downloads){
+    try{ await downloads.save({filename:name, data:csv}); toast(`${items.length}件を書き出しました。Google マイマップの「インポート」で読み込めます`); }
+    catch(e){ if(e&&e.code!=='declined') toast('書き出せませんでした'); }
+  }else{
+    try{ const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'})); a.download=name; a.click(); toast(`${items.length}件を書き出しました`); }
+    catch(e){ toast('このページでは書き出せません'); }
+  }
+};
+
 /* ---------- 起動 ---------- */
 async function init(){
   render();
   let db=null, assets=null;
   if(window.claude && typeof window.claude.use==='function'){
-    [db, assets, sample] = await Promise.all(['db','assets','sample'].map(n=>window.claude.use(n).catch(()=>null)));
+    [db, assets, sample, downloads] = await Promise.all(['db','assets','sample','downloads'].map(n=>window.claude.use(n).catch(()=>null)));
   }
   if(sample){ try{ imgLimits=(await sample.limits()).images||null; }catch(e){ imgLimits=null; } }
   store = db ? makeCloud(db, assets) : await makeLocal();
