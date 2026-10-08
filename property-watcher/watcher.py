@@ -9,7 +9,9 @@
     DISCORD_WEBHOOK_URL
     SLACK_WEBHOOK_URL
     LINE_CHANNEL_ACCESS_TOKEN + LINE_TO        (LINE Messaging API の push)
-    SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD, MAIL_TO (, MAIL_FROM)
+    SMTP_USER, SMTP_PASSWORD (, MAIL_TO, MAIL_FROM, SMTP_HOST, SMTP_PORT)
+        Gmail なら SMTP_USER=Gmailアドレス, SMTP_PASSWORD=アプリパスワード の2つだけでOK。
+        MAIL_TO 省略時は自分宛て、SMTP_HOST 省略時は smtp.gmail.com:587。
 """
 
 from __future__ import annotations
@@ -274,16 +276,16 @@ def notify_email(header: str, bodies: list[str]) -> None:
     msg = MIMEText("\n\n".join(bodies), "plain", "utf-8")
     msg["Subject"] = header
     msg["From"] = os.environ.get("MAIL_FROM") or os.environ["SMTP_USER"]
-    msg["To"] = os.environ["MAIL_TO"]
-    port = int(os.environ.get("SMTP_PORT", "587"))
-    host = os.environ["SMTP_HOST"]
+    msg["To"] = os.environ.get("MAIL_TO") or os.environ["SMTP_USER"]
+    port = int(os.environ.get("SMTP_PORT") or "587")
+    host = os.environ.get("SMTP_HOST") or "smtp.gmail.com"
     if port == 465:
         server = smtplib.SMTP_SSL(host, port, timeout=30)
     else:
         server = smtplib.SMTP(host, port, timeout=30)
         server.starttls()
     with server:
-        server.login(os.environ["SMTP_USER"], os.environ["SMTP_PASSWORD"])
+        server.login(os.environ["SMTP_USER"], os.environ["SMTP_PASSWORD"].replace(" ", ""))
         server.send_message(msg)
 
 
@@ -299,7 +301,7 @@ def notify(items: list[Listing], max_items: int) -> int:
             env.get("LINE_CHANNEL_ACCESS_TOKEN") and env.get("LINE_TO"),
             lambda: notify_line(env["LINE_CHANNEL_ACCESS_TOKEN"], env["LINE_TO"], header, bodies),
         ),
-        ("メール", env.get("SMTP_HOST") and env.get("MAIL_TO"), lambda: notify_email(header, bodies)),
+        ("メール", env.get("SMTP_USER") and env.get("SMTP_PASSWORD"), lambda: notify_email(header, bodies)),
     ]
     for name, enabled, send in channels:
         if not enabled:

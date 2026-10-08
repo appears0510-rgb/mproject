@@ -2,7 +2,7 @@
 # 楽待・健美家のサイトで条件を指定して検索し、結果ページのURLをそのまま貼り付けてください。
 # 並び順は「新着順」にしておくと取りこぼしが減ります。
 searches:
-  - name: 楽待 福岡県 一棟
+  - name: 楽待 福岡県
     site: rakumachi
     url: "https://www.rakumachi.jp/syuuekibukken/area/prefecture/dimAll/?pref=40"
   - name: 健美家 福岡県
@@ -11,8 +11,8 @@ searches:
 
 # 任意の絞り込み（一覧から読み取れた値だけで判定。読み取れなかった物件は通知します）
 filters:
-  max_price_man: null     # 価格上限（万円）例: 8000
-  min_yield: null         # 表面利回り下限（%）例: 8.0
+  max_price_man: 20000    # 価格上限（万円）= 2億円
+  min_yield: 8.0          # 表面利回り下限（%）
 
 # 1回の通知に載せる最大件数（超えた分は件数だけ通知）
 max_items_per_notify: 30

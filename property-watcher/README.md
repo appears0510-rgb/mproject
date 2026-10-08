@@ -27,7 +27,7 @@ Discord / Slack / LINE / メールに通知するツールです。GitHub Action
 | Discord | `DISCORD_WEBHOOK_URL`（チャンネル設定 → 連携サービス → ウェブフック） |
 | Slack | `SLACK_WEBHOOK_URL`（Incoming Webhook） |
 | LINE | `LINE_CHANNEL_ACCESS_TOKEN`, `LINE_TO`（LINE Messaging API。LINE Notify は2025年3月で終了） |
-| メール | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `MAIL_TO`（Gmailならアプリパスワード、`smtp.gmail.com` / `587`） |
+| メール（Gmail） | `SMTP_USER`（Gmailアドレス）, `SMTP_PASSWORD`（アプリパスワード）。自分宛てに届きます。別の宛先は `MAIL_TO`、Gmail以外は `SMTP_HOST` / `SMTP_PORT` も登録 |
 
 ### 3. 動作確認
 Actions タブ →「新着収益物件チェック」→ Run workflow。

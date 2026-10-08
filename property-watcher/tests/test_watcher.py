@@ -60,7 +60,7 @@ def test_run_first_then_new(tmp_path, monkeypatch, capsys):
     pages = {"r": RAKUMACHI_HTML}
     monkeypatch.setattr(watcher, "fetch", lambda url, session: pages["r"])
     monkeypatch.setattr(watcher, "REQUEST_INTERVAL_SEC", 0)
-    for k in ("DISCORD_WEBHOOK_URL", "SLACK_WEBHOOK_URL", "LINE_CHANNEL_ACCESS_TOKEN", "SMTP_HOST"):
+    for k in ("DISCORD_WEBHOOK_URL", "SLACK_WEBHOOK_URL", "LINE_CHANNEL_ACCESS_TOKEN", "SMTP_USER"):
         monkeypatch.delenv(k, raising=False)
     cfg = tmp_path / "c.yaml"
     cfg.write_text('searches:\n  - {name: t, site: rakumachi, url: "https://www.rakumachi.jp/x/"}\n', encoding="utf-8")
