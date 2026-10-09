@@ -1,3 +1,8 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TAKAHARA不動産</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -71,6 +76,7 @@
     *{animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important;}
   }
 
+  html, body{ overflow-x:clip; }
   body{
     margin:0;
     background:var(--bg);
@@ -448,6 +454,8 @@
     .area-grid{ grid-template-columns:1fr; }
   }
 </style>
+</head>
+<body>
 
 <header class="site" id="siteHeader">
   <div class="wrap nav-row">
@@ -994,3 +1002,5 @@
     status.textContent = 'ご入力ありがとうございます。デモのため実際の送信は行われません。';
   });
 </script>
+</body>
+</html>
